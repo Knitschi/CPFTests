@@ -1,0 +1,4 @@
+*.pyc
+*__pycache__*
+DockerImages/JenkinsConfig/nodes/
+cpfPackageVersion_*
