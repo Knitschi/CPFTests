@@ -10,6 +10,7 @@ set( PYTHON_FILES
     TestProject_tests.py
     run_tests.py
     __init__.py
+    ping.py
 )
 
 set( DOCUMENTATION_FILES

@@ -24,7 +24,7 @@ class ExcecuteCommandCase(unittest.TestCase):
     """
     """
         self.osa = miscosaccess.MiscOsAccess()
-        self.osa.execute_command_output('python -u -m Sources.CPFTests.Ping')
+        self.osa.execute_command_output('python -u -m Sources.CPFTests.ping')
     """
 
 
