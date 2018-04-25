@@ -34,8 +34,13 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         # versionCompatibilityChecks should not be available on visual studio solutions
         if self.is_visual_studio_config():
             with self.assertRaises(miscosaccess.CalledProcessError) as cm:
-                self.run_python_command('3_Make.py --targets versionCompatibilityChecks & set errorlevel=0')
+                self.run_python_command('3_Make.py --target versionCompatibilityChecks')
             # error MSB1009 says that a project is missing, which means the target does not exist.
             self.assertIn('MSBUILD : error MSB1009:', cm.exception.stdout)
+
+        with self.assertRaises(miscosaccess.CalledProcessError) as cm:
+            self.run_python_command('3_Make.py --target blub')
+        # error MSB1009 says that a project is missing, which means the target does not exist.
+        self.assertIn('Keine Regel', cm.exception.stdout)
 
 

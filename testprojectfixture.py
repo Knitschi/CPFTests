@@ -56,7 +56,7 @@ class TestProjectFixture(unittest.TestCase):
 
         # We delete the package in the the copy the content of this package over
         self.fsa.rmtree(test_project_package_dir)
-        shutil.copytree(this_package_dir, test_project_package_dir)
+        shutil.copytree(str(this_package_dir), str(test_project_package_dir))
         # We also commit the changes to make sure the repository is not dirty
         # which is expected after a "fresh" checkout.
         self.osa.execute_command('git commit --allow-empty . -m "Set package content to local developer files."', cwd=test_project_package_dir)
