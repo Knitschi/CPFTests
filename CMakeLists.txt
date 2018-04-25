@@ -8,10 +8,14 @@ cpfInitPackageProject(
 )
 
 set( PYTHON_FILES
-    TestProject_tests.py
     run_tests.py
     __init__.py
     ping.py
+    acpftestproject_tests.py
+    bcpftestproject_tests.py
+    misc_tests.py
+    simpleonelibcpftestproject_tests.py
+    testprojectfixture.py
 )
 
 set( DOCUMENTATION_FILES
