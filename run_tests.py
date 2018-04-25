@@ -10,17 +10,16 @@ Arguments:
 import unittest
 import sys
 
-from .TestProject_tests import ExcecuteCommandCase
-from .TestProject_tests import SimpleOneLibCPFTestProjectFixture
-from .TestProject_tests import ACPFTestProjectFixture
-from .TestProject_tests import BCPFTestProjectFixture
+from .testprojectfixture import BASE_TEST_DIR, PARENT_CONFIG
+from .acpftestproject_tests import *
+from .bcpftestproject_tests import *
+from .misc_tests import *
+from .simpleonelibcpftestproject_tests import *
 
-#from .TestProject_tests import TestProjectFixture
-from . import TestProject_tests
 
 if __name__ == '__main__':
-    TestProject_tests.BASE_TEST_DIR = sys.argv[1]
-    TestProject_tests.PARENT_CONFIG = sys.argv[2]
+    testprojectfixture.BASE_TEST_DIR = sys.argv[1]
+    testprojectfixture.PARENT_CONFIG = sys.argv[2]
     del(sys.argv[1])
     del(sys.argv[1])
     unittest.main()

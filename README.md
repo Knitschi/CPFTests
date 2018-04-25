@@ -1,3 +1,3 @@
 # Welcome to CPFTests
 
-[Package documentation](https://knitschi.github.io/CMakeProjectFramework/doxygen/d5/d7b/group___c_p_f_tests_group.html)
+[Package documentation](https://knitschi.github.io/CMakeProjectFramework/doxygen/d4/d62/_c_p_f_tests.html)

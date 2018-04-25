@@ -1,10 +1,11 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3
 """
-This module contains automated tests that build one of the CPF test projects.
+This module contains a testcase class the can be used to run tests
+on a cpf test project.
 """
 
 import unittest
-from pathlib import PureWindowsPath, PurePosixPath, PurePath
+from pathlib import PurePosixPath
 import shutil
 
 from Sources.CPFBuildscripts.python import miscosaccess
@@ -14,18 +15,6 @@ from Sources.CPFBuildscripts.python import filelocations
 
 BASE_TEST_DIR = ''
 PARENT_CONFIG = ''
-
-class ExcecuteCommandCase(unittest.TestCase):
-    """
-    This test case is used to test the execute_command_output() function.
-    """
-
-    def test_execute_command(self):
-        """
-        This test should verify, that execute_command_output() works with recursive calls.
-        """
-        self.osa = miscosaccess.MiscOsAccess()
-        self.osa.execute_command_output('python -u -m Sources.CPFTests.ping')
 
 
 class TestProjectFixture(unittest.TestCase):
@@ -87,71 +76,3 @@ class TestProjectFixture(unittest.TestCase):
             return self.osa.execute_command_output('python3 -u {0}'.format(argument), cwd=self.test_dir )
         else:
             raise Exception('Unknown OS')
-
-
-
-class SimpleOneLibCPFTestProjectFixture(TestProjectFixture):
-    """
-    A fixture for tests that can be done with a minimal project that has no test executable and 
-    only a library package.
-    """
-    def setUp(self):
-        self.project = 'SimpleOneLibCPFTestProject'
-        self.repository = 'https://github.com/Knitschi/SimpleOneLibCPFTestProject.git'
-        super(SimpleOneLibCPFTestProjectFixture, self).setUp()
-
-    
-    def test_pipeline_build_works(self):
-        """
-        Check that the pipeline target builds.
-        """
-        self.run_python_command('Sources/CPFBuildscripts/0_CopyScripts.py')
-        self.run_python_command('1_Configure.py {0} --inherits {0}'.format(PARENT_CONFIG))
-        self.run_python_command('2_Generate.py')
-        self.run_python_command('3_Make.py --target pipeline')
-
-
-class ACPFTestProjectFixture(TestProjectFixture):
-    """
-    A fixture for tests that require a project with multiple
-    internal and external packages.
-    """
-    def setUp(self):
-        self.project = 'ACPFTestProject'
-        self.repository = 'https://github.com/Knitschi/ACPFTestProject.git'
-        super(ACPFTestProjectFixture, self).setUp()
-
-    def test_pipeline_build_works(self):
-        """
-        Check that the pipeline target builds.
-        """
-        self.run_python_command('Sources/CPFBuildscripts/0_CopyScripts.py')
-        self.run_python_command('1_Configure.py {0} --inherits {0}'.format(PARENT_CONFIG))
-        self.run_python_command('2_Generate.py')
-        self.run_python_command('3_Make.py --target pipeline')
-
-
-class BCPFTestProjectFixture(TestProjectFixture):
-    """
-    A fixture for tests that require a project with multiple
-    internal library packages.
-    """
-    def setUp(self):
-        self.project = 'BCPFTestProject'
-        self.repository = 'https://github.com/Knitschi/BCPFTestProject.git'
-        super(BCPFTestProjectFixture, self).setUp()
-
-   
-    def test_pipeline_build_works(self):
-        """
-        Check that the pipeline target builds.
-        """
-        self.run_python_command('Sources/CPFBuildscripts/0_CopyScripts.py')
-        self.run_python_command('1_Configure.py {0} --inherits {0}'.format(PARENT_CONFIG))
-        self.run_python_command('2_Generate.py')
-        self.run_python_command('3_Make.py --target pipeline')
-
-
-        
-
-
