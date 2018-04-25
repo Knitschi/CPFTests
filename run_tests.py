@@ -12,7 +12,8 @@ import sys
 
 from .TestProject_tests import ExcecuteCommandCase
 from .TestProject_tests import SimpleOneLibCPFTestProjectFixture
-
+from .TestProject_tests import ACPFTestProjectFixture
+from .TestProject_tests import BCPFTestProjectFixture
 
 #from .TestProject_tests import TestProjectFixture
 from . import TestProject_tests
