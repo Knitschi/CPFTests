@@ -1,5 +1,6 @@
 include(cpfLocations)
 include(cpfAddPackage)
+include(cpfMiscUtilities)
 
 cpfInitPackageProject(
 	PACKAGE_NAME
@@ -36,4 +37,5 @@ cpfAddFilePackage(${PACKAGE_NAME} "${sources}")
 set(dependedOnPackages CPFCMake CPFBuildscripts)
 
 # Add a test target
+cpfAssertDefinedMessage(CPF_PARENT_CONFIG "Error! Your config file is missing a definition of variable CPF_PARENT_CONFIG")
 cpfAddRunPython3TestTarget( ${PACKAGE_NAME} "run_tests.py" "\"${CPF_TEST_FILES_DIR}\" ${CPF_PARENT_CONFIG}" "${sources}" "${dependedOnPackages}" )

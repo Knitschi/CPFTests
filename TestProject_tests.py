@@ -73,7 +73,6 @@ class SimpleOneLibCPFTestProjectFixture(TestProjectFixture):
         """
         Check that the pipeline target builds with ACPFTestProject.
         """
-        
         self.run_python_command('Sources/CPFBuildscripts/0_CopyScripts.py')
         self.run_python_command('1_Configure.py {0} --inherits {0}'.format(PARENT_CONFIG))
         self.run_python_command('2_Generate.py')
