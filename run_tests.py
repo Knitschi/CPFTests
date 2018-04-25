@@ -11,9 +11,11 @@ import unittest
 import sys
 
 from .testprojectfixture import BASE_TEST_DIR, PARENT_CONFIG
-from .acpftestproject_tests import *
-from .bcpftestproject_tests import *
-from .misc_tests import *
+
+# tests
+#from .acpftestproject_tests import *
+#from .bcpftestproject_tests import *
+#from .misc_tests import *
 from .simpleonelibcpftestproject_tests import *
 
 

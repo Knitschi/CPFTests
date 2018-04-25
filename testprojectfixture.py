@@ -69,10 +69,12 @@ class TestProjectFixture(unittest.TestCase):
         """
         system = self.osa.system()
         if system == 'Windows':
-            print('----------------------------------------------')
-            print(str(self.test_dir))
             return self.osa.execute_command_output('python -u {0}'.format(argument), cwd=self.test_dir )
         elif system == 'Linux':
             return self.osa.execute_command_output('python3 -u {0}'.format(argument), cwd=self.test_dir )
         else:
             raise Exception('Unknown OS')
+
+
+    def is_visual_studio_config(self):
+        return PARENT_CONFIG == 'VS2017-shared' or PARENT_CONFIG == 'VS2017-static'

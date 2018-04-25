@@ -3,6 +3,9 @@ This module contains automated tests that operate on the SimpleOneLibCPFTestProj
 """
 
 import unittest
+
+from Sources.CPFBuildscripts.python import miscosaccess
+
 from . import testprojectfixture
 
 
@@ -26,7 +29,13 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         self.run_python_command('Sources/CPFBuildscripts/0_CopyScripts.py')
         self.run_python_command('1_Configure.py {0} --inherits {0}'.format(testprojectfixture.PARENT_CONFIG))
         self.run_python_command('2_Generate.py')
-        self.run_python_command('3_Make.py --target pipeline')
+        #self.run_python_command('3_Make.py --target pipeline')
 
-        # versionCompatibilityChecks should not be available
-        self.assertRaisesRegex(self.run_python_command('3_Make.py --target versionCompatibilityChecks'), 'bla')
+        # versionCompatibilityChecks should not be available on visual studio solutions
+        if self.is_visual_studio_config():
+            with self.assertRaises(miscosaccess.CalledProcessError) as cm:
+                self.run_python_command('3_Make.py --targets versionCompatibilityChecks & set errorlevel=0')
+            # error MSB1009 says that a project is missing, which means the target does not exist.
+            self.assertIn('MSBUILD : error MSB1009:', cm.exception.stdout)
+
+
