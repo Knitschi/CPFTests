@@ -63,15 +63,15 @@ class TestProjectFixture(unittest.TestCase):
         self.osa.execute_command('git commit --allow-empty . -m "Update {0}"'.format(package), cwd=self.test_dir)
 
 
-    def run_python_command(self, argument):
+    def run_python_command(self, argument, print_output=miscosaccess.OutputMode.ALWAYS):
         """
         The function runs python3 on Linux and python on Windows.
         """
         system = self.osa.system()
         if system == 'Windows':
-            return self.osa.execute_command_output('python -u {0}'.format(argument), cwd=self.test_dir )
+            return self.osa.execute_command_output('python -u {0}'.format(argument), cwd=self.test_dir, print_output=print_output )
         elif system == 'Linux':
-            return self.osa.execute_command_output('python3 -u {0}'.format(argument), cwd=self.test_dir )
+            return self.osa.execute_command_output('python3 -u {0}'.format(argument), cwd=self.test_dir, print_output=print_output )
         else:
             raise Exception('Unknown OS')
 

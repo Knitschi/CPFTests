@@ -3,6 +3,8 @@ This module contains automated tests that operate on the SimpleOneLibCPFTestProj
 """
 
 import unittest
+import os
+import pprint
 
 from Sources.CPFBuildscripts.python import miscosaccess
 
@@ -29,18 +31,18 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         self.run_python_command('Sources/CPFBuildscripts/0_CopyScripts.py')
         self.run_python_command('1_Configure.py {0} --inherits {0}'.format(testprojectfixture.PARENT_CONFIG))
         self.run_python_command('2_Generate.py')
-        #self.run_python_command('3_Make.py --target pipeline')
+        self.run_python_command('3_Make.py --target pipeline')
 
         # versionCompatibilityChecks should not be available on visual studio solutions
         if self.is_visual_studio_config():
             with self.assertRaises(miscosaccess.CalledProcessError) as cm:
-                self.run_python_command('3_Make.py --target versionCompatibilityChecks')
+                # The reason to not print the output of the failing call ist, that MSBuild seems to parse
+                # its own output to determine if an error happened. When a nested MSBuild call fails, the
+                # parent call itself will also fail even if the nested call was supposed to fail like here.
+                self.run_python_command('3_Make.py --target versionCompatibilityChecks', print_output=miscosaccess.OutputMode.NEVER)
             # error MSB1009 says that a project is missing, which means the target does not exist.
             self.assertIn('MSBUILD : error MSB1009:', cm.exception.stdout)
 
-        with self.assertRaises(miscosaccess.CalledProcessError) as cm:
-            self.run_python_command('3_Make.py --target blub')
-        # error MSB1009 says that a project is missing, which means the target does not exist.
-        self.assertIn('Keine Regel', cm.exception.stdout)
+
 
 
