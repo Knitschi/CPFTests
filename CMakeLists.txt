@@ -7,39 +7,23 @@ cpfInitPackageProject(
 	CPFT
 )
 
-set( PYTHON_FILES
-    run_tests.py
+set( files
     __init__.py
-    ping.py
     acpftestproject_tests.py
     bcpftestproject_tests.py
+    documentation/CPFTests.dox
     misc_tests.py
+    ping.py
+    run_tests.py
     simpleonelibcpftestproject_tests.py
     testprojectfixture.py
 )
 
-set( DOCUMENTATION_FILES
-    documentation/CPFTests.dox
-)
+# Add the target.
+cpfAddFilePackage(${PACKAGE_NAME} "${files}")
 
-set( OTHER_FILES
-)
-
-
-# Put the files in directories in visual studio.
-source_group( ProjectTests FILES ${PROJECT_TESTS} )
-source_group( IntegrationTests FILES ${INTEGRATION_TESTS} )
-source_group( python FILES ${PYTHON_FILES} )
-source_group( documentation FILES ${DOCUMENTATION_FILES} )
-source_group( Other FILES ${OTHER_FILES} )
-
-# Finally add the target.
-set(sources ${PYTHON_FILES} ${DOCUMENTATION_FILES} ${OTHER_FILES})
-
-cpfAddFilePackage(${PACKAGE_NAME} "${sources}")
-
-set(dependedOnPackages CPFCMake CPFBuildscripts)
 
 # Add a test target
+set(dependedOnPackages CPFCMake CPFBuildscripts)
 cpfAssertDefinedMessage(CPF_PARENT_CONFIG "Error! Your config file is missing a definition of variable CPF_PARENT_CONFIG")
 cpfAddRunPython3TestTarget( ${PACKAGE_NAME} "run_tests.py" "\"${CPF_TEST_FILES_DIR}\" ${CPF_PARENT_CONFIG}" "${sources}" "${dependedOnPackages}" )
