@@ -14,5 +14,11 @@ class ExcecuteCommandCase(unittest.TestCase):
         """
         This test should verify, that execute_command_output() works with recursive calls.
         """
-        self.osa = miscosaccess.MiscOsAccess()
-        self.osa.execute_command_output('python -u -m Sources.CPFTests.ping')
+        osa = miscosaccess.MiscOsAccess()
+        system = osa.system()
+        if system == 'Windows':
+            return osa.execute_command_output('python -u -m Sources.CPFTests.ping')
+        elif system == 'Linux':
+            return osa.execute_command_output('python3 -u -m Sources.CPFTests.ping')
+        else:
+            raise Exception('Unknown OS')
