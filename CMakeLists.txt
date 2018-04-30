@@ -26,4 +26,12 @@ cpfAddFilePackage(${PACKAGE_NAME} "${files}")
 # Add a test target
 set(dependedOnPackages CPFCMake CPFBuildscripts)
 cpfAssertDefinedMessage(CPF_PARENT_CONFIG "Error! Your config file is missing a definition of variable CPF_PARENT_CONFIG")
-cpfAddRunPython3TestTarget( ${PACKAGE_NAME} "run_tests.py" "\"${CPF_TEST_FILES_DIR}\" ${CPF_PARENT_CONFIG}" "${sources}" "${dependedOnPackages}" )
+# The CPFTESTS_TEST_NAME variable can be specified to run only a subset of all tests. Its value should be set in the developers config file.
+# Running only one test is useful when adding new tests.
+# Examples:
+# CPFTESTS_TEST_NAME = ''                                                       -> run all tests
+# CPFTESTS_TEST_NAME = 'misc_tests'                                             -> run all tests in the misc tests module
+# CPFTESTS_TEST_NAME = 'misc_tests.ExcecuteCommandCase.test_execute_command'    -> runs only one test function
+#
+set(testScriptArgs  "test_dir=\"${CPF_TEST_FILES_DIR}\" parent_config=${CPF_PARENT_CONFIG} test_name=${CPFTESTS_TEST_NAME}")
+cpfAddRunPython3TestTarget( ${PACKAGE_NAME} run_tests.py ${testScriptArgs} "${files}" "${dependedOnPackages}" )
