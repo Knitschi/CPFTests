@@ -72,7 +72,7 @@ if __name__ == '__main__':
     # Run the tests
     test_loader = unittest.TestLoader()
     suite = test_loader.loadTestsFromName('Sources.CPFTests.' + test_name)
-    result = unittest.TextTestRunner().run(suite)
+    result = unittest.TextTestRunner(failfast=True).run(suite)
     sys.exit(not result.wasSuccessful())
 
 

@@ -25,6 +25,10 @@ class TestProjectFixture(unittest.TestCase):
     in the locally checked out and run CMakeProjectFramework repository.
     """
     def setUp(self):
+
+        # add a big fat line to help with manual output parsing when an error occurs.
+        print('########################### PROJECT TEST {0} #######################################'.format(self.project))
+
         self.fsa = filesystemaccess.FileSystemAccess()
         self.osa = miscosaccess.MiscOsAccess()
 
