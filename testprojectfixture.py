@@ -82,3 +82,10 @@ class TestProjectFixture(unittest.TestCase):
 
     def is_visual_studio_config(self):
         return PARENT_CONFIG == 'VS2017-shared' or PARENT_CONFIG == 'VS2017-static'
+
+    def is_linux_debug_config(self):
+        return PARENT_CONFIG == 'Gcc-shared-debug' or PARENT_CONFIG == 'Clang-shared-debug'
+
+    def is_clang_config(self):
+        return PARENT_CONFIG == 'Clang-static-release' or PARENT_CONFIG == 'Clang-shared-debug'
+
