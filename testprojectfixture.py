@@ -111,6 +111,9 @@ class TestProjectFixture(unittest.TestCase):
     def is_ninja_config(self):
         return PARENT_CONFIG == 'Clang-static-release'
 
+    def is_make_config(self):
+        return PARENT_CONFIG == 'Gcc-shared-debug' or PARENT_CONFIG == 'Clang-shared-debug'
+
     def is_msvc_or_debug_config(self):
         return self.is_visual_studio_config() or self.is_linux_debug_config()
 
@@ -138,7 +141,7 @@ class TestProjectFixture(unittest.TestCase):
         elif self.is_make_config():
             target_misses_signature = '*** No rule to make target'
         elif self.is_ninja_config():
-            target_misses_signature = ''
+            target_misses_signature = 'ninja: error: unknown target'
         else:
             raise Exception('Error! Missing case for current buildtool.')
         

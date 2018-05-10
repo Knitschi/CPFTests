@@ -86,9 +86,17 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         else:
             self.assert_targets_do_not_exist(msvc_specific_targets)
 
+        # make or ninja
+        make_or_ninja_specific_targets = [
+            'install',
+        ]
+        if self.is_make_config() or self.is_ninja_config():
+            self.assert_targets_build(make_or_ninja_specific_targets)
+        else:
+            self.assert_targets_do_not_exist(make_or_ninja_specific_targets)
+
         # Clang
         linux_clang_specific_targets = [
-            'install',
             'clang-tidy_MyLib',
         ]
         if self.is_clang_config():
