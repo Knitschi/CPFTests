@@ -57,7 +57,6 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
             'pipeline',
             'doxygen',
             'distributionPackages',
-            'dynamicAnalysis',
             'runAllTests',
             'runFastTests',
             'staticAnalysis',
@@ -89,13 +88,22 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
 
         # Clang
         linux_clang_specific_targets = [
-            'install'
-            'clang-tidy_MyLib'
+            'install',
+            'clang-tidy_MyLib',
         ]
         if self.is_clang_config():
             self.assert_targets_build(linux_clang_specific_targets)
         else:
             self.assert_targets_do_not_exist(linux_clang_specific_targets)
+
+        # Debug only targets
+        msvc_or_debug_specific_targets = [
+            'dynamicAnalysis',
+        ]
+        if self.is_msvc_or_debug_config():
+            self.assert_targets_build(msvc_or_debug_specific_targets)
+        else:
+            self.assert_targets_do_not_exist(msvc_or_debug_specific_targets)
 
         # Linux debug info
         linux_debug_specific_targets = [
