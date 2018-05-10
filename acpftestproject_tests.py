@@ -17,15 +17,12 @@ class ACPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         super(ACPFTestProjectFixture, self).setUp()
 
 
-    def test_build_works(self):
+    def test_pipeline_works(self):
         """
         Check that the pipeline target builds.
         """
-        self.run_python_command('Sources/CPFBuildscripts/0_CopyScripts.py')
-        self.run_python_command('1_Configure.py {0} --inherits {0}'.format(testprojectfixture.PARENT_CONFIG))
-        self.run_python_command('2_Generate.py')
-        self.run_python_command('3_Make.py --target pipeline')
+        # Setup
+        self.generate_project()
 
-        # Check that the dynamicAnalysis target exists for gcc-debug-shared
-        if testprojectfixture.PARENT_CONFIG == 'Gcc-shared-debug':
-            self.run_python_command('3_Make.py --target dynamicAnalysis')
+        # Test the pipeline works
+        self.build_target('pipeline')

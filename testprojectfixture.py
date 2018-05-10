@@ -27,7 +27,7 @@ class TestProjectFixture(unittest.TestCase):
     def setUp(self):
 
         # add a big fat line to help with manual output parsing when an error occurs.
-        print('#### PROJECT TEST {0} - {1} ####'.format(self.project,self._testMethodName))
+        print('-- Run test: {0} - {1} '.format(self.project,self._testMethodName))
 
         self.fsa = filesystemaccess.FileSystemAccess()
         self.osa = miscosaccess.MiscOsAccess()
@@ -39,7 +39,7 @@ class TestProjectFixture(unittest.TestCase):
             # have the project still available for debugging if the test fails.
             self.fsa.rmtree(self.test_dir)
         self.fsa.mkdirs(BASE_TEST_DIR)
-        self.osa.execute_command_output('git clone --recursive {0}'.format(self.repository), cwd=BASE_TEST_DIR, print_output=OutputMode.ON_ERROR)
+        self.osa.execute_command_output('git clone --recursive {0}'.format(self.repository), cwd=BASE_TEST_DIR, print_output=miscosaccess.OutputMode.ON_ERROR)
         
         # Replace the CPFCMake and CPFBuildscripts packages in the test project with the ones
         # that are used by this repository. This makes sure that we test the versions that
@@ -63,19 +63,19 @@ class TestProjectFixture(unittest.TestCase):
         shutil.copytree(str(this_package_dir), str(test_project_package_dir))
         # We also commit the changes to make sure the repository is not dirty
         # which is expected after a "fresh" checkout.
-        self.osa.execute_command('git commit --allow-empty . -m "Set package content to local developer files."', cwd=test_project_package_dir, print_output=OutputMode.ON_ERROR)
-        self.osa.execute_command('git commit --allow-empty . -m "Update {0}"'.format(package), cwd=self.test_dir, print_output=OutputMode.ON_ERROR)
+        self.osa.execute_command_output('git commit --allow-empty . -m "Set package content to local developer files."', cwd=test_project_package_dir, print_output=miscosaccess.OutputMode.ON_ERROR)
+        self.osa.execute_command_output('git commit --allow-empty . -m "Update {0}"'.format(package), cwd=self.test_dir, print_output=miscosaccess.OutputMode.ON_ERROR)
 
 
-    def run_python_command(self, argument, print_output=miscosaccess.OutputMode.ON_ERROR):
+    def run_python_command(self, argument, print_output=miscosaccess.OutputMode.ON_ERROR, print_command=False):
         """
         The function runs python3 on Linux and python on Windows.
         """
         system = self.osa.system()
         if system == 'Windows':
-            return self.osa.execute_command_output('python -u {0}'.format(argument), cwd=self.test_dir, print_output=print_output )
+            return self.osa.execute_command_output('python -u {0}'.format(argument), cwd=self.test_dir, print_output=print_output, print_command=print_command )
         elif system == 'Linux':
-            return self.osa.execute_command_output('python3 -u {0}'.format(argument), cwd=self.test_dir, print_output=print_output )
+            return self.osa.execute_command_output('python3 -u {0}'.format(argument), cwd=self.test_dir, print_output=print_output, print_command=print_command )
         else:
             raise Exception('Unknown OS')
 
@@ -88,4 +88,42 @@ class TestProjectFixture(unittest.TestCase):
 
     def is_clang_config(self):
         return PARENT_CONFIG == 'Clang-static-release' or PARENT_CONFIG == 'Clang-shared-debug'
+
+
+    def assert_targets_build(self, targets):
+        for target in targets:
+            command = '3_Make.py --target {0}'.format(target)
+            print(command) # We do our own abbreviated command printing here.
+            self.run_python_command(command)
+
+
+    def build_target(self, target, config=None):
+        command = '3_Make.py --target {0}'.format(target)
+        if config:
+            command += ' --config {0}'.format(config)
+        print(command) # We do our own abbreviated command printing here.
+        outputlist = self.run_python_command(command)
+        return '\n'.join(outputlist)
+
+
+    def assert_targets_do_not_exist(self, targets):
+        for target in targets:
+            with self.assertRaises(miscosaccess.CalledProcessError) as cm:
+                # The reason to not print the output of the failing call ist, that MSBuild seems to parse
+                # its own output to determine if an error happened. When a nested MSBuild call fails, the
+                # parent call itself will also fail even if the nested call was supposed to fail like here.
+                command = '3_Make.py --target {0}'.format(target)
+                print(command) # We do our own abbreviated command printing here.
+                self.run_python_command(command, print_output=miscosaccess.OutputMode.NEVER)
+            # error MSB1009 says that a project is missing, which means the target does not exist.
+            self.assertIn('MSBUILD : error MSB1009:', cm.exception.stdout)
+
+
+    def generate_project(self):
+        """
+        Setup helper that runs all steps up to the generate step.
+        """
+        self.run_python_command('Sources/CPFBuildscripts/0_CopyScripts.py')
+        self.run_python_command('1_Configure.py {0} --inherits {0}'.format(PARENT_CONFIG))
+        self.run_python_command('2_Generate.py')
 
