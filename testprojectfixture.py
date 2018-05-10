@@ -27,7 +27,7 @@ class TestProjectFixture(unittest.TestCase):
     def setUp(self):
 
         # add a big fat line to help with manual output parsing when an error occurs.
-        print('########################### PROJECT TEST {0} #######################################'.format(self.project))
+        print('#### PROJECT TEST {0} - {1} ####'.format(self.project,self._testMethodName))
 
         self.fsa = filesystemaccess.FileSystemAccess()
         self.osa = miscosaccess.MiscOsAccess()
@@ -39,7 +39,7 @@ class TestProjectFixture(unittest.TestCase):
             # have the project still available for debugging if the test fails.
             self.fsa.rmtree(self.test_dir)
         self.fsa.mkdirs(BASE_TEST_DIR)
-        self.osa.execute_command_output('git clone --recursive {0}'.format(self.repository), cwd=BASE_TEST_DIR)
+        self.osa.execute_command_output('git clone --recursive {0}'.format(self.repository), cwd=BASE_TEST_DIR, print_output=OutputMode.ON_ERROR)
         
         # Replace the CPFCMake and CPFBuildscripts packages in the test project with the ones
         # that are used by this repository. This makes sure that we test the versions that
@@ -63,11 +63,11 @@ class TestProjectFixture(unittest.TestCase):
         shutil.copytree(str(this_package_dir), str(test_project_package_dir))
         # We also commit the changes to make sure the repository is not dirty
         # which is expected after a "fresh" checkout.
-        self.osa.execute_command('git commit --allow-empty . -m "Set package content to local developer files."', cwd=test_project_package_dir)
-        self.osa.execute_command('git commit --allow-empty . -m "Update {0}"'.format(package), cwd=self.test_dir)
+        self.osa.execute_command('git commit --allow-empty . -m "Set package content to local developer files."', cwd=test_project_package_dir, print_output=OutputMode.ON_ERROR)
+        self.osa.execute_command('git commit --allow-empty . -m "Update {0}"'.format(package), cwd=self.test_dir, print_output=OutputMode.ON_ERROR)
 
 
-    def run_python_command(self, argument, print_output=miscosaccess.OutputMode.ALWAYS):
+    def run_python_command(self, argument, print_output=miscosaccess.OutputMode.ON_ERROR):
         """
         The function runs python3 on Linux and python on Windows.
         """

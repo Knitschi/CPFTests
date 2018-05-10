@@ -28,6 +28,13 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
             self.run_python_command('3_Make.py --target {0}'.format(target))
 
 
+    def build_target(self, target, config=None):
+        command = '3_Make.py --target {0}'.format(target)
+        if config:
+            command += ' --config {0}'.format(config)
+        return self.run_python_command(command)
+
+
     def assert_targets_do_not_exist(self, targets):
         for target in targets:
             with self.assertRaises(miscosaccess.CalledProcessError) as cm:
@@ -69,31 +76,34 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         self.run_python_command('3_Make.py --target runFastTests_MyLib')
 
 
-        # Check existence and non-existence of targets that
-        # are only available for certain configurations.
-        visual_studio_debug_specific_targets = [
-            'opencppcoverage_MyLib'
-        ]
+        # Check existence and non-existence of targets that are only available for certain configurations.
+        
+        # MSVC
+        if self.is_visual_studio_config():
+            # check that the tool is run for the debug configuration.
+            output = self.build_target('opencppcoverage_MyLib', config='Debug')
+            opencppcoverage_output_signature = 'OpenCppCoverage.exe" --export_type=binary' # This is a part of the command line call for the tool.
+            self.assertIn(opencppcoverage_output_signature, output)
+            # check that the tool is not run for the release configuration.
+            output = self.build_target('opencppcoverage_MyLib', config='Release')
+            self.assertNotIn(opencppcoverage_output_signature, output)
+        else:
+            self.assert_targets_do_not_exist('opencppcoverage_MyLib')
 
+        # Clang
         linux_clang_specific_targets = [
             'clang-tidy_MyLib'
         ]
-
-        linux_debug_specific_targets = [
-            'valgrind_MyLib',
-            'abi-compliance-checker-report_MyLib'
-        ]
-
-        if self.is_visual_studio_config():
-            self.assert_targets_build(visual_studio_debug_specific_targets)
-        else:
-            self.assert_targets_do_not_exist(visual_studio_debug_specific_targets)
-
         if self.is_clang_config():
             self.assert_targets_build(linux_clang_specific_targets)
         else:
             self.assert_targets_do_not_exist(linux_clang_specific_targets)
 
+        # Linux debug info
+        linux_debug_specific_targets = [
+            'valgrind_MyLib',
+            'abi-compliance-checker-report_MyLib'
+        ]
         if self.is_linux_debug_config():
             self.assert_targets_build(linux_debug_specific_targets)
         else:
