@@ -33,5 +33,5 @@ cpfAssertDefinedMessage(CPF_PARENT_CONFIG "Error! Your config file is missing a 
 # CPFTESTS_TEST_NAME = 'misc_tests'                                             -> run all tests in the misc tests module
 # CPFTESTS_TEST_NAME = 'misc_tests.ExcecuteCommandCase.test_execute_command'    -> runs only one test function
 #
-set(testScriptArgs  "test_dir=\"${CPF_TEST_FILES_DIR}\" parent_config=${CPF_PARENT_CONFIG} test_name=${CPFTESTS_TEST_NAME}")
+set(testScriptArgs  "test_dir=\"${CPF_TEST_FILES_DIR}/$<CONFIG>\" parent_config=${CPF_PARENT_CONFIG} test_name=${CPFTESTS_TEST_NAME}")
 cpfAddRunPython3TestTarget( ${PACKAGE_NAME} run_tests.py ${testScriptArgs} "${files}" "${dependedOnPackages}" )
