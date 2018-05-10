@@ -60,6 +60,7 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
             'runAllTests',
             'runFastTests',
             'staticAnalysis',
+            'install',
         ]
         self.assert_targets_build(global_targets)
 
@@ -78,22 +79,12 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         # Check existence and non-existence of targets that are only available for certain configurations.
         # MSVC
         msvc_specific_targets = [
-            'INSTALL',
             'opencppcoverage_MyLib',
         ]
         if self.is_visual_studio_config():
             self.assert_targets_build(msvc_specific_targets)
         else:
             self.assert_targets_do_not_exist(msvc_specific_targets)
-
-        # make or ninja
-        make_or_ninja_specific_targets = [
-            'install',
-        ]
-        if self.is_make_config() or self.is_ninja_config():
-            self.assert_targets_build(make_or_ninja_specific_targets)
-        else:
-            self.assert_targets_do_not_exist(make_or_ninja_specific_targets)
 
         # Clang
         linux_clang_specific_targets = [
