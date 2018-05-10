@@ -100,8 +100,9 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         # Linux debug info
         linux_debug_specific_targets = [
             'valgrind_MyLib',
-            'abi-compliance-checker',
-            'abi-compliance-checker_MyLib',
+            # how to do this ?
+            #'abi-compliance-checker',
+            #'abi-compliance-checker_MyLib',
         ]
         if self.is_linux_debug_config():
             self.assert_targets_build(linux_debug_specific_targets)
@@ -129,8 +130,10 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
             output = self.build_target('opencppcoverage_MyLib', config='Release')
             self.assertNotIn(opencppcoverage_output_signature, output)
 
-
-
+"""
+    how can we test do this? how can we download previous reports?
+    def test_abi_compliance_checker_target_works(self):
+"""
 
 
 
