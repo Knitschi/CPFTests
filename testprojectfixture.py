@@ -4,6 +4,7 @@ This module contains a testcase class the can be used to run tests
 on a cpf test project.
 """
 
+import os
 import unittest
 from pathlib import PurePosixPath
 import shutil
@@ -73,9 +74,24 @@ class TestProjectFixture(unittest.TestCase):
         """
         system = self.osa.system()
         if system == 'Windows':
-            return self.osa.execute_command_output('python -u {0}'.format(argument), cwd=self.test_dir, print_output=print_output, print_command=print_command )
+            return self.osa.execute_command_output(
+                'python -u {0}'.format(argument), 
+                cwd=self.test_dir, 
+                print_output=print_output, 
+                print_command=print_command 
+                )
         elif system == 'Linux':
-            return self.osa.execute_command_output('python3 -u {0}'.format(argument), cwd=self.test_dir, print_output=print_output, print_command=print_command )
+            # Force english language via environment variable,
+            # so we can parse the output reliably.
+            environment = os.environ
+            environment['LANG'] = "en_US.UTF-8" 
+            return self.osa.execute_command_output(
+                'python3 -u {0}'.format(argument),
+                cwd=self.test_dir,
+                print_output=print_output,
+                print_command=print_command,
+                env=environment 
+                )
         else:
             raise Exception('Unknown OS')
 
@@ -89,6 +105,11 @@ class TestProjectFixture(unittest.TestCase):
     def is_clang_config(self):
         return PARENT_CONFIG == 'Clang-static-release' or PARENT_CONFIG == 'Clang-shared-debug'
 
+    def is_make_config(self):
+        return PARENT_CONFIG == 'Clang-shared-debug'or PARENT_CONFIG == 'Gcc-shared-debug'
+
+    def is_ninja_config(self):
+        return PARENT_CONFIG == 'Clang-static-release'
 
     def assert_targets_build(self, targets):
         for target in targets:
@@ -107,6 +128,17 @@ class TestProjectFixture(unittest.TestCase):
 
 
     def assert_targets_do_not_exist(self, targets):
+        
+        target_misses_signature = ''
+        if self.is_visual_studio_config():
+            target_misses_signature = 'MSBUILD : error MSB1009:'
+        elif self.is_make_config():
+            target_misses_signature = '*** No rule to make target'
+        elif self.is_ninja_config():
+            target_misses_signature = ''
+        else:
+            raise Exception('Error! Missing case for current buildtool.')
+        
         for target in targets:
             with self.assertRaises(miscosaccess.CalledProcessError) as cm:
                 # The reason to not print the output of the failing call ist, that MSBuild seems to parse
@@ -116,7 +148,7 @@ class TestProjectFixture(unittest.TestCase):
                 print(command) # We do our own abbreviated command printing here.
                 self.run_python_command(command, print_output=miscosaccess.OutputMode.NEVER)
             # error MSB1009 says that a project is missing, which means the target does not exist.
-            self.assertIn('MSBUILD : error MSB1009:', cm.exception.stdout)
+            self.assertIn(target_misses_signature, cm.exception.stdout)
 
 
     def generate_project(self):

@@ -61,7 +61,6 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
             'runAllTests',
             'runFastTests',
             'staticAnalysis',
-            'INSTALL',
         ]
         self.assert_targets_build(global_targets)
 
@@ -80,7 +79,8 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         # Check existence and non-existence of targets that are only available for certain configurations.
         # MSVC
         msvc_specific_targets = [
-            'opencppcoverage_MyLib'
+            'INSTALL',
+            'opencppcoverage_MyLib',
         ]
         if self.is_visual_studio_config():
             self.assert_targets_build(msvc_specific_targets)
@@ -89,6 +89,7 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
 
         # Clang
         linux_clang_specific_targets = [
+            'install'
             'clang-tidy_MyLib'
         ]
         if self.is_clang_config():
@@ -99,7 +100,8 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         # Linux debug info
         linux_debug_specific_targets = [
             'valgrind_MyLib',
-            'abi-compliance-checker-report_MyLib'
+            'abi-compliance-checker',
+            'abi-compliance-checker_MyLib',
         ]
         if self.is_linux_debug_config():
             self.assert_targets_build(linux_debug_specific_targets)
