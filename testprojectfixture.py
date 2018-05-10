@@ -111,6 +111,9 @@ class TestProjectFixture(unittest.TestCase):
     def is_ninja_config(self):
         return PARENT_CONFIG == 'Clang-static-release'
 
+    def is_msvc_or_debug_config(self):
+        return self.is_visual_studio_config() or self.is_linux_debug_config()
+
     def assert_targets_build(self, targets):
         for target in targets:
             command = '3_Make.py --target {0}'.format(target)
