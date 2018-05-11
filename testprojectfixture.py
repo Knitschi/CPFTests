@@ -25,6 +25,11 @@ def prepareTestProject(repository, project):
     current versions of CPFCMake and CPFBuildscripts into the test project, to make
     sure that the tests test the code that comes with this repository and not the
     the versions that are included in the test projects.
+
+    To save time, test projects are only cloned once for all tests.
+    All source files in the test project should be left unchanged to
+    prevent coupling of single tests. All Generated files are deleted
+    before each test, so they can be changed by test cases.
     """
 
     print('-- Prepare test-project: {0}'.format(project))
