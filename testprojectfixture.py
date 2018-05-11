@@ -226,7 +226,8 @@ class TestProjectFixture(unittest.TestCase):
         Builds the given target and raises an exception if the given signature
         can be found in the build output.
         """
-        if self.output_contains_signature(output, signature):
+        missing_strings = self.find_missing_signature_strings(output, signature)
+        if not missing_strings:
             raise Exception('Test Error! Signature "{0}" was found in build output of target {1}.'.format(signature, target) )
 
 
