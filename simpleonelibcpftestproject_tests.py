@@ -5,6 +5,7 @@ This module contains automated tests that operate on the SimpleOneLibCPFTestProj
 import unittest
 import os
 import pprint
+import types
 
 from Sources.CPFBuildscripts.python import miscosaccess
 
@@ -49,9 +50,9 @@ target_signatures = {
     DYNAMIC_ANALYSIS_TARGET : [], # bundle target only
     INSTALL_TARGET : [], # bundle target only
     ABI_COMPLIANCE_CHECKER_TARGET : [], # bundle target only
-    MYLIB_TARGET : [],
-    MYLIB_TESTS_TARGET : [],
-    MYLIB_FIXTURES_TARGET : [],
+    MYLIB_TARGET : lambda fixture: getBinaryTargetSignature(fixture, 'MyLib'),
+    MYLIB_TESTS_TARGET : lambda fixture: getBinaryTargetSignature(fixture, 'MyLib_tests'),
+    MYLIB_FIXTURES_TARGET : lambda fixture: getBinaryTargetSignature(fixture, 'MyLib_fixture'),
     DISTRIBUTION_PACKAGES_MYLIB_TARGET : ['CPack: Create package'],
     INSTALL_MYLIB_TARGET : ['-- Installing: '],
     RUN_ALL_TESTS_MYLIB_TARGET : ['$<TARGET_FILE:MyLib_tests> -TestFilesDir', '--gtest_filter=*'],
@@ -63,6 +64,16 @@ target_signatures = {
 }
 
 
+# config dependent signatures:
+def getBinaryTargetSignature(test_fixture, binary_target):
+    if test_fixture.is_visual_studio_config():
+        return ['{0}.vcxproj'.format(binary_target)]
+    elif test_fixture.is_make_config():
+        return ['']
+    elif test_fixture.is_ninja_config():
+        return ['']
+    else:
+        raise Exception('Missing case in conditional')
 
 
 
@@ -86,11 +97,18 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         super(SimpleOneLibCPFTestProjectFixture, self).setUp(self.project, self.cpf_root_dir)
 
     def assert_output_contains_signature(self, output, target):
-        super(SimpleOneLibCPFTestProjectFixture, self).assert_output_contains_signature(output, target, target_signatures[target])
+        super(SimpleOneLibCPFTestProjectFixture, self).assert_output_contains_signature(output, target, self.get_signature(target))
+
+    def get_signature(self, target):
+        element = target_signatures[target]
+        if isinstance(element, types.FunctionType):
+            signature = (element(self))
+        else:
+            signature = element
+        return signature
 
     def assert_output_has_not_signature(self, output, target):
-        super(SimpleOneLibCPFTestProjectFixture, self).assert_output_has_not_signature(output, target, target_signatures[target])
-
+        super(SimpleOneLibCPFTestProjectFixture, self).assert_output_has_not_signature(output, target, self.get_signature(target))
 
     def test_configure_script(self):
         """
