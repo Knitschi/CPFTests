@@ -10,6 +10,15 @@ class ExcecuteCommandCase(unittest.TestCase):
     This test case is used to test the execute_command_output() function.
     """
 
+    @classmethod
+    def setUpClass(cls):
+        print('-- ExcecuteCommandCase')
+
+    def setUp(self):
+        # add a big fat line to help with manual output parsing when an error occurs.
+        print('-- Run test: {0}'.format(self._testMethodName))
+
+
     def test_execute_command(self):
         """
         This test should verify, that execute_command_output() works with recursive calls.
@@ -22,3 +31,4 @@ class ExcecuteCommandCase(unittest.TestCase):
             return osa.execute_command_output('python3 -u -m Sources.CPFTests.ping')
         else:
             raise Exception('Unknown OS')
+

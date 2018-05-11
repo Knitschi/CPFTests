@@ -11,12 +11,20 @@ class BCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
     A fixture for tests that require a project with multiple
     internal library packages.
     """
-    def setUp(self):
-        self.project = 'BCPFTestProject'
-        self.repository = 'https://github.com/Knitschi/BCPFTestProject.git'
-        super(BCPFTestProjectFixture, self).setUp()
 
-   
+    cpf_root_dir = ''
+    project = ''
+
+    @classmethod
+    def setUpClass(cls):
+        cls.project = 'BCPFTestProject'
+        cls.cpf_root_dir = testprojectfixture.prepareTestProject('https://github.com/Knitschi/BCPFTestProject.git', cls.project)
+
+
+    def setUp(self):
+        super(BCPFTestProjectFixture, self).setUp(self.project, self.cpf_root_dir)  
+
+
     def test_pipeline_works(self):
         """
         Check that the pipeline target builds.

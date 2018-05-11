@@ -11,10 +11,18 @@ class ACPFTestProjectFixture(testprojectfixture.TestProjectFixture):
     A fixture for tests that require a project with multiple
     internal and external packages.
     """
+
+    cpf_root_dir = ''
+    project = ''
+
+    @classmethod
+    def setUpClass(cls):
+        cls.project = 'ACPFTestProject'
+        cls.cpf_root_dir = testprojectfixture.prepareTestProject('https://github.com/Knitschi/ACPFTestProject.git', cls.project)
+
+
     def setUp(self):
-        self.project = 'ACPFTestProject'
-        self.repository = 'https://github.com/Knitschi/ACPFTestProject.git'
-        super(ACPFTestProjectFixture, self).setUp()
+        super(ACPFTestProjectFixture, self).setUp(self.project, self.cpf_root_dir)        
 
 
     def test_pipeline_works(self):

@@ -17,10 +17,18 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
     A fixture for tests that can be done with a minimal project that has no test executable and 
     only a library package.
     """
+
+    cpf_root_dir = ''
+    project = ''
+
+    @classmethod
+    def setUpClass(cls):
+        cls.project = 'SimpleOneLibCPFTestProject'
+        cls.cpf_root_dir = testprojectfixture.prepareTestProject('https://github.com/Knitschi/SimpleOneLibCPFTestProject.git', cls.project)
+
+
     def setUp(self):
-        self.project = 'SimpleOneLibCPFTestProject'
-        self.repository = 'https://github.com/Knitschi/SimpleOneLibCPFTestProject.git'
-        super(SimpleOneLibCPFTestProjectFixture, self).setUp()
+        super(SimpleOneLibCPFTestProjectFixture, self).setUp(self.project, self.cpf_root_dir)
 
 
     def test_configure_script(self):
@@ -38,7 +46,7 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         # Test overriding existing variables and setting variables with whitespaces.
         self.run_python_command('1_Configure.py MyConfig --inherits {0} -D CPF_ENABLE_DOXYGEN_TARGET=OFF -D BLUB="bli bla"'.format(testprojectfixture.PARENT_CONFIG))
         self.run_python_command('2_Generate.py')
-        cmakeCacheVariables = self.osa.execute_command_output('cmake Generated/MyConfig -L', cwd=self.test_dir, print_output=False, print_command=False)
+        cmakeCacheVariables = self.osa.execute_command_output('cmake Generated/MyConfig -L', cwd=self.cpf_root_dir, print_output=False, print_command=False)
         # Note that variables that are added via 1_Configure.py are always of type string
         self.assertIn('CPF_ENABLE_DOXYGEN_TARGET:STRING=OFF', cmakeCacheVariables)
         self.assertIn('BLUB:STRING=bli bla', cmakeCacheVariables)
