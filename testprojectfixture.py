@@ -16,6 +16,7 @@ from Sources.CPFBuildscripts.python import filelocations
 
 BASE_TEST_DIR = ''
 PARENT_CONFIG = ''
+COMPILER_CONFIG = ''
 
 
 def prepareTestProject(repository, project):
@@ -93,6 +94,29 @@ class TestProjectFixture(unittest.TestCase):
         # add a big fat line to help with manual output parsing when an error occurs.
         print('-- Run test: {0}'.format(self._testMethodName))
 
+    def generate_project(self):
+        """
+        Setup helper that runs all steps up to the generate step.
+        Previously existing configurations or generated files are deleted.
+        """
+        self.cleanup_generated_files()
+
+        self.run_python_command('Sources/CPFBuildscripts/0_CopyScripts.py')
+        self.run_python_command('1_Configure.py {0} --inherits {0}'.format(PARENT_CONFIG))
+        command = '2_Generate.py {0}'.format(PARENT_CONFIG)
+        print(command)
+        self.run_python_command(command)
+
+
+    def cleanup_generated_files(self):
+        # We delete all generated files to make sure they do not interfere with the test case.
+        config_dir = self.cpf_root_dir.joinpath('Configuration')
+        if self.fsa.exists(config_dir):
+            self.fsa.rmtree(config_dir)
+
+        generated_dir = self.cpf_root_dir.joinpath('Generated')
+        if self.fsa.exists(generated_dir):
+            self.fsa.rmtree(generated_dir)
 
     def run_python_command(self, argument, print_output=miscosaccess.OutputMode.ON_ERROR, print_command=False):
         """
@@ -125,6 +149,9 @@ class TestProjectFixture(unittest.TestCase):
     def is_visual_studio_config(self):
         return PARENT_CONFIG == 'VS2017-shared' or PARENT_CONFIG == 'VS2017-static'
 
+    def is_debug_compiler_config(self):
+        return COMPILER_CONFIG == 'Debug'
+
     def is_linux_debug_config(self):
         return PARENT_CONFIG == 'Gcc-shared-debug' or PARENT_CONFIG == 'Clang-shared-debug'
 
@@ -132,7 +159,7 @@ class TestProjectFixture(unittest.TestCase):
         return PARENT_CONFIG == 'Clang-static-release' or PARENT_CONFIG == 'Clang-shared-debug'
 
     def is_make_config(self):
-        return PARENT_CONFIG == 'Clang-shared-debug'or PARENT_CONFIG == 'Gcc-shared-debug'
+        return PARENT_CONFIG == 'Clang-shared-debug' or PARENT_CONFIG == 'Gcc-shared-debug'
 
     def is_ninja_config(self):
         return PARENT_CONFIG == 'Clang-static-release'
@@ -143,24 +170,20 @@ class TestProjectFixture(unittest.TestCase):
     def is_msvc_or_debug_config(self):
         return self.is_visual_studio_config() or self.is_linux_debug_config()
 
-    def assert_targets_build(self, targets):
+    def build_targets(self, targets):
         for target in targets:
-            command = '3_Make.py --target {0}'.format(target)
-            print(command) # We do our own abbreviated command printing here.
-            self.run_python_command(command)
+            self.build_target(target)
 
-
-    def build_target(self, target, config=None):
+    def build_target(self, target):
         command = '3_Make.py --target {0}'.format(target)
-        if config:
-            command += ' --config {0}'.format(config)
+        if self.is_visual_studio_config():
+            command += ' --config {0}'.format(COMPILER_CONFIG)
         print(command) # We do our own abbreviated command printing here.
         outputlist = self.run_python_command(command)
         return '\n'.join(outputlist)
 
-
-    def assert_targets_do_not_exist(self, targets):
-        
+    
+    def assert_target_does_not_exist(self, target):
         target_misses_signature = ''
         if self.is_visual_studio_config():
             target_misses_signature = 'MSBUILD : error MSB1009:'
@@ -171,35 +194,46 @@ class TestProjectFixture(unittest.TestCase):
         else:
             raise Exception('Error! Missing case for current buildtool.')
         
+        with self.assertRaises(miscosaccess.CalledProcessError) as cm:
+            # The reason to not print the output of the failing call ist, that MSBuild seems to parse
+            # its own output to determine if an error happened. When a nested MSBuild call fails, the
+            # parent call itself will also fail even if the nested call was supposed to fail like here.
+            command = '3_Make.py --target {0}'.format(target)
+            print(command) # We do our own abbreviated command printing here.
+            self.run_python_command(command, print_output=miscosaccess.OutputMode.NEVER)
+        # error MSB1009 says that a project is missing, which means the target does not exist.
+        if not target_misses_signature in cm.exception.stdout:
+            raise Exception('Test Error! Target {0} should not exist, but it did.'.format(target))
+        
+
+    def assert_targets_do_not_exist(self, targets):
         for target in targets:
-            with self.assertRaises(miscosaccess.CalledProcessError) as cm:
-                # The reason to not print the output of the failing call ist, that MSBuild seems to parse
-                # its own output to determine if an error happened. When a nested MSBuild call fails, the
-                # parent call itself will also fail even if the nested call was supposed to fail like here.
-                command = '3_Make.py --target {0}'.format(target)
-                print(command) # We do our own abbreviated command printing here.
-                self.run_python_command(command, print_output=miscosaccess.OutputMode.NEVER)
-            # error MSB1009 says that a project is missing, which means the target does not exist.
-            self.assertIn(target_misses_signature, cm.exception.stdout)
+            self.assert_target_does_not_exist(target)
 
 
-    def generate_project(self):
+    def assert_output_contains_signature(self, output, target, signature):
         """
-        Setup helper that runs all steps up to the generate step.
-        Previously existing configurations or generated files are deleted.
+        Builds the target and looks for the signature in its output.
+        If the signature is not int the output it raises an exception.
         """
-        # We delete all generated files to make sure they do not interfere with the test case.
-        config_dir = self.cpf_root_dir.joinpath('Configuration')
-        if self.fsa.exists(config_dir):
-            self.fsa.rmtree(config_dir)
+        missing_strings = self.find_missing_signature_strings(output, signature)
+        if missing_strings:
+            raise Exception('Test Error! Signature parts "{0}" were NOT found in build output of target {1}.'.format(missing_strings, target) )
 
-        generated_dir = self.cpf_root_dir.joinpath('Generated')
-        if self.fsa.exists(generated_dir):
-            self.fsa.rmtree(generated_dir)
 
-        self.run_python_command('Sources/CPFBuildscripts/0_CopyScripts.py')
-        self.run_python_command('1_Configure.py {0} --inherits {0}'.format(PARENT_CONFIG))
-        command = '2_Generate.py {0}'.format(PARENT_CONFIG)
-        print(command)
-        self.run_python_command(command)
+    def assert_output_has_not_signature(self, output, target, signature):
+        """
+        Builds the given target and raises an exception if the given signature
+        can be found in the build output.
+        """
+        if self.output_contains_signature(output, signature):
+            raise Exception('Test Error! Signature "{0}" was found in build output of target {1}.'.format(signature, target) )
+
+
+    def find_missing_signature_strings(self, output, signature):
+        missing_strings = []
+        for string in signature:
+            if not string in output:
+                return missing_strings.append(string)
+        return missing_strings
 

@@ -11,6 +11,63 @@ from Sources.CPFBuildscripts.python import miscosaccess
 from . import testprojectfixture
 
 
+# Target names
+PIPELINE_TARGET = 'pipeline'
+DOXYGEN_TARGET = 'doxygen'
+DISTRIBUTION_PACKAGES_TARGET = 'distributionPackages'
+RUN_ALL_TESTS_TARGET = 'runAllTests'
+RUN_FAST_TESTS_TARGET = 'runFastTests'
+STATIC_ANALYSIS_TARGET = 'staticAnalysis'
+DYNAMIC_ANALYSIS_TARGET = 'dynamicAnalysis'
+INSTALL_TARGET = 'install'
+ABI_COMPLIANCE_CHECKER_TARGET = 'abi-compliance-checker'
+
+MYLIB_TARGET = 'MyLib'
+MYLIB_TESTS_TARGET = 'MyLib_tests'
+MYLIB_FIXTURES_TARGET = 'MyLib_fixtures'
+DISTRIBUTION_PACKAGES_MYLIB_TARGET = 'distributionPackages_MyLib'
+INSTALL_MYLIB_TARGET = 'install_MyLib'
+RUN_ALL_TESTS_MYLIB_TARGET = 'runAllTests_MyLib'
+RUN_FAST_TESTS_MYLIB_TARGET = 'runFastTests_MyLib'
+OPENCPPCOVERAGE_MYLIB_TARGET = 'opencppcoverage_MyLib'
+CLANG_TIDY_MYLIB_TARGET = 'clang-tidy_MyLib'
+VALGRIND_MYLIB_TARGET = 'valgrind_MyLib'
+ABI_COMPLIANCE_CHECKER_MYLIB_TARGET = 'abi-compliance-checker_MyLib'
+
+
+# build output signatures
+# To verify that the build has executed a certain task, we parse the
+# command line output for these signatures. The output must contain
+# all the strings given by the signature to verify that the tool has been
+# run.
+target_signatures = {
+    OPENCPPCOVERAGE_MYLIB_TARGET : ['OpenCppCoverage.exe" --export_type=binary'],
+    DOXYGEN_TARGET : ['doxygen.exe', 'doxyindexer.exe', 'tred.exe','lookup cache used'],
+    DISTRIBUTION_PACKAGES_TARGET : ['CPack: Create package'],
+    RUN_ALL_TESTS_TARGET : [],
+    RUN_FAST_TESTS_TARGET : [],
+    STATIC_ANALYSIS_TARGET : [],
+    DYNAMIC_ANALYSIS_TARGET : [],
+    INSTALL_TARGET : [],
+    ABI_COMPLIANCE_CHECKER_TARGET : [],
+    MYLIB_TARGET : [],
+    MYLIB_TESTS_TARGET : [],
+    MYLIB_FIXTURES_TARGET : [],
+    DISTRIBUTION_PACKAGES_MYLIB_TARGET : [],
+    INSTALL_MYLIB_TARGET : [],
+    RUN_ALL_TESTS_MYLIB_TARGET : [],
+    RUN_FAST_TESTS_MYLIB_TARGET : [],
+    OPENCPPCOVERAGE_MYLIB_TARGET : [],
+    CLANG_TIDY_MYLIB_TARGET : [],
+    VALGRIND_MYLIB_TARGET : [],
+    ABI_COMPLIANCE_CHECKER_MYLIB_TARGET : [],
+}
+
+
+
+
+
+
 ############################################################################################
 class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
     """
@@ -26,9 +83,14 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         cls.project = 'SimpleOneLibCPFTestProject'
         cls.cpf_root_dir = testprojectfixture.prepareTestProject('https://github.com/Knitschi/SimpleOneLibCPFTestProject.git', cls.project)
 
-
     def setUp(self):
         super(SimpleOneLibCPFTestProjectFixture, self).setUp(self.project, self.cpf_root_dir)
+
+    def assert_output_contains_signature(self, output, target):
+        super(SimpleOneLibCPFTestProjectFixture, self).assert_output_contains_signature(output, target, target_signatures[target])
+
+    def assert_output_has_not_signature(self, output, target):
+        super(SimpleOneLibCPFTestProjectFixture, self).assert_output_has_not_signature(output, target, target_signatures[target])
 
 
     def test_configure_script(self):
@@ -36,6 +98,7 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         This tests the underlying functionality of the '1_Configure.py' script.
         """
         # SETUP
+        self.cleanup_generated_files()
         self.run_python_command('Sources/CPFBuildscripts/0_CopyScripts.py')
 
         # EXECUTE
@@ -45,117 +108,229 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         # Check that configuring an existing variable works.
         # Test overriding existing variables and setting variables with whitespaces.
         self.run_python_command('1_Configure.py MyConfig --inherits {0} -D CPF_ENABLE_DOXYGEN_TARGET=OFF -D BLUB="bli bla"'.format(testprojectfixture.PARENT_CONFIG))
-        self.run_python_command('2_Generate.py')
+        self.run_python_command('2_Generate.py MyConfig')
         cmakeCacheVariables = self.osa.execute_command_output('cmake Generated/MyConfig -L', cwd=self.cpf_root_dir, print_output=False, print_command=False)
         # Note that variables that are added via 1_Configure.py are always of type string
         self.assertIn('CPF_ENABLE_DOXYGEN_TARGET:STRING=OFF', cmakeCacheVariables)
         self.assertIn('BLUB:STRING=bli bla', cmakeCacheVariables)
 
 
-    def test_target_existence(self):
+    def test_pipeline_target(self):
         """
-        Check that the pipeline target builds.
+        Checks that the pipeline target builds and runs all tools.
         """
         # Setup
         self.generate_project()
-        
-        # Test existence of platform independent targets
-        # Global targets
-        global_targets = [
-            'pipeline',
-            'doxygen',
-            'distributionPackages',
-            'runAllTests',
-            'runFastTests',
-            'staticAnalysis',
-            'install',
-        ]
-        self.assert_targets_build(global_targets)
 
-        # Per package targets
-        per_package_targets = [
-            'MyLib',
-            'MyLib_tests',
-            'MyLib_fixtures',
-            'distributionPackages_MyLib',
-            'install_MyLib',
-            'runAllTests_MyLib',
-            'runFastTests_MyLib',
-        ]
-        self.assert_targets_build(per_package_targets)
+        # Execute
+        output = self.build_target(PIPELINE_TARGET)
 
-        # Check existence and non-existence of targets that are only available for certain configurations.
-        # MSVC
-        msvc_specific_targets = [
-            'opencppcoverage_MyLib',
-        ]
-        if self.is_visual_studio_config():
-            self.assert_targets_build(msvc_specific_targets)
-        else:
-            self.assert_targets_do_not_exist(msvc_specific_targets)
+        # Verify
+        # Universal tools are run
+        self.assert_output_contains_signature(output, DOXYGEN_TARGET)
+        self.assert_output_contains_signature(output, DISTRIBUTION_PACKAGES_TARGET)
 
-        # Clang
-        linux_clang_specific_targets = [
-            'clang-tidy_MyLib',
-        ]
-        if self.is_clang_config():
-            self.assert_targets_build(linux_clang_specific_targets)
-        else:
-            self.assert_targets_do_not_exist(linux_clang_specific_targets)
+        # Config specific tools are run
 
-        # Debug only targets
-        msvc_or_debug_specific_targets = [
-            'dynamicAnalysis',
-        ]
+
+    def test_doxygen_target(self):
+        # Setup
+        self.generate_project()
+        target = DOXYGEN_TARGET
+
+        # Execute
+        output = self.build_target(target)
+
+
+    def test_distributionPackages_target(self):
+        # Setup
+        self.generate_project()
+        target = DISTRIBUTION_PACKAGES_TARGET
+
+        # Execute
+        output = self.build_target(target)
+
+
+    def test_runAllTests_target(self):
+        # Setup
+        self.generate_project()
+        target = RUN_ALL_TESTS_TARGET
+
+        # Execute
+        output = self.build_target(target)
+
+
+    def test_runFastTests_target(self):
+        # Setup
+        self.generate_project()
+        target = RUN_FAST_TESTS_TARGET
+
+        # Execute
+        output = self.build_target(target)
+
+
+    def test_staticAnalysis_target(self):
+        # Setup
+        self.generate_project()
+        target = STATIC_ANALYSIS_TARGET
+
+        # Execute
+        output = self.build_target(target)
+
+
+    def test_dynamicAnalysis_target(self):
+        # Setup
+        self.generate_project()
+        target = DYNAMIC_ANALYSIS_TARGET
+
+        # Execute
         if self.is_msvc_or_debug_config():
-            self.assert_targets_build(msvc_or_debug_specific_targets)
+            output = self.build_target(target)
         else:
-            self.assert_targets_do_not_exist(msvc_or_debug_specific_targets)
-
-        # Linux debug info
-        linux_debug_specific_targets = [
-            'valgrind_MyLib',
-            # how to do this ?
-            #'abi-compliance-checker',
-            #'abi-compliance-checker_MyLib',
-        ]
-        if self.is_linux_debug_config():
-            self.assert_targets_build(linux_debug_specific_targets)
-        else:
-            self.assert_targets_do_not_exist(linux_debug_specific_targets)
+            self.assert_target_does_not_exist(target)
 
 
-    def test_opencppcoverage_target_works(self):
+    def test_install_target(self):
+        # Setup
+        self.generate_project()
+        target = INSTALL_TARGET
+
+        # Execute
+        output = self.build_target(target)
+
+
+    def test_MyLib_target(self):
+        # Setup
+        self.generate_project()
+        target = MYLIB_TARGET
+
+        # Execute
+        output = self.build_target(target)
+
+
+    def test_MyLib_Tests_target(self):
+        # Setup
+        self.generate_project()
+        target = MYLIB_TESTS_TARGET
+
+        # Execute
+        output = self.build_target(target)
+
+
+    def test_MyLib_Fixtures_target(self):
+        # Setup
+        self.generate_project()
+        target = MYLIB_FIXTURES_TARGET
+
+        # Execute
+        output = self.build_target(target)
+
+
+    def test_distributionPackages_MyLib_target(self):
+        # Setup
+        self.generate_project()
+        target = DISTRIBUTION_PACKAGES_MYLIB_TARGET
+
+        # Execute
+        output = self.build_target(target)
+
+
+    def test_install_MyLib_target(self):
+        # Setup
+        self.generate_project()
+        target = INSTALL_MYLIB_TARGET
+
+        # Execute
+        output = self.build_target(target)
+
+
+    def test_runAllTests_MyLib_target(self):
+        # Setup
+        self.generate_project()
+        target = RUN_ALL_TESTS_MYLIB_TARGET
+
+        # Execute
+        output = self.build_target(target)
+
+
+    def test_runFastTests_MyLib_target(self):
+        # Setup
+        self.generate_project()
+        target = RUN_FAST_TESTS_MYLIB_TARGET
+
+        # Execute
+        output = self.build_target(target)
+
+
+    def test_opencppcoverage_target(self):
         """
         Check that the target runs the OpenCppCoverage.exe for the
         compiler debug config and not for the release config.
         """
+        # Setup
+        self.generate_project()
+        target = OPENCPPCOVERAGE_MYLIB_TARGET
+
+        # Execute
         if self.is_visual_studio_config():
-            # Setup
-            self.generate_project()
+            output = self.build_target(target)
+            if self.is_debug_compiler_config():
+                # check that the tool is run for the debug configuration.
+                self.assert_output_contains_signature(output, target)
+            else:
+                # check that the tool is not run for the release configuration.
+                self.assert_output_has_not_signature(output, target)
+        else:
+            self.assert_target_does_not_exist(target)
 
-            # This is a part of the command line call for the tool.
-            opencppcoverage_output_signature = 'OpenCppCoverage.exe" --export_type=binary' 
 
-            # check that the tool is run for the debug configuration.
-            output = self.build_target('opencppcoverage_MyLib', config='Debug')
-            self.assertIn(opencppcoverage_output_signature, output)
+    def test_clangtidy_MyLib_target(self):
+        # Setup
+        self.generate_project()
+        target = CLANG_TIDY_MYLIB_TARGET
 
-            # check that the tool is not run for the release configuration.
-            output = self.build_target('opencppcoverage_MyLib', config='Release')
-            self.assertNotIn(opencppcoverage_output_signature, output)
+        # Execute
+        if self.is_clang_config():
+            output = self.build_target(target)
+        else:
+            self.assert_target_does_not_exist(target)
 
-"""
+
+    def test_valgrind_target(self):
+        # Setup
+        self.generate_project()
+        target = VALGRIND_MYLIB_TARGET
+
+        # Execute
+        if self.is_linux_debug_config():
+            output = self.build_target(target)
+        else:
+            self.assert_target_does_not_exist(target)
+
+
+""" 
     how can we test do this? how can we download previous reports?
     def test_abi_compliance_checker_target_works(self):
+
+    def test__target(self):
+        # Setup
+        self.generate_project()
+        target = ABI_COMPLIANCE_CHECKER_TARGET
+
+        # Execute
+        if self.is_linux_debug_config():
+        output = self.build_target(target)
+
+
+    def test__target(self):
+        # Setup
+        self.generate_project()
+        target = ABI_COMPLIANCE_CHECKER_MYLIB_TARGET
+
+        # Execute
+        if self.is_linux_debug_config():
+        output = self.build_target(target)
 """
-
-
-
-
-
-
-
-        
+       
 
 

@@ -7,6 +7,7 @@ The script takes keyword arguments in the form
 
 test_dir="C:/mytests" -> A base directory in which the script can put temporary files for tests.
 parent_config=VS      -> The configuration from which the current config derives. Testprojects will be build in this configuration.
+compiler_config=Debug -> For multi-configuration generators, the compiler config that is used to build Testprojects.
 test_name             -> Determines the tests that is run. If the value is empty, it will run all tests.
 """
 
@@ -64,6 +65,7 @@ if __name__ == '__main__':
     keywordargs = parseKeyWordArgs(sys.argv)
     testprojectfixture.BASE_TEST_DIR = getKeywordArgument('test_dir', keywordargs)
     testprojectfixture.PARENT_CONFIG = getKeywordArgument('parent_config', keywordargs)
+    testprojectfixture.COMPILER_CONFIG = getKeywordArgument('compiler_config', keywordargs)
     test_name = getKeywordArgument('test_name', keywordargs)
     # run all tests by default
     if test_name == '':
