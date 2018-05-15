@@ -50,9 +50,9 @@ target_signatures = {
     DYNAMIC_ANALYSIS_TARGET : [], # bundle target only
     INSTALL_TARGET : [], # bundle target only
     ABI_COMPLIANCE_CHECKER_TARGET : [], # bundle target only
-    MYLIB_TARGET : lambda fixture: getBinaryTargetSignature(fixture, 'MyLib'),
-    MYLIB_TESTS_TARGET : lambda fixture: getBinaryTargetSignature(fixture, 'MyLib_tests'),
-    MYLIB_FIXTURES_TARGET : lambda fixture: getBinaryTargetSignature(fixture, 'MyLib_fixture'),
+    MYLIB_TARGET : lambda fixture: getBinaryTargetSignature(fixture, MYLIB_TARGET),
+    MYLIB_TESTS_TARGET : lambda fixture: getBinaryTargetSignature(fixture, MYLIB_TESTS_TARGET),
+    MYLIB_FIXTURES_TARGET : lambda fixture: getBinaryTargetSignature(fixture, MYLIB_FIXTURES_TARGET),
     DISTRIBUTION_PACKAGES_MYLIB_TARGET : ['CPack: Create package'],
     INSTALL_MYLIB_TARGET : ['-- Installing: '],
     RUN_ALL_TESTS_MYLIB_TARGET : ['$<TARGET_FILE:MyLib_tests> -TestFilesDir', '--gtest_filter=*'],
