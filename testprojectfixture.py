@@ -218,6 +218,9 @@ class TestProjectFixture(unittest.TestCase):
         """
         missing_strings = self.find_missing_signature_strings(output, signature)
         if missing_strings:
+            print('------------------------- Start test-build output ------------------')
+            print(output)
+            print('------------------------- End test-build output ------------------')
             raise Exception('Test Error! Signature parts "{0}" were NOT found in build output of target {1}.'.format(missing_strings, target) )
 
 

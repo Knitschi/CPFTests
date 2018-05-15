@@ -151,10 +151,9 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         self.assert_output_contains_signature(output, MYLIB_FIXTURES_TARGET)
         self.assert_output_contains_signature(output, DISTRIBUTION_PACKAGES_MYLIB_TARGET)
         self.assert_output_contains_signature(output, INSTALL_MYLIB_TARGET)
-        self.assert_output_contains_signature(output, RUN_ALL_TESTS_MYLIB_TARGET)
 
         # Config specific tools are run
-        if self.is_msvc_or_debug_config() and self.is_debug_compiler_config():
+        if self.is_visual_studio_config() and self.is_debug_compiler_config():
             self.assert_output_contains_signature(output, OPENCPPCOVERAGE_MYLIB_TARGET)
 
         if self.is_clang_config():
@@ -163,6 +162,9 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         if self.is_linux_debug_config():
             self.assert_output_contains_signature(output, VALGRIND_MYLIB_TARGET)
             # self.assert_output_contains_signature(output, ABI_COMPLIANCE_CHECKER_MYLIB_TARGET)
+
+        else: # The runAllTests target is not included in the pipeline when the valgrind target is available to not run tests twice.
+            self.assert_output_contains_signature(output, RUN_ALL_TESTS_MYLIB_TARGET)
 
 
     def test_doxygen_target(self):
