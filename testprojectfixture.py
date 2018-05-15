@@ -235,6 +235,6 @@ class TestProjectFixture(unittest.TestCase):
         missing_strings = []
         for string in signature:
             if not string in output:
-                return missing_strings.append(string)
+                missing_strings.append(string)
         return missing_strings
 

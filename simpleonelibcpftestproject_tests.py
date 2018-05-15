@@ -42,7 +42,7 @@ ABI_COMPLIANCE_CHECKER_MYLIB_TARGET = 'abi-compliance-checker_MyLib'
 # all the strings given by the signature to verify that the tool has been
 # run.
 target_signatures = {
-    DOXYGEN_TARGET : ['doxygen.exe', 'doxyindexer.exe', 'tred.exe','lookup cache used'],
+    DOXYGEN_TARGET : ['doxygen', 'doxyindexer', 'tred','lookup cache used'],
     DISTRIBUTION_PACKAGES_TARGET : [], # bundle target only
     RUN_ALL_TESTS_TARGET : [], # bundle target only
     RUN_FAST_TESTS_TARGET : [], # bundle target only
@@ -58,9 +58,9 @@ target_signatures = {
     RUN_ALL_TESTS_MYLIB_TARGET : ['$<TARGET_FILE:MyLib_tests> -TestFilesDir', '--gtest_filter=*'],
     RUN_FAST_TESTS_MYLIB_TARGET : ['$<TARGET_FILE:MyLib_tests> -TestFilesDir', '--gtest_filter=*FastFixture*:*FastTests*'],
     OPENCPPCOVERAGE_MYLIB_TARGET : ['OpenCppCoverage.exe" --export_type=binary'],
-    CLANG_TIDY_MYLIB_TARGET : [],
-    VALGRIND_MYLIB_TARGET : [],
-    ABI_COMPLIANCE_CHECKER_MYLIB_TARGET : [],
+    CLANG_TIDY_MYLIB_TARGET : ['clang-tidy', '-checks='],
+    VALGRIND_MYLIB_TARGET : ['valgrind', '--leak-check=full'],
+    ABI_COMPLIANCE_CHECKER_MYLIB_TARGET : ['abi-compliance-checker','-DBINARY_NAME='],
 }
 
 
@@ -69,9 +69,9 @@ def getBinaryTargetSignature(test_fixture, binary_target):
     if test_fixture.is_visual_studio_config():
         return ['{0}.vcxproj'.format(binary_target)]
     elif test_fixture.is_make_config():
-        return ['']
+        return ['Built target {0}'.format(binary_target)]
     elif test_fixture.is_ninja_config():
-        return ['']
+        return [''] # ninja only prints commands which vary with target type. This makes things complicated so I decided to skip that test for ninja builds.
     else:
         raise Exception('Missing case in conditional')
 
