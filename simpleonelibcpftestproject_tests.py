@@ -110,6 +110,40 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
     def assert_output_has_not_signature(self, output, target):
         super(SimpleOneLibCPFTestProjectFixture, self).assert_output_has_not_signature(output, target, self.get_signature(target))
 
+    def do_basic_target_tests(self, built_target, signature_target, target_exists = True, is_dummy_target = False):
+        """
+        This functions does basic tests for created targets.
+        For bundle targets that do not produce their own signature,
+        the signature target should be one of the bundled targets.
+
+        Tests:
+        1. Check the given built_target exists, builds and produces a output signature that
+        is defined by signature_target.
+        2. Check that the given target does not exist if target_exits is set to False.
+        3. Check that the target does not produce the output signature if is_dummy_target is set to True.
+        This is the case for targets in multiconfig generators that only do something for a certain compiler config.
+        4. Check the given built_target is not build a second time, when it is up-to-date.
+        """
+
+        if target_exists:
+            output = self.build_target(built_target)
+            if not is_dummy_target:
+                # Check the target builds and produces an output signature
+                self.assert_output_contains_signature(output, signature_target)
+
+                # Check the target is not build again when it is up-to-date.
+                output = self.build_target(built_target)
+                self.assert_output_has_not_signature(output, signature_target)
+            else:
+                # Make sure the dummy target does not really do anything.
+                self.assert_output_has_not_signature(output, signature_target)
+
+        else:
+            # Check the target does not exist.
+            self.assert_target_does_not_exist(built_target)
+            
+
+
     def test_configure_script(self):
         """
         This tests the underlying functionality of the '1_Configure.py' script.
@@ -173,8 +207,7 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         target = DOXYGEN_TARGET
 
         # Execute
-        output = self.build_target(target)
-        self.assert_output_contains_signature(output, target)
+        self.do_basic_target_tests(target, target)
 
 
     def test_distributionPackages_target(self):
@@ -183,8 +216,7 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         target = DISTRIBUTION_PACKAGES_TARGET
 
         # Execute
-        output = self.build_target(target)
-        self.assert_output_contains_signature(output, DISTRIBUTION_PACKAGES_MYLIB_TARGET)
+        self.do_basic_target_tests(target, DISTRIBUTION_PACKAGES_MYLIB_TARGET)
 
 
     def test_runAllTests_target(self):
@@ -193,8 +225,7 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         target = RUN_ALL_TESTS_TARGET
 
         # Execute
-        output = self.build_target(target)
-        self.assert_output_contains_signature(output, RUN_ALL_TESTS_MYLIB_TARGET)
+        self.do_basic_target_tests(target, RUN_ALL_TESTS_MYLIB_TARGET)
 
 
     def test_runFastTests_target(self):
@@ -203,8 +234,7 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         target = RUN_FAST_TESTS_TARGET
 
         # Execute
-        output = self.build_target(target)
-        self.assert_output_contains_signature(output, RUN_FAST_TESTS_MYLIB_TARGET)
+        self.do_basic_target_tests(target, RUN_FAST_TESTS_MYLIB_TARGET)
 
 
     def test_staticAnalysis_target(self):
@@ -213,10 +243,17 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         target = STATIC_ANALYSIS_TARGET
 
         # Execute
+        # Check the target builds
         output = self.build_target(target)
         self.assert_output_contains_signature(output, STATIC_ANALYSIS_TARGET)
         if self.is_clang_config():
             self.assert_output_contains_signature(output, CLANG_TIDY_MYLIB_TARGET)
+
+        # Check the target is not build again
+        output = self.build_target(target)
+        self.assert_output_has_not_signature(output, STATIC_ANALYSIS_TARGET)
+        if self.is_clang_config():
+            self.assert_output_has_not_signature(output, CLANG_TIDY_MYLIB_TARGET)
 
 
     def test_dynamicAnalysis_target(self):
@@ -228,9 +265,18 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         if self.is_msvc_or_debug_config():
             output = self.build_target(target)
             if self.is_visual_studio_config():
-                self.assert_output_contains_signature(output, OPENCPPCOVERAGE_MYLIB_TARGET)
+                if self.is_debug_compiler_config():
+                    self.assert_output_contains_signature(output, OPENCPPCOVERAGE_MYLIB_TARGET)
             if self.is_linux_debug_config():
                 self.assert_output_contains_signature(output, VALGRIND_MYLIB_TARGET)
+
+            # Check the target is not build again
+            output = self.build_target(target)
+            if self.is_visual_studio_config():
+                self.assert_output_has_not_signature(output, OPENCPPCOVERAGE_MYLIB_TARGET)
+            if self.is_linux_debug_config():
+                self.assert_output_has_not_signature(output, VALGRIND_MYLIB_TARGET)
+
         else:
             self.assert_target_does_not_exist(target)
 
@@ -241,8 +287,7 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         target = INSTALL_TARGET
 
         # Execute
-        output = self.build_target(target)
-        self.assert_output_contains_signature(output, INSTALL_MYLIB_TARGET)
+        self.do_basic_target_tests(target, INSTALL_MYLIB_TARGET)
 
 
     def test_MyLib_target(self):
@@ -251,8 +296,7 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         target = MYLIB_TARGET
 
         # Execute
-        output = self.build_target(target)
-        self.assert_output_contains_signature(output, target)
+        self.do_basic_target_tests(target, target)
 
 
     def test_MyLib_Tests_target(self):
@@ -261,8 +305,7 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         target = MYLIB_TESTS_TARGET
 
         # Execute
-        output = self.build_target(target)
-        self.assert_output_contains_signature(output, target)
+        self.do_basic_target_tests(target, target)
 
 
     def test_MyLib_Fixtures_target(self):
@@ -271,8 +314,7 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         target = MYLIB_FIXTURES_TARGET
 
         # Execute
-        output = self.build_target(target)
-        self.assert_output_contains_signature(output, target)
+        self.do_basic_target_tests(target, target)
 
 
     def test_distributionPackages_MyLib_target(self):
@@ -281,8 +323,7 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         target = DISTRIBUTION_PACKAGES_MYLIB_TARGET
 
         # Execute
-        output = self.build_target(target)
-        self.assert_output_contains_signature(output, target)
+        self.do_basic_target_tests(target, target)
 
 
     def test_install_MyLib_target(self):
@@ -291,8 +332,7 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         target = INSTALL_MYLIB_TARGET
 
         # Execute
-        output = self.build_target(target)
-        self.assert_output_contains_signature(output, target)
+        self.do_basic_target_tests(target, target)
 
 
     def test_runAllTests_MyLib_target(self):
@@ -301,8 +341,7 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         target = RUN_ALL_TESTS_MYLIB_TARGET
 
         # Execute
-        output = self.build_target(target)
-        self.assert_output_contains_signature(output, target)
+        self.do_basic_target_tests(target, target)
 
 
     def test_runFastTests_MyLib_target(self):
@@ -311,8 +350,7 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         target = RUN_FAST_TESTS_MYLIB_TARGET
 
         # Execute
-        output = self.build_target(target)
-        self.assert_output_contains_signature(output, target)
+        self.do_basic_target_tests(target, target)
 
 
     def test_opencppcoverage_target(self):
@@ -325,16 +363,12 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         target = OPENCPPCOVERAGE_MYLIB_TARGET
 
         # Execute
-        if self.is_visual_studio_config():
-            output = self.build_target(target)
-            if self.is_debug_compiler_config():
-                # check that the tool is run for the debug configuration.
-                self.assert_output_contains_signature(output, target)
-            else:
-                # check that the tool is not run for the release configuration.
-                self.assert_output_has_not_signature(output, target)
-        else:
-            self.assert_target_does_not_exist(target)
+        self.do_basic_target_tests(
+            target, 
+            target, 
+            self.is_visual_studio_config(), 
+            self.is_debug_compiler_config()
+        )
 
 
     def test_clangtidy_MyLib_target(self):
@@ -343,11 +377,7 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         target = CLANG_TIDY_MYLIB_TARGET
 
         # Execute
-        if self.is_clang_config():
-            output = self.build_target(target)
-            self.assert_output_contains_signature(output, target)
-        else:
-            self.assert_target_does_not_exist(target)
+        self.do_basic_target_tests(target, target, self.is_clang_config())
 
 
     def test_valgrind_target(self):
@@ -356,11 +386,7 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         target = VALGRIND_MYLIB_TARGET
 
         # Execute
-        if self.is_linux_debug_config():
-            output = self.build_target(target)
-            self.assert_output_contains_signature(output, target)
-        else:
-            self.assert_target_does_not_exist(target)
+        self.do_basic_target_tests(target, target, self.is_linux_debug_config())
 
 
 """ 
