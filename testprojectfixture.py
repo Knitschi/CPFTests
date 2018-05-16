@@ -218,11 +218,13 @@ class TestProjectFixture(unittest.TestCase):
         """
         missing_strings = self.find_missing_signature_strings(output, signature)
         if missing_strings:
-            print('------------------------- Start test-build output ------------------')
-            print(output)
-            print('------------------------- End test-build output ------------------')
+            self.print_build_output(output)
             raise Exception('Test Error! Signature parts "{0}" were NOT found in build output of target {1}.'.format(missing_strings, target) )
 
+    def print_build_output(self, output):
+        print('------------------------- Start test-build output ------------------')
+        print(output)
+        print('------------------------- End test-build output ------------------')
 
     def assert_output_has_not_signature(self, output, target, signature):
         """
@@ -231,6 +233,7 @@ class TestProjectFixture(unittest.TestCase):
         """
         missing_strings = self.find_missing_signature_strings(output, signature)
         if not missing_strings:
+            self.print_build_output(output)
             raise Exception('Test Error! Signature "{0}" was found in build output of target {1}.'.format(signature, target) )
 
 
