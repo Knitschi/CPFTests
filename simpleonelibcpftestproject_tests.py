@@ -57,7 +57,7 @@ target_signatures = {
     INSTALL_MYLIB_TARGET : ['-- Installing: '],
     RUN_ALL_TESTS_MYLIB_TARGET : ['$<TARGET_FILE:MyLib_tests> -TestFilesDir', '--gtest_filter=*'],
     RUN_FAST_TESTS_MYLIB_TARGET : ['$<TARGET_FILE:MyLib_tests> -TestFilesDir', '--gtest_filter=*FastFixture*:*FastTests*'],
-    OPENCPPCOVERAGE_MYLIB_TARGET : ['OpenCppCoverage.exe', '--export_type=binary']
+    OPENCPPCOVERAGE_MYLIB_TARGET : ['OpenCppCoverage.exe', '--export_type=binary'],
     CLANG_TIDY_MYLIB_TARGET : ['clang-tidy', '-checks='],
     VALGRIND_MYLIB_TARGET : ['valgrind', '--leak-check=full'],
     ABI_COMPLIANCE_CHECKER_MYLIB_TARGET : ['abi-compliance-checker','-DBINARY_NAME='],
