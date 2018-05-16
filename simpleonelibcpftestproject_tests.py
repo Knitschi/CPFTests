@@ -69,9 +69,9 @@ def getBinaryTargetSignature(test_fixture, binary_target):
     if test_fixture.is_visual_studio_config():
         return ['{0}.vcxproj'.format(binary_target), 'CL.exe']
     elif test_fixture.is_make_config():
-        return ['Built target {0}'.format(binary_target)]
+        return ['Built target {0}'.format(binary_target), 'Building CXX object']
     elif test_fixture.is_ninja_config():
-        return ['MyLib'] # ninja only prints commands which vary with target type. This makes things complicated so I decided to skip that test for ninja builds.
+        return ['MyLib', 'Building CXX object'] # ninja only prints commands which vary with target type. This makes things complicated so I decided to skip that test for ninja builds.
     else:
         raise Exception('Missing case in conditional')
 
