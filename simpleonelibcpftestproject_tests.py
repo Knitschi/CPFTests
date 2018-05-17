@@ -42,7 +42,7 @@ ABI_COMPLIANCE_CHECKER_MYLIB_TARGET = 'abi-compliance-checker_MyLib'
 # all the strings given by the signature to verify that the tool has been
 # run.
 target_signatures = {
-    DOXYGEN_TARGET : ['doxygen', 'doxyindexer', 'tred','lookup cache used'],
+    DOXYGEN_TARGET : ['doxygen', 'Parsing layout file', 'lookup cache used'],
     DISTRIBUTION_PACKAGES_TARGET : [], # bundle target only
     RUN_ALL_TESTS_TARGET : [], # bundle target only
     RUN_FAST_TESTS_TARGET : [], # bundle target only
@@ -96,8 +96,8 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
     def setUp(self):
         super(SimpleOneLibCPFTestProjectFixture, self).setUp(self.project, self.cpf_root_dir)
 
-    def assert_output_contains_signature(self, output, target, signature_target):
-        super(SimpleOneLibCPFTestProjectFixture, self).assert_output_contains_signature(output, target, self.get_signature(signature_target))
+    def assert_output_contains_signature(self, output, target, signature_target, source_file = None):
+        super(SimpleOneLibCPFTestProjectFixture, self).assert_output_contains_signature(output, target, self.get_signature(signature_target), trigger_source_file = source_file)
 
     def get_signature(self, target):
         element = target_signatures[target]
@@ -110,7 +110,21 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
     def assert_output_has_not_signature(self, output, target, signature_target):
         super(SimpleOneLibCPFTestProjectFixture, self).assert_output_has_not_signature(output, target, self.get_signature(signature_target))
 
-    def do_basic_target_tests(self, built_target, signature_target, target_exists = True, is_dummy_target = False):
+
+    def assert_target_output_files_exist(self, target, files):
+        """
+        files must be relative to CMAKE_BINARY_DIR.
+        """
+        missing_files = []
+        for file in files:
+            full_file = self.cpf_root_dir.joinpath('Generated').joinpath(testprojectfixture.PARENT_CONFIG).joinpath(file)
+            if not self.fsa.exists(full_file):
+                missing_files.append(file)
+        if missing_files:
+            raise Exception('Test error! The following files were not produced by target {0} as expected: {1}'.format(target, ';'.join(missing_files)))
+
+
+    def do_basic_target_tests(self, built_target, signature_target, target_exists = True, is_dummy_target = False, source_files = [], output_files = []):
         """
         This functions does basic tests for created targets.
         For bundle targets that do not produce their own signature,
@@ -123,6 +137,10 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         3. Check that the target does not produce the output signature if is_dummy_target is set to True.
         This is the case for targets in multiconfig generators that only do something for a certain compiler config.
         4. Check the given built_target is not build a second time, when it is up-to-date.
+        5. Check the target is rebuild after touching any of the given source_files. Note that
+        one build is done for each file, so adding a lot of files will drive test times in the sky.
+        The pathes of the source_files must be relative to the cpf_root_directory.
+        6. Check that the specified output files are produced. Paths must be relative to CMAKE_BINARY_DIR.
         """
 
         if target_exists:
@@ -131,9 +149,20 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
                 # Check the target builds and produces an output signature
                 self.assert_output_contains_signature(output, built_target, signature_target)
 
+                # Check the target produced the specified files
+                self.assert_target_output_files_exist(built_target, output_files)
+
                 # Check the target is not build again when it is up-to-date.
                 output = self.build_target(built_target)
                 self.assert_output_has_not_signature(output, built_target, signature_target)
+
+                # Check that changes to source files out-date the target
+                for source_file in source_files:
+                    full_source_file = self.cpf_root_dir.joinpath(source_file)
+                    self.fsa.touch_file(full_source_file)
+                    output = self.build_target(built_target)
+                    self.assert_output_contains_signature(output, built_target, signature_target, source_file=source_file)
+
             else:
                 # Make sure the dummy target does not really do anything.
                 self.assert_output_has_not_signature(output, built_target, signature_target)
@@ -206,9 +235,20 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         # Setup
         self.generate_project()
         target = DOXYGEN_TARGET
+        # More or less every change to a file should trigger doxygen.
+        # We restrain ourselves to two files here to save time.
+        sources = [
+            'Sources/documentation/DoxygenConfig.txt',
+            'Sources/MyLib/function.cpp'
+        ]
+        output = [
+            '_CPF/doxygen/tempDoxygenConfig.txt',                           # test the production of the temp config file works
+            'html/doxygen/external/CPFDependenciesTransitiveReduced.dot',   # test the dependency dot files are produced.
+            'html/doxygen/index.html'                                       # test the entry file is produced.
+        ]
 
         # Execute
-        self.do_basic_target_tests(target, target)
+        self.do_basic_target_tests(target, target, source_files=sources, output_files=output)
 
 
     def test_distributionPackages_target(self):
@@ -322,9 +362,15 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         # Setup
         self.generate_project()
         target = DISTRIBUTION_PACKAGES_MYLIB_TARGET
+        sources = [
+            'Sources/MyLib/function.cpp'
+        ]
+        output = [
+            'html/Downloads/MyLib/LastBuild' # because of the complex package names we only check for the directory here
+        ]
 
         # Execute
-        self.do_basic_target_tests(target, target)
+        self.do_basic_target_tests(target, target, source_files=sources, output_files=output)
 
 
     def test_install_MyLib_target(self):

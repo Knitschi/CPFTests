@@ -211,7 +211,7 @@ class TestProjectFixture(unittest.TestCase):
             self.assert_target_does_not_exist(target)
 
 
-    def assert_output_contains_signature(self, output, target, signature):
+    def assert_output_contains_signature(self, output, target, signature, trigger_source_file = None):
         """
         Builds the target and looks for the signature in its output.
         If the signature is not int the output it raises an exception.
@@ -219,7 +219,10 @@ class TestProjectFixture(unittest.TestCase):
         missing_strings = self.find_missing_signature_strings(output, signature)
         if missing_strings:
             self.print_build_output(output)
-            raise Exception('Test Error! Signature parts "{0}" were NOT found in build output of target {1}.'.format(missing_strings, target) )
+            error_string= 'Test Error! Signature parts "{0}" were NOT found in build output of target {1}.'.format(missing_strings, target)
+            if trigger_source_file:
+                error_string = 'The build of target {0} was not triggered by touching file "{1}". The file does not seem to be one of the targets dependencies.'.format(target, trigger_source_file)
+            raise Exception(error_string)
 
     def print_build_output(self, output):
         print('------------------------- Start test-build output ------------------')
