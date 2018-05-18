@@ -376,10 +376,52 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
     def test_install_MyLib_target(self):
         # Setup
         self.generate_project()
+        config = testprojectfixture.COMPILER_CONFIG.lower()
+        if config == 'release':
+            config = ''
+        else:
+            config = '-' + config
         target = INSTALL_MYLIB_TARGET
+        sources = [
+            'Sources/MyLib/function.cpp'
+        ]
+        output = [
+            # public header
+            'InstallStage/MyLib/include/MyLib/fixture.h',
+            'InstallStage/MyLib/include/MyLib/function.h',
+            'InstallStage/MyLib/include/MyLib/mylib_export.h',
+            'InstallStage/MyLib/include/MyLib/mylib_tests_export.h',
+            # cmake files
+            'InstallStage/MyLib/lib/cmake/MyLib/MyLibConfig.cmake',
+            'InstallStage/MyLib/lib/cmake/MyLib/MyLibConfigVersion.cmake',
+            'InstallStage/MyLib/lib/cmake/MyLib/MyLibTargets.cmake',
+            'InstallStage/MyLib/lib/cmake/MyLib/MyLibTargets{0}.cmake'.format(config),
+        ]
+        if self.is_windows():
+            output.extend([
+                'InstallStage/MyLib/MyLib_fixtures{0}.dll'.format(config),
+                'InstallStage/MyLib/MyLib{0}.dll'.format(config),
+                'InstallStage/MyLib/MyLib_tests{0}.exe'.format(config),
+            ])
+            if self.is_debug_compiler_config():
+                output.extend([
+                    'InstallStage/MyLib/debug/MyLib_fixtures{0}-compiler.pdb'.format(config),
+                    'InstallStage/MyLib/debug/MyLib_fixtures{0}-compiler.pdb'.format(config),
+                    'InstallStage/MyLib/debug/MyLib_tests{0}-compiler.pdb'.format(config),
+                    'InstallStage/MyLib/debug/MyLib_tests{0}-compiler.pdb'.format(config),
+                    'InstallStage/MyLib/debug/MyLib{0}-compiler.pdb'.format(config),
+                    'InstallStage/MyLib/debug/MyLib{0}-compiler.pdb'.format(config),
+                ])
+
+        elif self.is_linux():
+            output = [
+                'blub',
+            ]
+        else:
+            raise Exception('Unhandled case.')
 
         # Execute
-        self.do_basic_target_tests(target, target)
+        self.do_basic_target_tests(target, target, source_files=sources, output_files=output)
 
 
     def test_runAllTests_MyLib_target(self):

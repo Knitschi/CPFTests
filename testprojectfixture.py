@@ -170,6 +170,12 @@ class TestProjectFixture(unittest.TestCase):
     def is_msvc_or_debug_config(self):
         return self.is_visual_studio_config() or self.is_linux_debug_config()
 
+    def is_windows(self):
+        return self.osa.system() == 'Windows'
+
+    def is_linux(self):
+        return self.osa.system() == 'Linux'
+
     def build_targets(self, targets):
         for target in targets:
             self.build_target(target)
