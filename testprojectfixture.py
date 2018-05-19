@@ -183,7 +183,7 @@ class TestProjectFixture(unittest.TestCase):
         package_dir = self.cpf_root_dir.joinpath('Sources/{0}'.format(package))
         script = self.cpf_root_dir.joinpath('Sources/CPFCMake/Scripts/getVersionFromRepository.cmake')
         return self.osa.execute_command_output(
-            'cmake -DREPO_DIR={0} -P {1}'.format(package_dir, script),
+            'cmake -DREPO_DIR="{0}" -P {1}'.format(package_dir, script),
             cwd=self.cpf_root_dir,
             print_output=False,
             print_command=False

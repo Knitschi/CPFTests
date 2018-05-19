@@ -121,7 +121,7 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
             if not self.fsa.exists(full_file):
                 missing_files.append(file)
         if missing_files:
-            raise Exception('Test error! The following files were not produced by target {0} as expected: {1}'.format(target, ';'.join(missing_files)))
+            raise Exception('Test error! The following files were not produced by target {0} as expected: {1}'.format(target, '; '.join(missing_files)))
 
 
     def do_basic_target_tests(self, built_target, signature_target, target_exists = True, is_dummy_target = False, source_files = [], output_files = []):
@@ -383,8 +383,6 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         else:
             config = '-' + config
         version = self.get_package_version('MyLib')
-        
-        print('------------------' + version)
 
         sources = [
             'Sources/MyLib/function.cpp'
@@ -436,17 +434,17 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
                 ])
             if self.is_shared_libraries_config():
                 output.extend([
-                    'InstallStage/MyLib/MyLib_fixtures-{0}.so'.format(config),
-                    'InstallStage/MyLib/MyLib_fixtures-{0}.so.{1}'.format(config, major_minor_version),
-                    'InstallStage/MyLib/MyLib_fixtures-{0}.so.{1}'.format(config, version),
-                    'InstallStage/MyLib/MyLib-{0}.so'.format(config),
-                    'InstallStage/MyLib/MyLib-{0}.so.{1}'.format(config, major_minor_version),
-                    'InstallStage/MyLib/MyLib-{0}.so.{1}'.format(config, version),
+                    'InstallStage/MyLib/lib/MyLib_fixtures{0}.so'.format(config),
+                    'InstallStage/MyLib/lib/MyLib_fixtures{0}.so.{1}'.format(config, major_minor_version),
+                    'InstallStage/MyLib/lib/MyLib_fixtures{0}.so.{1}'.format(config, version),
+                    'InstallStage/MyLib/lib/MyLib{0}.so'.format(config),
+                    'InstallStage/MyLib/lib/MyLib{0}.so.{1}'.format(config, major_minor_version),
+                    'InstallStage/MyLib/lib/MyLib{0}.so.{1}'.format(config, version),
                 ])
             else:
                 output.extend([
-                    'InstallStage/MyLib/MyLib_fixtures.a',
-                    'InstallStage/MyLib/MyLib.a',
+                    'InstallStage/MyLib/lib/MyLib_fixtures.a',
+                    'InstallStage/MyLib/lib/MyLib.a',
                 ])
         else:
             raise Exception('Unhandled case.')
