@@ -376,12 +376,16 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
     def test_install_MyLib_target(self):
         # Setup
         self.generate_project()
+        target = INSTALL_MYLIB_TARGET
         config = testprojectfixture.COMPILER_CONFIG.lower()
         if config == 'release':
             config = ''
         else:
             config = '-' + config
-        target = INSTALL_MYLIB_TARGET
+        version = self.get_package_version('MyLib')
+        
+        print('------------------' + version)
+
         sources = [
             'Sources/MyLib/function.cpp'
         ]
@@ -399,10 +403,13 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         ]
         if self.is_windows():
             output.extend([
-                'InstallStage/MyLib/MyLib_fixtures{0}.dll'.format(config),
-                'InstallStage/MyLib/MyLib{0}.dll'.format(config),
                 'InstallStage/MyLib/MyLib_tests{0}.exe'.format(config),
             ])
+            if self.is_shared_libraries_config():
+                output.extend([
+                    'InstallStage/MyLib/MyLib_fixtures{0}.dll'.format(config),
+                    'InstallStage/MyLib/MyLib{0}.dll'.format(config),
+                ])
             if self.is_debug_compiler_config():
                 output.extend([
                     'InstallStage/MyLib/debug/MyLib_fixtures{0}-compiler.pdb'.format(config),
@@ -414,9 +421,33 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
                 ])
 
         elif self.is_linux():
-            output = [
-                'blub',
-            ]
+
+            version_parts = version.split('.')
+            major_minor_version = version_parts[0] + '.' + version_parts[1]
+
+            output.extend([
+                'InstallStage/MyLib/bin/MyLib_tests{0}'.format(config),
+                'InstallStage/MyLib/bin/MyLib_tests{0}-{1}'.format(config, version),
+            ])
+            if self.is_debug_compiler_config():
+                output.extend([
+                    'InstallStage/MyLib/debug/ABI_MyLib_fixtures{0}.{1}.dump'.format(config, version),
+                    'InstallStage/MyLib/debug/ABI_MyLib{0}.{1}.dump'.format(config, version),
+                ])
+            if self.is_shared_libraries_config():
+                output.extend([
+                    'InstallStage/MyLib/MyLib_fixtures-{0}.so'.format(config),
+                    'InstallStage/MyLib/MyLib_fixtures-{0}.so.{1}'.format(config, major_minor_version),
+                    'InstallStage/MyLib/MyLib_fixtures-{0}.so.{1}'.format(config, version),
+                    'InstallStage/MyLib/MyLib-{0}.so'.format(config),
+                    'InstallStage/MyLib/MyLib-{0}.so.{1}'.format(config, major_minor_version),
+                    'InstallStage/MyLib/MyLib-{0}.so.{1}'.format(config, version),
+                ])
+            else:
+                output.extend([
+                    'InstallStage/MyLib/MyLib_fixtures.a',
+                    'InstallStage/MyLib/MyLib.a',
+                ])
         else:
             raise Exception('Unhandled case.')
 
