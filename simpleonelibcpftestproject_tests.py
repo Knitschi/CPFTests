@@ -428,6 +428,8 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
                 'InstallStage/MyLib/bin/MyLib_tests{0}-{1}'.format(config, version),
             ])
             if self.is_debug_compiler_config():
+                # Note that the dump files are not created by the install_MyLib target but by
+                # the abi_dump_file targets.
                 output.extend([
                     'InstallStage/MyLib/debug/ABI_MyLib_fixtures{0}.{1}.dump'.format(config, version),
                     'InstallStage/MyLib/debug/ABI_MyLib{0}.{1}.dump'.format(config, version),
