@@ -362,12 +362,24 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         # Setup
         self.generate_project()
         target = DISTRIBUTION_PACKAGES_MYLIB_TARGET
+        config = testprojectfixture.COMPILER_CONFIG.lower()
+
         sources = [
             'Sources/MyLib/function.cpp'
         ]
         output = [
             'html/Downloads/MyLib/LastBuild' # because of the complex package names we only check for the directory here
         ]
+        """
+        if self.is_linux():
+            if self.is_debug_compiler_config():
+                # Note that the dump files are not created by the install_MyLib target but by
+                # the abi_dump_file targets.
+                output.extend([
+                    'InstallStage/MyLib/debug/ABI_MyLib_fixtures{0}.{1}.dump'.format(config, version),
+                    'InstallStage/MyLib/debug/ABI_MyLib{0}.{1}.dump'.format(config, version),
+                ])
+        """
 
         # Execute
         self.do_basic_target_tests(target, target, source_files=sources, output_files=output)
@@ -427,13 +439,6 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
                 'InstallStage/MyLib/bin/MyLib_tests{0}'.format(config),
                 'InstallStage/MyLib/bin/MyLib_tests{0}-{1}'.format(config, version),
             ])
-            if self.is_debug_compiler_config():
-                # Note that the dump files are not created by the install_MyLib target but by
-                # the abi_dump_file targets.
-                output.extend([
-                    'InstallStage/MyLib/debug/ABI_MyLib_fixtures{0}.{1}.dump'.format(config, version),
-                    'InstallStage/MyLib/debug/ABI_MyLib{0}.{1}.dump'.format(config, version),
-                ])
             if self.is_shared_libraries_config():
                 output.extend([
                     'InstallStage/MyLib/lib/MyLib_fixtures{0}.so'.format(config),
