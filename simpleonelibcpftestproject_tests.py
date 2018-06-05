@@ -366,23 +366,28 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         self.generate_project()
         target = DISTRIBUTION_PACKAGES_MYLIB_TARGET
         config = testprojectfixture.COMPILER_CONFIG.lower()
+        if config == 'release':
+            config = ''
+        else:
+            config = '-' + config
+        version = self.get_package_version('MyLib')
+        os = self.osa.system()
 
         sources = [
             'Sources/MyLib/function.cpp'
         ]
         output = [
-            'html/Downloads/MyLib/LastBuild' # because of the complex package names we only check for the directory here
+            'html/Downloads/MyLib/LastBuild/MyLib.{0}.{1}.dev-bin.{2}.7z'.format(version, os,testprojectfixture.COMPILER_CONFIG) 
         ]
-        """
+
         if self.is_linux():
+            # for now we check the 
             if self.is_debug_compiler_config():
-                # Note that the dump files are not created by the install_MyLib target but by
-                # the abi_dump_file targets.
                 output.extend([
-                    'InstallStage/MyLib/debug/ABI_MyLib_fixtures{0}.{1}.dump'.format(config, version),
-                    'InstallStage/MyLib/debug/ABI_MyLib{0}.{1}.dump'.format(config, version),
+                    '_pckg/Debug/dev-bin/MyLib/debug/ABI_MyLib_fixtures{0}.{1}.dump'.format(config, version),
+                    '_pckg/Debug/dev-bin/MyLib/debug/ABI_MyLib{0}.{1}.dump'.format(config, version),
                 ])
-        """
+
 
         # Execute
         self.do_basic_target_tests(target, target, source_files=sources, output_files=output)
