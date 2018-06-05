@@ -489,13 +489,23 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         # Setup
         self.generate_project()
         target = OPENCPPCOVERAGE_MYLIB_TARGET
+        sources = [
+            'Sources/MyLib/function.cpp'
+        ]
+        output = []
+        if self.is_visual_studio_config() and self.is_debug_compiler_config():
+            output.extend([
+                '_CPF/opencppcoverage_MyLib/MyLib_tests.cov'
+            ])
 
         # Execute
         self.do_basic_target_tests(
             target, 
             target, 
             self.is_visual_studio_config(), 
-            not self.is_debug_compiler_config()
+            not self.is_debug_compiler_config(),
+            source_files=sources,
+            output_files=output
         )
 
 
