@@ -19,7 +19,8 @@ DISTRIBUTION_PACKAGES_TARGET = 'distributionPackages'
 RUN_ALL_TESTS_TARGET = 'runAllTests'
 RUN_FAST_TESTS_TARGET = 'runFastTests'
 STATIC_ANALYSIS_TARGET = 'staticAnalysis'
-DYNAMIC_ANALYSIS_TARGET = 'dynamicAnalysis'
+VALGRIND_TARGET = 'valgrind'
+OPENCPPCOVERAGE_TARGET = 'opencppcoverage'
 INSTALL_TARGET = 'install'
 ABI_COMPLIANCE_CHECKER_TARGET = 'abi-compliance-checker'
 
@@ -47,7 +48,8 @@ target_signatures = {
     RUN_ALL_TESTS_TARGET : [], # bundle target only
     RUN_FAST_TESTS_TARGET : [], # bundle target only
     STATIC_ANALYSIS_TARGET : ['acyclic'],
-    DYNAMIC_ANALYSIS_TARGET : [], # bundle target only
+    VALGRIND_TARGET : [], # bundle target only
+    OPENCPPCOVERAGE_TARGET : ['OpenCppCoverage.exe', '--export_type=html'],
     INSTALL_TARGET : [], # bundle target only
     ABI_COMPLIANCE_CHECKER_TARGET : [], # bundle target only
     MYLIB_TARGET : lambda fixture: getBinaryTargetSignature(fixture, MYLIB_TARGET),
@@ -300,29 +302,44 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
             self.assert_output_has_not_signature(output, target, CLANG_TIDY_MYLIB_TARGET)
 
 
-    def test_dynamicAnalysis_target(self):
+    def test_valgrind_target(self):
         # Setup
         self.generate_project()
-        target = DYNAMIC_ANALYSIS_TARGET
+        target = VALGRIND_TARGET
+        sources = [
+            'Sources/MyLib/function.cpp',
+        ]
 
         # Execute
-        if self.is_msvc_or_debug_config():
-            output = self.build_target(target)
-            if self.is_visual_studio_config():
-                if self.is_debug_compiler_config():
-                    self.assert_output_contains_signature(output, target, OPENCPPCOVERAGE_MYLIB_TARGET)
-            if self.is_linux_debug_config():
-                self.assert_output_contains_signature(output, target, VALGRIND_MYLIB_TARGET)
+        self.do_basic_target_tests( 
+            target, 
+            VALGRIND_MYLIB_TARGET, 
+            target_exists=self.is_linux_debug_config(),
+            source_files=sources
+        )
 
-            # Check the target is not build again
-            output = self.build_target(target)
-            if self.is_visual_studio_config():
-                self.assert_output_has_not_signature(output, target, OPENCPPCOVERAGE_MYLIB_TARGET)
-            if self.is_linux_debug_config():
-                self.assert_output_has_not_signature(output, target, VALGRIND_MYLIB_TARGET)
 
-        else:
-            self.assert_target_does_not_exist(target)
+    def test_opencppcoverage_target(self):
+        # Setup
+        self.generate_project()
+        target = OPENCPPCOVERAGE_TARGET
+        sources = [
+            'Sources/MyLib/function.cpp',
+        ]
+        
+        output = [
+            'html/OpenCppCoverage/index.html',
+        ]
+
+        # Execute
+        self.do_basic_target_tests( 
+            target, 
+            target, 
+            target_exists=self.is_visual_studio_config(),
+            is_dummy_target=testprojectfixture.COMPILER_CONFIG.lower() != 'Debug',
+            source_files=sources,
+            output_files=output
+        )
 
 
     def test_install_target(self):
