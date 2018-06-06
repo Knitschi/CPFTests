@@ -18,7 +18,8 @@ DOXYGEN_TARGET = 'doxygen'
 DISTRIBUTION_PACKAGES_TARGET = 'distributionPackages'
 RUN_ALL_TESTS_TARGET = 'runAllTests'
 RUN_FAST_TESTS_TARGET = 'runFastTests'
-STATIC_ANALYSIS_TARGET = 'staticAnalysis'
+CLANGTIDY_TARGET = 'clang-tidy'
+ACYCLIC_TARGET = 'acyclic'
 VALGRIND_TARGET = 'valgrind'
 OPENCPPCOVERAGE_TARGET = 'opencppcoverage'
 INSTALL_TARGET = 'install'
@@ -47,7 +48,8 @@ target_signatures = {
     DISTRIBUTION_PACKAGES_TARGET : [], # bundle target only
     RUN_ALL_TESTS_TARGET : [], # bundle target only
     RUN_FAST_TESTS_TARGET : [], # bundle target only
-    STATIC_ANALYSIS_TARGET : ['acyclic'],
+    CLANGTIDY_TARGET : [], # bundle target only
+    ACYCLIC_TARGET : ['acyclic'],
     VALGRIND_TARGET : [], # bundle target only
     OPENCPPCOVERAGE_TARGET : ['OpenCppCoverage.exe', '--export_type=html'],
     INSTALL_TARGET : [], # bundle target only
@@ -214,7 +216,7 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         # Verify
         # Universal tools are run
         self.assert_output_contains_signature(output, target, DOXYGEN_TARGET)
-        self.assert_output_contains_signature(output, target, STATIC_ANALYSIS_TARGET)
+        self.assert_output_contains_signature(output, target, CLANGTIDY_TARGET)
         self.assert_output_contains_signature(output, target, MYLIB_TARGET)
         self.assert_output_contains_signature(output, target, MYLIB_TESTS_TARGET)
         self.assert_output_contains_signature(output, target, MYLIB_FIXTURES_TARGET)
@@ -283,23 +285,23 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         self.do_basic_target_tests(target, RUN_FAST_TESTS_MYLIB_TARGET)
 
 
-    def test_staticAnalysis_target(self):
+    def test_clangtidy_target(self):
         # Setup
         self.generate_project()
-        target = STATIC_ANALYSIS_TARGET
+        target = CLANGTIDY_TARGET
 
         # Execute
         # Check the target builds
-        output = self.build_target(target)
-        self.assert_output_contains_signature(output, target, STATIC_ANALYSIS_TARGET)
-        if self.is_clang_config():
-            self.assert_output_contains_signature(output, target, CLANG_TIDY_MYLIB_TARGET)
+        self.do_basic_target_tests(target, CLANG_TIDY_MYLIB_TARGET, target_exists=self.is_clang_config())
 
-        # Check the target is not build again
-        output = self.build_target(target)
-        self.assert_output_has_not_signature(output, target, STATIC_ANALYSIS_TARGET)
-        if self.is_clang_config():
-            self.assert_output_has_not_signature(output, target, CLANG_TIDY_MYLIB_TARGET)
+
+    def test_acylic_target(self):
+        # Setup
+        self.generate_project()
+        target = ACYCLIC_TARGET
+
+        # Execute
+        self.do_basic_target_tests(target, target)
 
 
     def test_valgrind_target(self):
