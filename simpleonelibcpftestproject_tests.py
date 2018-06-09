@@ -49,7 +49,7 @@ target_signatures = {
     RUN_ALL_TESTS_TARGET : [], # bundle target only
     RUN_FAST_TESTS_TARGET : [], # bundle target only
     CLANGTIDY_TARGET : [], # bundle target only
-    ACYCLIC_TARGET : ['acyclic'],
+    ACYCLIC_TARGET : ['-nv','CPFDependencies.dot'],
     VALGRIND_TARGET : [], # bundle target only
     OPENCPPCOVERAGE_TARGET : ['OpenCppCoverage.exe', '--export_type=html'],
     INSTALL_TARGET : [], # bundle target only
