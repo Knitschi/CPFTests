@@ -21,6 +21,7 @@ from .acpftestproject_tests import *
 from .bcpftestproject_tests import *
 from .misc_tests import *
 from .simpleonelibcpftestproject_tests import *
+from .distpackageconsumption_tests import *
 
 
 def parseKeyWordArgs( arglist ):

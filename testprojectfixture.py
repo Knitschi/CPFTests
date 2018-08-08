@@ -94,7 +94,7 @@ class TestProjectFixture(unittest.TestCase):
         # add a big fat line to help with manual output parsing when an error occurs.
         print('-- Run test: {0}'.format(self._testMethodName))
 
-    def generate_project(self):
+    def generate_project(self, d_options=[]):
         """
         Setup helper that runs all steps up to the generate step.
         Previously existing configurations or generated files are deleted.
@@ -102,7 +102,11 @@ class TestProjectFixture(unittest.TestCase):
         self.cleanup_generated_files()
 
         self.run_python_command('Sources/CPFBuildscripts/0_CopyScripts.py')
-        self.run_python_command('1_Configure.py {0} --inherits {0}'.format(PARENT_CONFIG))
+        d_option_string = ''
+        for option in d_options:
+            d_option_string += '-D ' + option + ' '
+
+        self.run_python_command('1_Configure.py {0} --inherits {0} {1}'.format(PARENT_CONFIG, d_option_string))
         command = '2_Generate.py {0}'.format(PARENT_CONFIG)
         print(command)
         self.run_python_command(command)
