@@ -72,7 +72,7 @@ class DistPackageFixture(unittest.TestCase):
 
         # Delete the library project to make sure possible references to
         # the original directory cause errors.
-        # self.fsa.rmtree(self.libraryProjectFixture.cpf_root_dir)
+        self.fsa.rmtree(self.libraryProjectFixture.cpf_root_dir)
 
         # Build the consumer project.
         self.consumerProjectFixture.generate_project([
