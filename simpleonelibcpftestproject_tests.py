@@ -115,19 +115,6 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         super(SimpleOneLibCPFTestProjectFixture, self).assert_output_has_not_signature(output, target, self.get_signature(signature_target))
 
 
-    def assert_target_output_files_exist(self, target, files):
-        """
-        files must be relative to CMAKE_BINARY_DIR.
-        """
-        missing_files = []
-        for file in files:
-            full_file = self.cpf_root_dir.joinpath('Generated').joinpath(testprojectfixture.PARENT_CONFIG).joinpath(file)
-            if not self.fsa.exists(full_file):
-                missing_files.append(file)
-        if missing_files:
-            raise Exception('Test error! The following files were not produced by target {0} as expected: {1}'.format(target, '; '.join(missing_files)))
-
-
     def do_basic_target_tests(self, built_target, signature_target, target_exists = True, is_dummy_target = False, source_files = [], output_files = []):
         """
         This functions does basic tests for created targets.

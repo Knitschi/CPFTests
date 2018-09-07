@@ -90,9 +90,12 @@ class TestProjectFixture(unittest.TestCase):
 
         self.project = project
         self.cpf_root_dir = cpf_root_dir
+        self.locations = filelocations.FileLocations(cpf_root_dir)
 
         # add a big fat line to help with manual output parsing when an error occurs.
-        print('-- Run test: {0}'.format(self._testMethodName))
+        if str(self._testMethodName) != "runTest":
+            print('-- Run test: {0}'.format(self._testMethodName))
+
 
     def generate_project(self, d_options=[]):
         """
@@ -183,13 +186,50 @@ class TestProjectFixture(unittest.TestCase):
     def is_shared_libraries_config(self):
         return PARENT_CONFIG == 'Gcc-shared-debug' or PARENT_CONFIG == 'Clang-shared-debug' or PARENT_CONFIG == 'VS2017-shared'
 
+    def get_compiler_configs(self):
+        buildTypeKey = "CMAKE_BUILD_TYPE"                       # This should be defined for single config generators.
+        configurationTypeKey = "CMAKE_CONFIGURATION_TYPES"      # This should be defined for multi config generators.
+        
+        # Get the values for both variables
+        variableValues = self.get_cache_variable_values([configurationTypeKey, buildTypeKey])
+        
+        configValues = []
+        if buildTypeKey in variableValues:
+            assert(variableValues[buildTypeKey])                # It should have a value when it is defined.
+            assert(configurationTypeKey not in variableValues)  # Only one of both should be defined.
+            return variableValues[buildTypeKey]
+        else:
+            assert(configurationTypeKey in variableValues)
+            return variableValues[configurationTypeKey].split(";")
+
+    def get_cache_variable_values(self, variables):
+        build_dir = self.locations.get_full_path_config_makefile_folder(PARENT_CONFIG)
+        allVariables = self.osa.execute_command_output(
+            'cmake -LA -N',
+            cwd=build_dir,
+            print_output=miscosaccess.OutputMode.ON_ERROR,
+            print_command=False
+        )
+        
+        variableValueMap = {} 
+        for line in allVariables:
+            for variable in variables:
+                if variable in line:
+                    splitLine = line.split('=')
+                    if len(splitLine) > 1:
+                        variableValueMap[variable] = splitLine[1]
+                    else:
+                        variableValueMap[variable] = ""
+
+        return variableValueMap
+
     def get_package_version(self, package):
         package_dir = self.cpf_root_dir.joinpath('Sources/{0}'.format(package))
         script = self.cpf_root_dir.joinpath('Sources/CPFCMake/Scripts/getVersionFromRepository.cmake')
         return self.osa.execute_command_output(
             'cmake -DREPO_DIR="{0}" -P {1}'.format(package_dir, script),
             cwd=self.cpf_root_dir,
-            print_output=False,
+            print_output=miscosaccess.OutputMode.ON_ERROR,
             print_command=False
         )[0]
 
@@ -269,4 +309,35 @@ class TestProjectFixture(unittest.TestCase):
             if not string in output:
                 missing_strings.append(string)
         return missing_strings
+
+
+    def assert_target_output_files_exist(self, target, files):
+        """
+        File pathes must be relative to CMAKE_BINARY_DIR.
+        """
+        missing_files = []
+        for file in files:
+            full_file = self.cpf_root_dir.joinpath('Generated').joinpath(PARENT_CONFIG).joinpath(file)
+            if not self.fsa.exists(full_file):
+                missing_files.append(str(file))
+        if missing_files:
+            raise Exception('Test error! The following files were not produced by target {0} as expected: {1}'.format(target, '; '.join(missing_files)))
+
+
+    def assert_target_does_not_create_files(self, target, files ):
+        """
+        Throws an exception if the given files exist. 
+        File pathes must be relative to CMAKE_BINARY_DIR or full pathes.
+        """
+        existing_files = []
+        for file in files:
+            full_file = file
+            if not os.path.isabs(full_file):
+                full_file = self.cpf_root_dir.joinpath('Generated').joinpath(PARENT_CONFIG).joinpath(file)
+
+            if self.fsa.exists(full_file):
+                existing_files.append(str(full_file))
+
+        if existing_files:
+            raise Exception('Test error! The following files were unexpectedly produced by target {0}: {1}'.format(target, '; '.join(existing_files)))
 

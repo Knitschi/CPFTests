@@ -55,16 +55,20 @@ class DistPackageFixture(unittest.TestCase):
         This test builds the distribution packages of the SimpleOneLibCPFTestProject
         and tests for one of them if the package can be used within the CPFPackageConsumerTestProject.
         """
+
+        # ------------------- Setup -----------------------
+
+        compilerConfigSmallCase = testprojectfixture.COMPILER_CONFIG.lower()
+
         # build the library project
         self.libraryProjectFixture.generate_project()
         self.libraryProjectFixture.build_target("distributionPackages")
 
         # Copy binary package to the consumer package
         myLibVersion = self.libraryProjectFixture.get_package_version("MyLib")
-        libraryProjectLocations = filelocations.FileLocations(self.libraryProjectFixture.cpf_root_dir)
-        packageFileWE = "MyLib.{0}.{1}.dev-bin.{2}".format(myLibVersion, self.osa.system(), testprojectfixture.COMPILER_CONFIG)
+        packageFileWE = "MyLib.{0}.{1}.dev-bin.{2}".format(myLibVersion, self.osa.system(), compilerConfigSmallCase)
         packageFileShort = packageFileWE + ".7z"
-        packageFile = libraryProjectLocations.get_full_path_config_makefile_folder(testprojectfixture.PARENT_CONFIG).joinpath("html/Downloads/MyLib/LastBuild").joinpath(packageFileShort)
+        packageFile = self.libraryProjectFixture.locations.get_full_path_config_makefile_folder(testprojectfixture.PARENT_CONFIG).joinpath("html/Downloads/MyLib/LastBuild").joinpath(packageFileShort)
         self.fsa.copyfile(packageFile, self.consumerProjectFixture.cpf_root_dir / packageFileShort)
 
         # Unzip the binary package
@@ -74,15 +78,49 @@ class DistPackageFixture(unittest.TestCase):
         # the original directory cause errors.
         self.fsa.rmtree(self.libraryProjectFixture.cpf_root_dir)
 
+
+        # ------------------- Execute -----------------------
+
         # Build the consumer project.
         self.consumerProjectFixture.generate_project([
             "MYLIB_VERSION={0}".format(myLibVersion),
-            "MYLIB_LOCATION={0}".format(self.consumerProjectFixture.cpf_root_dir / packageFileWE)
+            "MYLIB_LOCATION={0}".format(self.consumerProjectFixture.cpf_root_dir / packageFileWE / "MyLib")
             ])
-        output = self.consumerProjectFixture.build_target("ALL_BUILD")
+        self.consumerProjectFixture.build_target("ALL_BUILD")
 
-        # Assert the output does not contain any warnings
 
+        # ------------------- Verify -----------------------
+
+        # Check that the deployment of the external dll works by running the executable
+        binaryOutputDirCurrentConfig = self.consumerProjectFixture.locations.get_full_path_binary_output_folder(
+            testprojectfixture.PARENT_CONFIG,
+            testprojectfixture.COMPILER_CONFIG,
+            "MyLibConsumer" 
+        )
+        consumerExe = binaryOutputDirCurrentConfig / "MyLibConsumer-{0}.exe".format(compilerConfigSmallCase)
+        self.assertTrue(self.osa.execute_command(str(consumerExe) , self.consumerProjectFixture.cpf_root_dir))
+        
+        # Assert that the buildstage directories of the not-current
+        # configuration do not contain the MyLib-<config>.dll (this this was a bug)
+        compilerConfigs = self.consumerProjectFixture.get_compiler_configs()
+        if len(compilerConfigs) > 1:
+            notCurrentCompilerConfig = list(set(compilerConfigs) - set([testprojectfixture.PARENT_CONFIG]))[0]
+            binaryOutputDirOtherConfig = self.consumerProjectFixture.locations.get_full_path_binary_output_folder(
+                testprojectfixture.PARENT_CONFIG,
+                notCurrentCompilerConfig,
+                "MyLibConsumer" 
+            )
+            dllFile = binaryOutputDirOtherConfig / "MyLib-{0}.dll".format(testprojectfixture.COMPILER_CONFIG.lower())
+            print("-----------" + str(dllFile))
+
+            self.consumerProjectFixture.assert_target_does_not_create_files("MyLibConsumer", [dllFile])
+
+        # Assert .pdb file is deployed
+
+        # Assert source files are deployed
+
+
+ 
         
 
 

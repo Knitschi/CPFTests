@@ -11,6 +11,8 @@ set( files
     __init__.py
     acpftestproject_tests.py
     bcpftestproject_tests.py
+    cpfpackageconsumertestprojectfixture.py
+    distpackageconsumption_tests.py
     documentation/CPFTests.dox
     misc_tests.py
     ping.py
