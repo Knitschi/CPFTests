@@ -237,10 +237,13 @@ class TestProjectFixture(unittest.TestCase):
         for target in targets:
             self.build_target(target)
 
-    def build_target(self, target):
+    def build_target(self, target, config=None ):
         command = '3_Make.py --target {0}'.format(target)
         if self.is_visual_studio_config():
-            command += ' --config {0}'.format(COMPILER_CONFIG)
+            if config:
+                command += ' --config {0}'.format(config)
+            else:
+                command += ' --config {0}'.format(COMPILER_CONFIG)
         print(command) # We do our own abbreviated command printing here.
         outputlist = self.run_python_command(command)
         return '\n'.join(outputlist)

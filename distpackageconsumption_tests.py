@@ -20,6 +20,8 @@ class DistPackageFixture(unittest.TestCase):
 
     def setUp(self):
 
+        print('-- Run test: {0}'.format(self._testMethodName))
+
         self.fsa = filesystemaccess.FileSystemAccess()
         self.osa = miscosaccess.MiscOsAccess()
 
@@ -35,6 +37,7 @@ class DistPackageFixture(unittest.TestCase):
         # Checkout the consumer project.
         cpfpackageconsumertestprojectfixture.CPFPackageConsumerTestProjectFixture.setUpClass()
         self.consumerProjectFixture = cpfpackageconsumertestprojectfixture.CPFPackageConsumerTestProjectFixture()
+        
         self.consumerProjectFixture.setUp()
 
 
@@ -50,41 +53,54 @@ class DistPackageFixture(unittest.TestCase):
         return '.'.join(versionElements)
 
 
+    def get_package_file_we(self, version, compilerConfig):
+        return "MyLib.{0}.{1}.dev-bin.{2}".format(version, self.osa.system(), compilerConfig.lower())
+
+
     def test_consume_the_simple_test_project_library(self):
         """
         This test builds the distribution packages of the SimpleOneLibCPFTestProject
         and tests for one of them if the package can be used within the CPFPackageConsumerTestProject.
         """
-
         # ------------------- Setup -----------------------
 
-        compilerConfigSmallCase = testprojectfixture.COMPILER_CONFIG.lower()
-
-        # build the library project
+        # Create a distribution package for each compiler config and deploy it in the consumer project.
         self.libraryProjectFixture.generate_project()
-        self.libraryProjectFixture.build_target("distributionPackages")
-
-        # Copy binary package to the consumer package
+        compilerConfigs = self.libraryProjectFixture.get_compiler_configs()
         myLibVersion = self.libraryProjectFixture.get_package_version("MyLib")
-        packageFileWE = "MyLib.{0}.{1}.dev-bin.{2}".format(myLibVersion, self.osa.system(), compilerConfigSmallCase)
-        packageFileShort = packageFileWE + ".7z"
-        packageFile = self.libraryProjectFixture.locations.get_full_path_config_makefile_folder(testprojectfixture.PARENT_CONFIG).joinpath("html/Downloads/MyLib/LastBuild").joinpath(packageFileShort)
-        self.fsa.copyfile(packageFile, self.consumerProjectFixture.cpf_root_dir / packageFileShort)
+        commonPackageDirectory = self.consumerProjectFixture.cpf_root_dir / "MyLib.{0}.{1}.dev-bin".format(myLibVersion, self.osa.system()) / "MyLib"   # Note that the last MyLib is required or the pathes in the target properties will not be correct.
+        
+        for config in compilerConfigs:
+            
+            # Build the library project
+            self.libraryProjectFixture.build_target("distributionPackages", config=config)
 
-        # Unzip the binary package
-        self.osa.execute_command("cmake -E tar xzf " + packageFileShort, self.consumerProjectFixture.cpf_root_dir)
+            # Copy binary packages to the consumer package
+            packageFileWE = self.get_package_file_we(myLibVersion, config)
+            packageFileShort = packageFileWE + ".7z"
+            packageFile = self.libraryProjectFixture.locations.get_full_path_config_makefile_folder(testprojectfixture.PARENT_CONFIG).joinpath("html/Downloads/MyLib/LastBuild").joinpath(packageFileShort)
+            self.fsa.copyfile(packageFile, self.consumerProjectFixture.cpf_root_dir / packageFileShort)
+
+            # Unzip the binary package
+            self.osa.execute_command("cmake -E tar xzf " + packageFileShort, self.consumerProjectFixture.cpf_root_dir)
+
+            # Copy the package content into a directory that contains the package contents of all compiler configurations.
+            configPackageDir = self.consumerProjectFixture.cpf_root_dir / packageFileWE
+            self.fsa.copytree(configPackageDir / "MyLib", commonPackageDirectory)
+            self.fsa.rmtree(configPackageDir)
+
 
         # Delete the library project to make sure possible references to
         # the original directory cause errors.
         self.fsa.rmtree(self.libraryProjectFixture.cpf_root_dir)
 
-
         # ------------------- Execute -----------------------
 
         # Build the consumer project.
+        packageFileWE = self.get_package_file_we(myLibVersion, testprojectfixture.COMPILER_CONFIG)
         self.consumerProjectFixture.generate_project([
             "MYLIB_VERSION={0}".format(myLibVersion),
-            "MYLIB_LOCATION={0}".format(self.consumerProjectFixture.cpf_root_dir / packageFileWE / "MyLib")
+            "MYLIB_LOCATION={0}".format(commonPackageDirectory)
             ])
         self.consumerProjectFixture.build_target("ALL_BUILD")
 
@@ -97,30 +113,24 @@ class DistPackageFixture(unittest.TestCase):
             testprojectfixture.COMPILER_CONFIG,
             "MyLibConsumer" 
         )
-        consumerExe = binaryOutputDirCurrentConfig / "MyLibConsumer-{0}.exe".format(compilerConfigSmallCase)
+        consumerExe = binaryOutputDirCurrentConfig / "MyLibConsumer-{0}.exe".format(testprojectfixture.COMPILER_CONFIG.lower())
         self.assertTrue(self.osa.execute_command(str(consumerExe) , self.consumerProjectFixture.cpf_root_dir))
         
-        # Assert that the buildstage directories of the not-current
-        # configuration do not contain the MyLib-<config>.dll (this this was a bug)
-        compilerConfigs = self.consumerProjectFixture.get_compiler_configs()
-        if len(compilerConfigs) > 1:
-            notCurrentCompilerConfig = list(set(compilerConfigs) - set([testprojectfixture.PARENT_CONFIG]))[0]
-            binaryOutputDirOtherConfig = self.consumerProjectFixture.locations.get_full_path_binary_output_folder(
-                testprojectfixture.PARENT_CONFIG,
-                notCurrentCompilerConfig,
-                "MyLibConsumer" 
-            )
-            dllFile = binaryOutputDirOtherConfig / "MyLib-{0}.dll".format(testprojectfixture.COMPILER_CONFIG.lower())
-            print("-----------" + str(dllFile))
+        # Assert that the binary output directory of one config does not contain deployed dlls from another.
+        for config in compilerConfigs:
+            otherConfigs = list(set(compilerConfigs) - set([config]))
+            for otherConfig in otherConfigs:
+                binaryOutputDirConfig = self.consumerProjectFixture.locations.get_full_path_binary_output_folder(
+                    testprojectfixture.PARENT_CONFIG,
+                    config,
+                    "MyLibConsumer" 
+                )
+                dllFile = binaryOutputDirConfig / "MyLib-{0}.dll".format(otherConfig.lower())
 
-            self.consumerProjectFixture.assert_target_does_not_create_files("MyLibConsumer", [dllFile])
+                self.consumerProjectFixture.assert_target_does_not_create_files("MyLibConsumer", [dllFile])
 
         # Assert .pdb file is deployed
 
         # Assert source files are deployed
-
-
- 
-        
 
 
