@@ -320,9 +320,14 @@ class TestProjectFixture(unittest.TestCase):
         """
         missing_files = []
         for file in files:
-            full_file = self.cpf_root_dir.joinpath('Generated').joinpath(PARENT_CONFIG).joinpath(file)
+
+            full_file = file
+            if not os.path.isabs(full_file):
+                full_file = self.cpf_root_dir / 'Generated' / PARENT_CONFIG / file
+
             if not self.fsa.exists(full_file):
-                missing_files.append(str(file))
+                missing_files.append(str(full_file))
+
         if missing_files:
             raise Exception('Test error! The following files were not produced by target {0} as expected: {1}'.format(target, '; '.join(missing_files)))
 
@@ -336,7 +341,7 @@ class TestProjectFixture(unittest.TestCase):
         for file in files:
             full_file = file
             if not os.path.isabs(full_file):
-                full_file = self.cpf_root_dir.joinpath('Generated').joinpath(PARENT_CONFIG).joinpath(file)
+                full_file = self.cpf_root_dir / 'Generated' / PARENT_CONFIG / file
 
             if self.fsa.exists(full_file):
                 existing_files.append(str(full_file))

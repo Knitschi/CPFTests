@@ -129,8 +129,20 @@ class DistPackageFixture(unittest.TestCase):
 
                 self.consumerProjectFixture.assert_target_does_not_create_files("MyLibConsumer", [dllFile])
 
-        # Assert .pdb file is deployed
+        # Assert .pdb files are deployed in debug configuration
+        debugConfig = "Debug"
+        binaryOutputDirConfig = self.consumerProjectFixture.locations.get_full_path_binary_output_folder(
+            testprojectfixture.PARENT_CONFIG,
+            debugConfig,
+            "MyLibConsumer" 
+        )
 
-        # Assert source files are deployed
+        pdbFileLib = binaryOutputDirConfig / "MyLib-{0}.pdb".format(debugConfig.lower())
+        pdbFileFixtureLib = binaryOutputDirConfig / "MyLib_fixtures-{0}.pdb".format(debugConfig.lower())
+        self.consumerProjectFixture.assert_target_output_files_exist("MyLibConsumer", [pdbFileLib, pdbFileFixtureLib])
 
+        # Assert source files are provided by the package for the debug configuration.
+        librarySourceFile = commonPackageDirectory / "src/MyLib/function.cpp"
+        libraryHeaderFile = commonPackageDirectory / "src/MyLib/function.h"
+        self.consumerProjectFixture.assert_target_output_files_exist("MyLib_distributionPackages", [librarySourceFile])
 
