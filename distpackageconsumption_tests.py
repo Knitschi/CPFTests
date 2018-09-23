@@ -82,7 +82,7 @@ class DistPackageFixture(unittest.TestCase):
             self.fsa.copyfile(packageFile, self.consumerProjectFixture.cpf_root_dir / packageFileShort)
 
             # Unzip the binary package
-            self.osa.execute_command("cmake -E tar xzf " + packageFileShort, self.consumerProjectFixture.cpf_root_dir)
+            self.osa.execute_command_output("cmake -E tar xzf " + packageFileShort, self.consumerProjectFixture.cpf_root_dir, print_output=miscosaccess.OutputMode.ON_ERROR, print_command=False)
 
             # Copy the package content into a directory that contains the package contents of all compiler configurations.
             configPackageDir = self.consumerProjectFixture.cpf_root_dir / packageFileWE
@@ -129,17 +129,18 @@ class DistPackageFixture(unittest.TestCase):
 
                 self.consumerProjectFixture.assert_target_does_not_create_files("MyLibConsumer", [dllFile])
 
-        # Assert .pdb files are deployed in debug configuration
-        debugConfig = "Debug"
-        binaryOutputDirConfig = self.consumerProjectFixture.locations.get_full_path_binary_output_folder(
-            testprojectfixture.PARENT_CONFIG,
-            debugConfig,
-            "MyLibConsumer" 
-        )
+        # Assert .pdb files are deployed in debug configuration when MyLib is a shared library.
+        if self.consumerProjectFixture.is_shared_libraries_config():
+            debugConfig = "Debug"
+            binaryOutputDirConfig = self.consumerProjectFixture.locations.get_full_path_binary_output_folder(
+                testprojectfixture.PARENT_CONFIG,
+                debugConfig,
+                "MyLibConsumer" 
+            )
 
-        pdbFileLib = binaryOutputDirConfig / "MyLib-{0}.pdb".format(debugConfig.lower())
-        pdbFileFixtureLib = binaryOutputDirConfig / "MyLib_fixtures-{0}.pdb".format(debugConfig.lower())
-        self.consumerProjectFixture.assert_target_output_files_exist("MyLibConsumer", [pdbFileLib, pdbFileFixtureLib])
+            pdbFileLib = binaryOutputDirConfig / "MyLib-{0}.pdb".format(debugConfig.lower())
+            pdbFileFixtureLib = binaryOutputDirConfig / "MyLib_fixtures-{0}.pdb".format(debugConfig.lower())
+            self.consumerProjectFixture.assert_target_output_files_exist("MyLibConsumer", [pdbFileLib, pdbFileFixtureLib])
 
         # Assert source files are provided by the package for the debug configuration.
         librarySourceFile = commonPackageDirectory / "src/MyLib/function.cpp"
