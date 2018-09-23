@@ -436,12 +436,12 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
                 ])
             if self.is_debug_compiler_config():
                 output.extend([
-                    'InstallStage/MyLib/debug/MyLib_fixtures{0}-compiler.pdb'.format(config),
-                    'InstallStage/MyLib/debug/MyLib_fixtures{0}-compiler.pdb'.format(config),
-                    'InstallStage/MyLib/debug/MyLib_tests{0}-compiler.pdb'.format(config),
-                    'InstallStage/MyLib/debug/MyLib_tests{0}-compiler.pdb'.format(config),
-                    'InstallStage/MyLib/debug/MyLib{0}-compiler.pdb'.format(config),
-                    'InstallStage/MyLib/debug/MyLib{0}-compiler.pdb'.format(config),
+                    'InstallStage/MyLib/lib/MyLib_fixtures{0}-compiler.pdb'.format(config),
+                    'InstallStage/MyLib/lib/MyLib_fixtures{0}-compiler.pdb'.format(config),
+                    'InstallStage/MyLib/lib/MyLib_tests{0}-compiler.pdb'.format(config),
+                    'InstallStage/MyLib/lib/MyLib_tests{0}-compiler.pdb'.format(config),
+                    'InstallStage/MyLib/lib/MyLib{0}-compiler.pdb'.format(config),
+                    'InstallStage/MyLib/lib/MyLib{0}-compiler.pdb'.format(config),
                 ])
 
         elif self.is_linux():
