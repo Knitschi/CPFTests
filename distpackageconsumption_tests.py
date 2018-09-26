@@ -54,7 +54,7 @@ class DistPackageFixture(unittest.TestCase):
 
 
     def get_package_file_we(self, version, compilerConfig):
-        return "MyLib.{0}.{1}.dev-bin.{2}".format(version, self.osa.system(), compilerConfig.lower())
+        return "MyLib.{0}.{1}.dev-bin.{2}".format(version, self.osa.system(), compilerConfig)
 
 
     def test_consume_the_simple_test_project_library(self):
@@ -69,7 +69,7 @@ class DistPackageFixture(unittest.TestCase):
         compilerConfigs = self.libraryProjectFixture.get_compiler_configs()
         myLibVersion = self.libraryProjectFixture.get_package_version("MyLib")
         commonPackageDirectory = self.consumerProjectFixture.cpf_root_dir / "MyLib.{0}.{1}.dev-bin".format(myLibVersion, self.osa.system()) / "MyLib"   # Note that the last MyLib is required or the pathes in the target properties will not be correct.
-        
+ 
         for config in compilerConfigs:
             
             # Build the library project

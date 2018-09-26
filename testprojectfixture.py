@@ -8,6 +8,7 @@ import os
 import unittest
 from pathlib import PurePosixPath
 import shutil
+import pprint
 
 from Sources.CPFBuildscripts.python import miscosaccess
 from Sources.CPFBuildscripts.python import filesystemaccess
@@ -197,7 +198,8 @@ class TestProjectFixture(unittest.TestCase):
         if buildTypeKey in variableValues:
             assert(variableValues[buildTypeKey])                # It should have a value when it is defined.
             assert(configurationTypeKey not in variableValues)  # Only one of both should be defined.
-            return variableValues[buildTypeKey]
+            return [variableValues[buildTypeKey]]
+
         else:
             assert(configurationTypeKey in variableValues)
             return variableValues[configurationTypeKey].split(";")
