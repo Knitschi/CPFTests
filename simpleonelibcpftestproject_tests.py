@@ -96,7 +96,7 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
     @classmethod
     def setUpClass(cls):
         cls.project = 'SimpleOneLibCPFTestProject'
-        cls.cpf_root_dir = testprojectfixture.prepareTestProject('https://prefix_dirhub.com/Knitschi/SimpleOneLibCPFTestProject.prefix_dir', cls.project)
+        cls.cpf_root_dir = testprojectfixture.prepareTestProject('https://github.com/Knitschi/SimpleOneLibCPFTestProject.git', cls.project)
 
     def setUp(self):
         super(SimpleOneLibCPFTestProjectFixture, self).setUp(self.project, self.cpf_root_dir)
@@ -380,7 +380,7 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         sources = [
             'Sources/MyLib/function.cpp'
         ]
-        output = self.get_expected_package_content('InstallStage')
+        output = self.get_expected_package_content('InstallStage/MyLib')
 
         # Execute
         self.do_basic_target_tests(target, target, source_files=sources, output_files=output)
@@ -394,6 +394,7 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         config = testprojectfixture.COMPILER_CONFIG.lower()
 
         # location primitives
+        prefix_dir = PurePosixPath(prefix_dir)
         sharedLibOutputDir = ''
         if self.is_windows():
             sharedLibOutputDir = prefix_dir
@@ -402,9 +403,9 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
 
         runtimeOutputDir = ''
         if self.is_windows():
-            sharedLibOutputDir = prefix_dir
+            runtimeOutputDir = prefix_dir
         else:
-            sharedLibOutputDir = prefix_dir / 'bin'
+            runtimeOutputDir = prefix_dir / 'bin'
 
         staticLibOutputDir = prefix_dir / 'lib'
         
@@ -433,7 +434,7 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         ])
 
         # Public header files
-        includePath = prefix_dir / 'include '
+        includePath = prefix_dir / 'include/MyLib'
         packageFiles.extend([
             includePath / 'function.h',
             includePath / 'fixture.h',
@@ -445,18 +446,18 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         # Library files
         if self.is_shared_libraries_config():
             packageFiles.extend([
-                sharedLibOutputDir / libBaseName + sharedLibExtension,
-                sharedLibOutputDir / fixtureLibBaseName + sharedLibExtension
+                sharedLibOutputDir / (libBaseName + sharedLibExtension),
+                sharedLibOutputDir / (fixtureLibBaseName + sharedLibExtension)
             ])
         else:
             packageFiles.extend([
-                staticLibOutputDir / libBaseName + staticLibExtension,
-                staticLibOutputDir / fixtureLibBaseName  + staticLibExtension
+                staticLibOutputDir / (libBaseName + staticLibExtension),
+                staticLibOutputDir / (fixtureLibBaseName  + staticLibExtension)
             ])
 
         # Test executable
         packageFiles.extend([
-            runtimeOutputDir / testExeBaseName + exeExtension,
+            runtimeOutputDir / (testExeBaseName + exeExtension),
         ])
 
         # Platform dependend files
@@ -465,8 +466,8 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
             # On windows .lib files are also created for shared libraris.
             if self.is_shared_libraries_config():
                 packageFiles.extend([
-                    staticLibOutputDir / libBaseName + staticLibExtension,
-                    staticLibOutputDir / fixtureLibBaseName  + staticLibExtension
+                    staticLibOutputDir / (libBaseName + staticLibExtension),
+                    staticLibOutputDir / (fixtureLibBaseName  + staticLibExtension)
                 ])
 
             # pdb and source files
@@ -485,7 +486,7 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
                 ])
 
                 # Source files are required for debugging with pdb files.
-                sourcePath = prefix_dir / 'src'
+                sourcePath = prefix_dir / 'src/MyLib'
                 packageFiles.extend([
                     sourcePath / 'cpfPackageVersion_MyLib.h',
                     sourcePath / 'fixture.cpp',
@@ -502,8 +503,8 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
             otherPath = prefix_dir / 'other'
             if self.is_debug_compiler_config():
                 packageFiles.extend([
-                    otherPath / 'ABI_{0}.dump'.format(libBaseName),
-                    otherPath / 'ABI_{0}.dump'.format(fixtureLibBaseName),
+                    otherPath / 'ABI_{0}-{1}.dump'.format(libBaseName, version),
+                    otherPath / 'ABI_{0}-{1}.dump'.format(fixtureLibBaseName, version),
                 ])
 
         return packageFiles

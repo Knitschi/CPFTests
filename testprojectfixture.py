@@ -379,7 +379,7 @@ class TestProjectFixture(unittest.TestCase):
         for file in files:
 
             full_file = file
-            if not os.path.isabs(full_file):
+            if not os.path.isabs(str(full_file)):
                 full_file = self.cpf_root_dir / 'Generated' / PARENT_CONFIG / file
 
             if not self.fsa.exists(full_file):
