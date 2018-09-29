@@ -34,3 +34,29 @@ class ACPFTestProjectFixture(testprojectfixture.TestProjectFixture):
 
         # Test the pipeline works
         self.build_target('pipeline')
+
+
+    def test_dlls_are_deployed_into_build_tree(self):
+        """
+        Check that the deployment of dlls from inlined targets into the build tree works on windows.
+        """
+        if self.is_windows:
+            # Setup
+            self.generate_project()
+
+            # Execute
+            self.build_target('APackage')
+
+            # Verify that the dlls are in place by running the executable.
+            version = self.get_package_version('APackage')
+            exe = self.get_package_executable_path_in_build_tree(
+                'APackage',
+                testprojectfixture.PARENT_CONFIG,
+                testprojectfixture.COMPILER_CONFIG,
+                version
+            )
+            self.assertTrue(self.osa.execute_command(str(exe) , self.cpf_root_dir))
+
+
+
+    

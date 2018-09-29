@@ -108,12 +108,13 @@ class DistPackageFixture(unittest.TestCase):
         # ------------------- Verify -----------------------
 
         # Check that the deployment of the external dll works by running the executable
-        binaryOutputDirCurrentConfig = self.consumerProjectFixture.locations.get_full_path_binary_output_folder(
+        consumerVersion = self.consumerProjectFixture.get_package_version('MyLibConsumer')
+        consumerExe = self.consumerProjectFixture.get_package_executable_path_in_build_tree(
+            'MyLibConsumer',
             testprojectfixture.PARENT_CONFIG,
             testprojectfixture.COMPILER_CONFIG,
-            "MyLibConsumer" 
+            consumerVersion
         )
-        consumerExe = binaryOutputDirCurrentConfig / "MyLibConsumer-{0}.exe".format(testprojectfixture.COMPILER_CONFIG.lower())
         self.assertTrue(self.osa.execute_command(str(consumerExe) , self.consumerProjectFixture.cpf_root_dir))
         
         # Assert that the binary output directory of one config does not contain deployed dlls from another.
@@ -121,29 +122,27 @@ class DistPackageFixture(unittest.TestCase):
             otherConfigs = list(set(compilerConfigs) - set([config]))
             for otherConfig in otherConfigs:
                 binaryOutputDirConfig = self.consumerProjectFixture.locations.get_full_path_binary_output_folder(
+                    "MyLibConsumer",
                     testprojectfixture.PARENT_CONFIG,
-                    config,
-                    "MyLibConsumer" 
+                    config
                 )
                 dllFile = binaryOutputDirConfig / "MyLib-{0}.dll".format(otherConfig.lower())
 
                 self.consumerProjectFixture.assert_target_does_not_create_files("MyLibConsumer", [dllFile])
 
         # Assert .pdb files are deployed in debug configuration when MyLib is a shared library.
+        # This tests the pdb deployment for imported targets.
         if self.consumerProjectFixture.is_shared_libraries_config():
             debugConfig = "Debug"
             binaryOutputDirConfig = self.consumerProjectFixture.locations.get_full_path_binary_output_folder(
+                "MyLibConsumer",
                 testprojectfixture.PARENT_CONFIG,
-                debugConfig,
-                "MyLibConsumer" 
+                debugConfig
             )
 
             pdbFileLib = binaryOutputDirConfig / "MyLib-{0}.pdb".format(debugConfig.lower())
             pdbFileFixtureLib = binaryOutputDirConfig / "MyLib_fixtures-{0}.pdb".format(debugConfig.lower())
             self.consumerProjectFixture.assert_target_output_files_exist("MyLibConsumer", [pdbFileLib, pdbFileFixtureLib])
 
-        # Assert source files are provided by the package for the debug configuration.
-        librarySourceFile = commonPackageDirectory / "src/MyLib/function.cpp"
-        libraryHeaderFile = commonPackageDirectory / "src/MyLib/function.h"
-        self.consumerProjectFixture.assert_target_output_files_exist("MyLib_distributionPackages", [librarySourceFile])
+
 

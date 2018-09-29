@@ -6,6 +6,7 @@ import unittest
 import os
 import pprint
 import types
+from pathlib import PureWindowsPath, PurePosixPath, PurePath
 
 from Sources.CPFBuildscripts.python import miscosaccess
 
@@ -346,7 +347,7 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         target = MYLIB_TARGET
 
         # Execute
-        self.do_basic_target_tests(target, target)
+        self.do_basic_target_tests(target, t arget)
 
 
     def test_MyLib_Tests_target(self):
@@ -367,6 +368,151 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         self.do_basic_target_tests(target, target)
 
 
+    def test_install_MyLib_target(self):
+        # Setup
+        self.generate_project()
+        target = INSTALL_MYLIB_TARGET
+        config = testprojectfixture.COMPILER_CONFIG.lower()
+        if config == 'release':
+            config = ''
+        else:
+            config = '-' + config
+        version = self.get_package_version('MyLib')
+
+        sources = [
+            'Sources/MyLib/function.cpp'
+        ]
+
+        output = self.get_expected_package_content(prefix_dir, 'InstallStage' ):
+
+        else:
+            raise Exception('Unhandled case.')
+
+        # Execute
+        self.do_basic_target_tests(target, target, source_files=sources, output_files=output)
+
+
+    def get_expected_package_content(self, prefix_dir):
+
+        packageFiles = []
+
+        # location primitives
+        sharedLibOutputDir = ''
+        if self.is_windows():
+            sharedLibOutputDir = prefix_dir
+        else:
+            sharedLibOutputDir = prefix_dir / 'lib'
+
+        runtimeOutputDir = ''
+        if self.is_windows():
+            sharedLibOutputDir = prefix_dir
+        else:
+            sharedLibOutputDir = prefix_dir / 'bin'
+
+        staticLibOutputDir = prefix_dir / 'lib'
+        
+        libBaseName = self.get_target_binary_base_name('MyLib', testprojectfixture.COMPILER_CONFIG, version)
+        testExeBaseName = self.get_target_binary_base_name('MyLib_tests', testprojectfixture.COMPILER_CONFIG, version)
+        fixtureLibBaseName = self.get_target_binary_base_name('MyLib_fixtures', testprojectfixture.COMPILER_CONFIG, version)
+        
+        if self.is_linux():
+            libBaseName += '.' + version
+            testExeBaseName += '.' + version
+            fixtureLibBaseName += '.' + version
+
+        sharedLibExtension = self.get_shared_lib_extension()
+        staticLibExtension = self.get_static_lib_extension()
+        exeExtension = self.get_exe_extension()
+
+
+        # Assemble pathes for package files.
+
+        # CMake package files
+        cmakeFilesPath = libPath / 'cmake/MyLib'
+        packageFiles.extend([
+            cmakeFilesPath / 'MyLibConfig.cmake',
+            cmakeFilesPath / 'MyLibConfigVersion.cmake',
+            cmakeFilesPath / 'MyLibTargets-{0}.cmake'.format(config),
+            cmakeFilesPath / 'MyLibTargets.cmake',
+        ])
+
+        # Public header files
+        includePath = prefix_dir / 'include '
+        packageFiles.extend([
+            includePath / 'function.h',
+            includePath / 'fixture.h',
+            includePath / 'mylib_export.h',
+            includePath / 'mylib_tests_export.h',
+            includePath / 'cpfPackageVersion_MyLib.h'
+        ])
+
+        # Library files
+        if self.is_shared_libraries_config():
+            packageFiles.extend([
+                sharedLibOutputDir / libBaseName + sharedLibExtension,
+                sharedLibOutputDir / fixtureLibBaseName + sharedLibExtension
+            ])
+        else:
+            packageFiles.extend([
+                staticLibOutputDir / libBaseName + staticLibExtension,
+                staticLibOutputDir / fixtureLibBaseName  + staticLibExtension
+            ])
+
+        # Test executable
+        packageFiles.extend([
+            runtimeOutputDir / testExeBaseName + exeExtension,
+        ])
+
+        # Platform dependend files
+        if self.is_windows():
+
+            # On windows .lib files are also created for shared libraris.
+            if self.is_shared_libraries_config():
+                packageFiles.extend([
+                    staticLibOutputDir / libBaseName + staticLibExtension,
+                    staticLibOutputDir / fixtureLibBaseName  + staticLibExtension
+                ])
+
+            # pdb and source files
+            if self.is_debug_compiler_config():
+
+                if self.is_shared_libraries_config():
+                    packageFiles.extend([
+                        sharedLibOutputDir / '{0}.pdb'.format(libBaseName),
+                        sharedLibOutputDir / '{0}.pdb'.format(fixtureLibBaseName)
+                    ])
+
+                packageFiles.extend([
+                    staticLibOutputDir / '{0}-compiler.pdb'.format(libBaseName),
+                    staticLibOutputDir / '{0}-compiler.pdb'.format(fixtureLibBaseName)
+                    staticLibOutputDir / '{0}-compiler.pdb'.format(testExeBaseName),
+                ])
+
+                # Source files are required for debugging with pdb files.
+                sourcePath = prefix_dir / 'src'
+                packageFiles.extend([
+                    sourcePath / 'cpfPackageVersion_MyLib.h',
+                    sourcePath / 'fixture.cpp',
+                    sourcePath / 'fixture.h',
+                    sourcePath / 'function.cpp',
+                    sourcePath / 'function.h',
+                    sourcePath / 'mylib_export.h',
+                    sourcePath / 'mylib_tests_export.h'
+                ])
+
+        if self.is_linux():
+
+            # Abi dumps
+            otherPath = prefix_dir / 'other'
+            if self.is_debug_compiler_config():
+                packageFiles.extend([
+                    otherPath / 'ABI_{0}.dump'.format(libBaseName),
+                    otherPath / 'ABI_{0}.dump'.format(fixtureLibBaseName),
+                ])
+
+        return packageFiles
+
+
     def test_distributionPackages_MyLib_target(self):
         # Setup
         self.generate_project()
@@ -382,96 +528,28 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         sources = [
             'Sources/MyLib/function.cpp'
         ]
+        # Check the zip file is created.
+        packageFileWE = 'MyLib.{0}.{1}.dev-bin.{2}'.format(version, os,testprojectfixture.COMPILER_CONFIG)
+        packageFileShort = packageFileWE + '.7z'
+        packageFileDir = PurePosixPath('html/Downloads/MyLib/LastBuild')
         output = [
-            'html/Downloads/MyLib/LastBuild/MyLib.{0}.{1}.dev-bin.{2}.7z'.format(version, os,testprojectfixture.COMPILER_CONFIG) 
+            packageFileDir / packageFileShort
         ]
-
-        if self.is_linux():
-            # for now we check the 
-            if self.is_debug_compiler_config():
-                output.extend([
-                    '_pckg/Debug/dev-bin/MyLib/debug/ABI_MyLib_fixtures{0}.{1}.dump'.format(config, version),
-                    '_pckg/Debug/dev-bin/MyLib/debug/ABI_MyLib{0}.{1}.dump'.format(config, version),
-                ])
-
 
         # Execute
         self.do_basic_target_tests(target, target, source_files=sources, output_files=output)
 
+        # Extract the zip file and check its content
+        self.osa.execute_command_output(
+            "cmake -E tar xzf " + packageFileShort,
+            packageFileDir,
+            print_output=miscosaccess.OutputMode.ON_ERROR,
+            print_command=False
+            )
 
-    def test_install_MyLib_target(self):
-        # Setup
-        self.generate_project()
-        target = INSTALL_MYLIB_TARGET
-        config = testprojectfixture.COMPILER_CONFIG.lower()
-        if config == 'release':
-            config = ''
-        else:
-            config = '-' + config
-        version = self.get_package_version('MyLib')
-
-        sources = [
-            'Sources/MyLib/function.cpp'
-        ]
-        output = [
-            # public header
-            'InstallStage/MyLib/include/MyLib/fixture.h',
-            'InstallStage/MyLib/include/MyLib/function.h',
-            'InstallStage/MyLib/include/MyLib/mylib_export.h',
-            'InstallStage/MyLib/include/MyLib/mylib_tests_export.h',
-            # cmake files
-            'InstallStage/MyLib/lib/cmake/MyLib/MyLibConfig.cmake',
-            'InstallStage/MyLib/lib/cmake/MyLib/MyLibConfigVersion.cmake',
-            'InstallStage/MyLib/lib/cmake/MyLib/MyLibTargets.cmake',
-            'InstallStage/MyLib/lib/cmake/MyLib/MyLibTargets{0}.cmake'.format(config),
-        ]
-        if self.is_windows():
-            output.extend([
-                'InstallStage/MyLib/MyLib_tests{0}.exe'.format(config),
-            ])
-            if self.is_shared_libraries_config():
-                output.extend([
-                    'InstallStage/MyLib/MyLib_fixtures{0}.dll'.format(config),
-                    'InstallStage/MyLib/MyLib{0}.dll'.format(config),
-                ])
-            if self.is_debug_compiler_config():
-                output.extend([
-                    'InstallStage/MyLib/lib/MyLib_fixtures{0}-compiler.pdb'.format(config),
-                    'InstallStage/MyLib/lib/MyLib_fixtures{0}-compiler.pdb'.format(config),
-                    'InstallStage/MyLib/lib/MyLib_tests{0}-compiler.pdb'.format(config),
-                    'InstallStage/MyLib/lib/MyLib_tests{0}-compiler.pdb'.format(config),
-                    'InstallStage/MyLib/lib/MyLib{0}-compiler.pdb'.format(config),
-                    'InstallStage/MyLib/lib/MyLib{0}-compiler.pdb'.format(config),
-                ])
-
-        elif self.is_linux():
-
-            version_parts = version.split('.')
-            major_minor_version = version_parts[0] + '.' + version_parts[1]
-
-            output.extend([
-                'InstallStage/MyLib/bin/MyLib_tests{0}'.format(config),
-                'InstallStage/MyLib/bin/MyLib_tests{0}-{1}'.format(config, version),
-            ])
-            if self.is_shared_libraries_config():
-                output.extend([
-                    'InstallStage/MyLib/lib/MyLib_fixtures{0}.so'.format(config),
-                    'InstallStage/MyLib/lib/MyLib_fixtures{0}.so.{1}'.format(config, major_minor_version),
-                    'InstallStage/MyLib/lib/MyLib_fixtures{0}.so.{1}'.format(config, version),
-                    'InstallStage/MyLib/lib/MyLib{0}.so'.format(config),
-                    'InstallStage/MyLib/lib/MyLib{0}.so.{1}'.format(config, major_minor_version),
-                    'InstallStage/MyLib/lib/MyLib{0}.so.{1}'.format(config, version),
-                ])
-            else:
-                output.extend([
-                    'InstallStage/MyLib/lib/MyLib_fixtures.a',
-                    'InstallStage/MyLib/lib/MyLib.a',
-                ])
-        else:
-            raise Exception('Unhandled case.')
-
-        # Execute
-        self.do_basic_target_tests(target, target, source_files=sources, output_files=output)
+        # Check the content of the package is correct.
+        package_files = self.get_expected_package_content(packageFileDir / packageFileWE / 'MyLib')
+        self.assert_target_output_files_exist('MyLib', package_files)
 
 
     def test_runAllTests_MyLib_target(self):

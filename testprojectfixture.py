@@ -160,6 +160,9 @@ class TestProjectFixture(unittest.TestCase):
     def is_debug_compiler_config(self):
         return COMPILER_CONFIG == 'Debug'
 
+    def is_release_compiler_config(self):
+        return COMPILER_CONFIG == 'Release'
+
     def is_linux_debug_config(self):
         return PARENT_CONFIG == 'Gcc-shared-debug' or PARENT_CONFIG == 'Clang-shared-debug'
 
@@ -250,7 +253,59 @@ class TestProjectFixture(unittest.TestCase):
         outputlist = self.run_python_command(command)
         return '\n'.join(outputlist)
 
-    
+    def get_package_runtime_path_in_build_tree(self, package, config, compilerConfig):
+        buildTreePath = self.locations.get_full_path_binary_output_folder(package, config, compilerConfig)
+        if self.is_linux():
+            return buildTreePath / 'bin'
+        elif self.is_windows():
+            return buildTreePath
+
+        raise Exception('Unknown platform!. Add case.')
+
+    def get_package_executable_path_in_build_tree(self, package, config, compilerConfig, version):
+        runtimeDir = self.get_package_runtime_path_in_build_tree(package, config, compilerConfig)
+        shortExeName = self.get_target_exe_shortname(package, config, version)
+        return runtimeDir / shortExeName
+
+    def get_target_exe_shortname(self, target, config, version):
+        baseName = self.get_target_binary_base_name(target, config)
+        extension = self.get_exe_extension()
+        if self.is_windows():
+            return baseName + extension
+        else:
+            return baseName + '.' + version + extension
+        
+
+    def get_target_binary_base_name(self, target, config):
+        if self.is_release_compiler_config():
+            return '{0}'.format(target)
+        else:
+            return '{0}-{1}'.format(target, config.lower())
+
+    def get_exe_extension(self):
+        if self.is_linux():
+            return ''
+        elif self.is_windows():
+            return '.exe'
+
+        raise Exception('Unknown platform!. Add case.')
+
+    def get_shared_lib_extension(self):
+        if self.is_linux():
+            return '.so'
+        elif self.is_windows():
+            return '.dll'
+
+        raise Exception('Unknown platform!. Add case.')
+
+    def get_static_lib_extension(self):
+        if self.is_linux():
+            return '.a'
+        elif self.is_windows():
+            return '.dll'
+
+        raise Exception('Unknown platform!. Add case.')
+
     def assert_target_does_not_exist(self, target):
         target_misses_signature = ''
         if self.is_visual_studio_config():
