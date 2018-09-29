@@ -106,7 +106,7 @@ class DistPackageFixture(unittest.TestCase):
             "MYLIB_VERSION={0}".format(myLibVersion),
             "MYLIB_LOCATION={0}".format(commonPackageDirectory)
             ])
-        self.consumerProjectFixture.build_target("ALL_BUILD")
+        self.consumerProjectFixture.build_target("MyLibConsumer")
 
 
         # ------------------- Verify -----------------------
@@ -119,24 +119,15 @@ class DistPackageFixture(unittest.TestCase):
             testprojectfixture.COMPILER_CONFIG,
             consumerVersion
         )
-        self.assertTrue(self.osa.execute_command(str(consumerExe) , self.consumerProjectFixture.cpf_root_dir))
-        
-        # Assert that the binary output directory of one config does not contain deployed dlls from another.
-        for config in compilerConfigs:
-            otherConfigs = list(set(compilerConfigs) - set([config]))
-            for otherConfig in otherConfigs:
-                binaryOutputDirConfig = self.consumerProjectFixture.locations.get_full_path_binary_output_folder(
-                    "MyLibConsumer",
-                    testprojectfixture.PARENT_CONFIG,
-                    config
-                )
-                dllFile = binaryOutputDirConfig / "MyLib-{0}.dll".format(otherConfig.lower())
-
-                self.consumerProjectFixture.assert_target_does_not_create_files("MyLibConsumer", [dllFile])
+        self.osa.execute_command_output(
+            str(consumerExe),
+            cwd=self.consumerProjectFixture.cpf_root_dir,
+            print_output=miscosaccess.OutputMode.ON_ERROR
+        )
 
         # Assert .pdb files are deployed in debug configuration when MyLib is a shared library.
         # This tests the pdb deployment for imported targets.
-        if self.consumerProjectFixture.is_shared_libraries_config():
+        if self.consumerProjectFixture.is_shared_libraries_config() and self.consumerProjectFixture.is_windows():
             debugConfig = "Debug"
             binaryOutputDirConfig = self.consumerProjectFixture.locations.get_full_path_binary_output_folder(
                 "MyLibConsumer",

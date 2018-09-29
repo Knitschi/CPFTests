@@ -376,21 +376,21 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         # Setup
         self.generate_project()
         target = INSTALL_MYLIB_TARGET
+        version = self.get_package_version('MyLib')
 
         sources = [
             'Sources/MyLib/function.cpp'
         ]
-        output = self.get_expected_package_content('InstallStage/MyLib')
+        output = self.get_expected_package_content('InstallStage/MyLib', version)
 
         # Execute
         self.do_basic_target_tests(target, target, source_files=sources, output_files=output)
 
 
-    def get_expected_package_content(self, prefix_dir):
+    def get_expected_package_content(self, prefix_dir, version):
 
         packageFiles = []
 
-        version = self.get_package_version('MyLib')
         config = testprojectfixture.COMPILER_CONFIG.lower()
 
         # location primitives
@@ -503,8 +503,8 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
             otherPath = prefix_dir / 'other'
             if self.is_debug_compiler_config():
                 packageFiles.extend([
-                    otherPath / 'ABI_{0}-{1}.dump'.format(libBaseName, version),
-                    otherPath / 'ABI_{0}-{1}.dump'.format(fixtureLibBaseName, version),
+                    otherPath / 'ABI_{0}.{1}.dump'.format(libBaseName, version),
+                    otherPath / 'ABI_{0}.{1}.dump'.format(fixtureLibBaseName, version),
                 ])
 
         return packageFiles
@@ -523,7 +523,7 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         # Check the zip file is created.
         packageFileWE = 'MyLib.{0}.{1}.dev-bin.{2}'.format(version, os, testprojectfixture.COMPILER_CONFIG)
         packageFileShort = packageFileWE + '.7z'
-        packageFileDir = PurePosixPath('html/Downloads/MyLib/LastBuild')
+        packageFileDir = self.locations.get_full_path_config_makefile_folder(testprojectfixture.PARENT_CONFIG)  / 'html/Downloads/MyLib/LastBuild'
         output = [
             packageFileDir / packageFileShort
         ]
@@ -534,13 +534,12 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         # Extract the zip file and check its content
         self.osa.execute_command_output(
             "cmake -E tar xzf " + packageFileShort,
-            packageFileDir,
-            print_output=miscosaccess.OutputMode.ON_ERROR,
-            print_command=False
+            cwd=packageFileDir,
+            print_output=miscosaccess.OutputMode.ON_ERROR
             )
 
         # Check the content of the package is correct.
-        package_files = self.get_expected_package_content(packageFileDir / packageFileWE / 'MyLib')
+        package_files = self.get_expected_package_content(packageFileDir / packageFileWE / 'MyLib', version)
         self.assert_target_output_files_exist('MyLib', package_files)
 
 
