@@ -32,7 +32,11 @@ class DistPackageFixture(unittest.TestCase):
         # For now set a release version tag, because the cmake package files only work for release
         # versions.
         myLibVersion = self.libraryProjectFixture.get_package_version("MyLib")
-        self.osa.execute_command("git tag {0}".format(self.getNextReleaseVersion(myLibVersion)), self.libraryProjectFixture.cpf_root_dir)
+        self.osa.execute_command_output(
+            "git tag {0}".format(self.getNextReleaseVersion(myLibVersion)),
+            cwd=self.libraryProjectFixture.cpf_root_dir,
+            print_output=miscosaccess.OutputMode.ON_ERROR
+            )
 
         # Checkout the consumer project.
         cpfpackageconsumertestprojectfixture.CPFPackageConsumerTestProjectFixture.setUpClass()

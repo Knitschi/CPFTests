@@ -96,7 +96,7 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
     @classmethod
     def setUpClass(cls):
         cls.project = 'SimpleOneLibCPFTestProject'
-        cls.cpf_root_dir = testprojectfixture.prepareTestProject('https://github.com/Knitschi/SimpleOneLibCPFTestProject.git', cls.project)
+        cls.cpf_root_dir = testprojectfixture.prepareTestProject('https://prefix_dirhub.com/Knitschi/SimpleOneLibCPFTestProject.prefix_dir', cls.project)
 
     def setUp(self):
         super(SimpleOneLibCPFTestProjectFixture, self).setUp(self.project, self.cpf_root_dir)
@@ -184,7 +184,11 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         # Test overriding existing variables and setting variables with whitespaces.
         self.run_python_command('1_Configure.py MyConfig --inherits {0} -D CPF_ENABLE_DOXYGEN_TARGET=OFF -D BLUB="bli bla"'.format(testprojectfixture.PARENT_CONFIG))
         self.run_python_command('2_Generate.py MyConfig')
-        cmakeCacheVariables = self.osa.execute_command_output('cmake Generated/MyConfig -L', cwd=self.cpf_root_dir, print_output=False, print_command=False)
+        cmakeCacheVariables = self.osa.execute_command_output(
+            'cmake Generated/MyConfig -L',
+            cwd=self.cpf_root_dir,
+            print_output=miscosaccess.OutputMode.ON_ERROR
+            )
         # Note that variables that are added via 1_Configure.py are always of type string
         self.assertIn('CPF_ENABLE_DOXYGEN_TARGET:STRING=OFF', cmakeCacheVariables)
         self.assertIn('BLUB:STRING=bli bla', cmakeCacheVariables)
@@ -347,7 +351,7 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         target = MYLIB_TARGET
 
         # Execute
-        self.do_basic_target_tests(target, t arget)
+        self.do_basic_target_tests(target, target)
 
 
     def test_MyLib_Tests_target(self):
@@ -372,21 +376,11 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         # Setup
         self.generate_project()
         target = INSTALL_MYLIB_TARGET
-        config = testprojectfixture.COMPILER_CONFIG.lower()
-        if config == 'release':
-            config = ''
-        else:
-            config = '-' + config
-        version = self.get_package_version('MyLib')
 
         sources = [
             'Sources/MyLib/function.cpp'
         ]
-
-        output = self.get_expected_package_content(prefix_dir, 'InstallStage' ):
-
-        else:
-            raise Exception('Unhandled case.')
+        output = self.get_expected_package_content('InstallStage')
 
         # Execute
         self.do_basic_target_tests(target, target, source_files=sources, output_files=output)
@@ -395,6 +389,9 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
     def get_expected_package_content(self, prefix_dir):
 
         packageFiles = []
+
+        version = self.get_package_version('MyLib')
+        config = testprojectfixture.COMPILER_CONFIG.lower()
 
         # location primitives
         sharedLibOutputDir = ''
@@ -411,24 +408,23 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
 
         staticLibOutputDir = prefix_dir / 'lib'
         
-        libBaseName = self.get_target_binary_base_name('MyLib', testprojectfixture.COMPILER_CONFIG, version)
-        testExeBaseName = self.get_target_binary_base_name('MyLib_tests', testprojectfixture.COMPILER_CONFIG, version)
-        fixtureLibBaseName = self.get_target_binary_base_name('MyLib_fixtures', testprojectfixture.COMPILER_CONFIG, version)
+        libBaseName = self.get_target_binary_base_name('MyLib', testprojectfixture.COMPILER_CONFIG)
+        testExeBaseName = self.get_target_binary_base_name('MyLib_tests', testprojectfixture.COMPILER_CONFIG)
+        fixtureLibBaseName = self.get_target_binary_base_name('MyLib_fixtures', testprojectfixture.COMPILER_CONFIG)
         
         if self.is_linux():
-            libBaseName += '.' + version
-            testExeBaseName += '.' + version
-            fixtureLibBaseName += '.' + version
+            testExeBaseName += '-' + version
 
         sharedLibExtension = self.get_shared_lib_extension()
         staticLibExtension = self.get_static_lib_extension()
         exeExtension = self.get_exe_extension()
+        versionExtension = '.' + version
 
 
         # Assemble pathes for package files.
 
         # CMake package files
-        cmakeFilesPath = libPath / 'cmake/MyLib'
+        cmakeFilesPath = staticLibOutputDir / 'cmake/MyLib'
         packageFiles.extend([
             cmakeFilesPath / 'MyLibConfig.cmake',
             cmakeFilesPath / 'MyLibConfigVersion.cmake',
@@ -484,8 +480,8 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
 
                 packageFiles.extend([
                     staticLibOutputDir / '{0}-compiler.pdb'.format(libBaseName),
-                    staticLibOutputDir / '{0}-compiler.pdb'.format(fixtureLibBaseName)
-                    staticLibOutputDir / '{0}-compiler.pdb'.format(testExeBaseName),
+                    staticLibOutputDir / '{0}-compiler.pdb'.format(fixtureLibBaseName),
+                    staticLibOutputDir / '{0}-compiler.pdb'.format(testExeBaseName)
                 ])
 
                 # Source files are required for debugging with pdb files.
@@ -517,11 +513,6 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         # Setup
         self.generate_project()
         target = DISTRIBUTION_PACKAGES_MYLIB_TARGET
-        config = testprojectfixture.COMPILER_CONFIG.lower()
-        if config == 'release':
-            config = ''
-        else:
-            config = '-' + config
         version = self.get_package_version('MyLib')
         os = self.osa.system()
 
@@ -529,7 +520,7 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
             'Sources/MyLib/function.cpp'
         ]
         # Check the zip file is created.
-        packageFileWE = 'MyLib.{0}.{1}.dev-bin.{2}'.format(version, os,testprojectfixture.COMPILER_CONFIG)
+        packageFileWE = 'MyLib.{0}.{1}.dev-bin.{2}'.format(version, os, testprojectfixture.COMPILER_CONFIG)
         packageFileShort = packageFileWE + '.7z'
         packageFileDir = PurePosixPath('html/Downloads/MyLib/LastBuild')
         output = [

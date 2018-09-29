@@ -5,6 +5,8 @@ This module contains automated tests that operate on the ACPFTestProject project
 import unittest
 from . import testprojectfixture
 
+from Sources.CPFBuildscripts.python import miscosaccess
+
 
 class ACPFTestProjectFixture(testprojectfixture.TestProjectFixture):
     """
@@ -55,7 +57,7 @@ class ACPFTestProjectFixture(testprojectfixture.TestProjectFixture):
                 testprojectfixture.COMPILER_CONFIG,
                 version
             )
-            self.assertTrue(self.osa.execute_command(str(exe) , self.cpf_root_dir))
+            self.osa.execute_command_output(str(exe), cwd=str(self.cpf_root_dir), print_output=miscosaccess.OutputMode.ON_ERROR)
 
 
 

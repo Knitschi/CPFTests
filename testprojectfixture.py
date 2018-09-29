@@ -264,23 +264,23 @@ class TestProjectFixture(unittest.TestCase):
 
     def get_package_executable_path_in_build_tree(self, package, config, compilerConfig, version):
         runtimeDir = self.get_package_runtime_path_in_build_tree(package, config, compilerConfig)
-        shortExeName = self.get_target_exe_shortname(package, config, version)
+        shortExeName = self.get_target_exe_shortname(package, compilerConfig, version)
         return runtimeDir / shortExeName
 
-    def get_target_exe_shortname(self, target, config, version):
-        baseName = self.get_target_binary_base_name(target, config)
+    def get_target_exe_shortname(self, target, compilerConfig, version):
+        baseName = self.get_target_binary_base_name(target, compilerConfig)
         extension = self.get_exe_extension()
         if self.is_windows():
             return baseName + extension
         else:
-            return baseName + '.' + version + extension
+            return baseName + '-' + version + extension
         
 
-    def get_target_binary_base_name(self, target, config):
+    def get_target_binary_base_name(self, target, compilerConfig):
         if self.is_release_compiler_config():
             return '{0}'.format(target)
         else:
-            return '{0}-{1}'.format(target, config.lower())
+            return '{0}-{1}'.format(target, compilerConfig.lower())
 
     def get_exe_extension(self):
         if self.is_linux():
