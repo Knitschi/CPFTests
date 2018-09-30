@@ -302,7 +302,7 @@ class TestProjectFixture(unittest.TestCase):
         if self.is_linux():
             return '.a'
         elif self.is_windows():
-            return '.dll'
+            return '.lib'
 
         raise Exception('Unknown platform!. Add case.')
 
