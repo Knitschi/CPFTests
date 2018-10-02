@@ -395,7 +395,7 @@ class TestProjectFixture(unittest.TestCase):
             if not os.path.isabs(str(abs_path)):
                 abs_path = self.locations.get_full_path_config_makefile_folder(PARENT_CONFIG) / abs_path
 
-            if not object_checker(abs_path):
+            if not object_checker(str(abs_path)):
                 missing_objects.append(str(abs_path))
 
         if missing_objects:

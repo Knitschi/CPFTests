@@ -415,8 +415,9 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         testExeBaseName = self.get_target_binary_base_name('MyLib_tests', testprojectfixture.COMPILER_CONFIG)
         fixtureLibBaseName = self.get_target_binary_base_name('MyLib_fixtures', testprojectfixture.COMPILER_CONFIG)
         
+        exeVersionPostfix = ''
         if self.is_linux():
-            testExeBaseName += '-' + version
+            exeVersionPostfix += '-' + version
 
         sharedLibExtension = self.get_shared_lib_extension()
         staticLibExtension = self.get_static_lib_extension()
@@ -448,18 +449,18 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         # Library files
         if self.is_shared_libraries_config():
             packageFiles.extend([
-                sharedLibOutputDir / (libBaseName + sharedLibExtension),
-                sharedLibOutputDir / (fixtureLibBaseName + sharedLibExtension)
+                sharedLibOutputDir / (libBaseName + sharedLibExtension + versionExtension),
+                sharedLibOutputDir / (fixtureLibBaseName + sharedLibExtension + versionExtension)
             ])
         else:
             packageFiles.extend([
-                staticLibOutputDir / (libBaseName + staticLibExtension),
-                staticLibOutputDir / (fixtureLibBaseName  + staticLibExtension)
+                staticLibOutputDir / (libBaseName + staticLibExtension + versionExtension),
+                staticLibOutputDir / (fixtureLibBaseName + staticLibExtension + versionExtension)
             ])
 
         # Test executable
         packageFiles.extend([
-            runtimeOutputDir / (testExeBaseName + exeExtension),
+            runtimeOutputDir / (testExeBaseName + exeVersionPostfix + exeExtension),
         ])
 
         # Platform dependend files
@@ -509,12 +510,16 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
                     otherPath / 'ABI_{0}.{1}.dump'.format(fixtureLibBaseName, version),
                 ])
 
-            # Check that symlinks for compatible versions exits.
+            # Check that symlinks for compatible versions exist.
             if self.is_shared_libraries_config():
 
-                symlinks.extend.extend([
+                twoDigitsVersionExtension = '.' + '.'.join(version.split('.')[0:2])
+                symlinks.extend([
+                    runtimeOutputDir / (testExeBaseName),
                     sharedLibOutputDir / (libBaseName + sharedLibExtension),
-                    sharedLibOutputDir / (fixtureLibBaseName + sharedLibExtension)
+                    sharedLibOutputDir / (libBaseName + sharedLibExtension + twoDigitsVersionExtension),
+                    sharedLibOutputDir / (fixtureLibBaseName + sharedLibExtension),
+                    sharedLibOutputDir / (libBaseName + sharedLibExtension + twoDigitsVersionExtension)
                 ])
 
 
