@@ -137,7 +137,7 @@ class DistPackageFixture(unittest.TestCase):
 
             pdbFileLib = binaryOutputDirConfig / "MyLib-{0}.pdb".format(debugConfig.lower())
             pdbFileFixtureLib = binaryOutputDirConfig / "MyLib_fixtures-{0}.pdb".format(debugConfig.lower())
-            self.consumerProjectFixture.assert_target_output_files_exist("MyLibConsumer", [pdbFileLib, pdbFileFixtureLib])
+            self.consumerProjectFixture.assert_files_exist([pdbFileLib, pdbFileFixtureLib])
 
 
 

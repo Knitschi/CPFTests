@@ -371,38 +371,51 @@ class TestProjectFixture(unittest.TestCase):
         return missing_strings
 
 
-    def assert_target_output_files_exist(self, target, files):
+    def assert_files_exist(self, files):
         """
-        File pathes must be relative to CMAKE_BINARY_DIR.
+        Throws an exception if not all files exist.
+        File pathes must be relative to CMAKE_BINARY_DIR or absolute paths.
         """
-        missing_files = []
-        for file in files:
-
-            full_file = file
-            if not os.path.isabs(str(full_file)):
-                full_file = self.cpf_root_dir / 'Generated' / PARENT_CONFIG / file
-
-            if not self.fsa.exists(full_file):
-                missing_files.append(str(full_file))
-
-        if missing_files:
-            raise Exception('Test error! The following files were not produced by target {0} as expected: {1}'.format(target, '; '.join(missing_files)))
+        self.assert_filesystem_objects_exist(files, self.fsa.exists, 'files')
 
 
-    def assert_target_does_not_create_files(self, target, files ):
+    def assert_symlinks_exist(self, symlinks):
         """
-        Throws an exception if the given files exist. 
-        File pathes must be relative to CMAKE_BINARY_DIR or full pathes.
+        Throws an exception if not all the given symlinks exist.
+        This function only works on Linux.
+        Paths must be relative to CMAKE_BINARY_DIR or absolute paths.
+        """
+        self.assert_filesystem_objects_exist(symlinks, os.path.islink, 'symlinks')
+
+
+    def assert_filesystem_objects_exist(self, paths, object_checker, objects_name):
+        missing_objects = []
+        for path in paths:
+            abs_path = path
+            if not os.path.isabs(str(abs_path)):
+                abs_path = self.locations.get_full_path_config_makefile_folder(PARENT_CONFIG) / abs_path
+
+            if not object_checker(abs_path):
+                missing_objects.append(str(abs_path))
+
+        if missing_objects:
+            raise Exception('Test error! The following {0} were not produced as expected: {1}'.format(objects_name, '; '.join(missing_objects)))
+
+
+    def assert_files_do_not_exist(self, files):
+        """
+        Throws an exception if one of the given files exist. 
+        File pathes must be relative to CMAKE_BINARY_DIR or absolute paths.
         """
         existing_files = []
         for file in files:
             full_file = file
             if not os.path.isabs(full_file):
-                full_file = self.cpf_root_dir / 'Generated' / PARENT_CONFIG / file
+                full_file = self.locations.get_full_path_config_makefile_folder(PARENT_CONFIG) / file
 
             if self.fsa.exists(full_file):
                 existing_files.append(str(full_file))
 
         if existing_files:
-            raise Exception('Test error! The following files were unexpectedly produced by target {0}: {1}'.format(target, '; '.join(existing_files)))
+            raise Exception('Test error! The following files were unexpectedly produced: {1}'.format('; '.join(existing_files)))
 

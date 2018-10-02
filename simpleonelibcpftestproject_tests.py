@@ -142,7 +142,7 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
                 self.assert_output_contains_signature(output, built_target, signature_target)
 
                 # Check the target produced the specified files
-                self.assert_target_output_files_exist(built_target, output_files)
+                self.assert_files_exist(output_files)
 
                 # Check the target is not build again when it is up-to-date.
                 output = self.build_target(built_target)
@@ -381,15 +381,17 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         sources = [
             'Sources/MyLib/function.cpp'
         ]
-        output = self.get_expected_package_content('InstallStage/MyLib', version)
+        [package_files, package_symlinks] = self.get_expected_package_content('InstallStage/MyLib', version)
 
         # Execute
-        self.do_basic_target_tests(target, target, source_files=sources, output_files=output)
+        self.do_basic_target_tests(target, target, source_files=sources, output_files=package_files)
+        self.assert_symlinks_exist(package_symlinks)
 
 
     def get_expected_package_content(self, prefix_dir, version):
 
         packageFiles = []
+        symlinks = []
 
         config = testprojectfixture.COMPILER_CONFIG.lower()
 
@@ -507,7 +509,16 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
                     otherPath / 'ABI_{0}.{1}.dump'.format(fixtureLibBaseName, version),
                 ])
 
-        return packageFiles
+            # Check that symlinks for compatible versions exits.
+            if self.is_shared_libraries_config():
+
+                symlinks.extend.extend([
+                    sharedLibOutputDir / (libBaseName + sharedLibExtension),
+                    sharedLibOutputDir / (fixtureLibBaseName + sharedLibExtension)
+                ])
+
+
+        return [packageFiles, symlinks]
 
 
     def test_distributionPackages_MyLib_target(self):
@@ -539,8 +550,9 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
             )
 
         # Check the content of the package is correct.
-        package_files = self.get_expected_package_content(packageFileDir / packageFileWE / 'MyLib', version)
-        self.assert_target_output_files_exist('MyLib', package_files)
+        [package_files, package_symlinks] = self.get_expected_package_content(packageFileDir / packageFileWE / 'MyLib', version)
+        self.assert_files_exist(package_files)
+        self.assert_symlinks_exist(package_symlinks)
 
 
     def test_runAllTests_MyLib_target(self):
