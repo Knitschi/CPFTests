@@ -435,8 +435,8 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
             ])
         else:
             packageFiles.extend([
-                staticLibOutputDir / (libBaseName + staticLibExtension + versionExtension),
-                staticLibOutputDir / (fixtureLibBaseName + staticLibExtension + versionExtension)
+                staticLibOutputDir / (libBaseName + staticLibExtension ),
+                staticLibOutputDir / (fixtureLibBaseName + staticLibExtension )
             ])
 
         # Test executable
