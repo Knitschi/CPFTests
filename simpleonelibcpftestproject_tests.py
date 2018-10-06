@@ -52,7 +52,7 @@ target_signatures = {
     ACYCLIC_TARGET : ['-nv','CPFDependencies.dot'],
     VALGRIND_TARGET : [], # bundle target only
     OPENCPPCOVERAGE_TARGET : ['OpenCppCoverage.exe', '--export_type=html'],
-    INSTALL_TARGET : ['Install the project...'], # bundle target only
+    INSTALL_TARGET : ['Install the project...', 'Installing:'],
     ABI_COMPLIANCE_CHECKER_TARGET : [], # bundle target only
     MYLIB_TARGET : lambda fixture: getBinaryTargetSignature(fixture, MYLIB_TARGET),
     MYLIB_TESTS_TARGET : lambda fixture: getBinaryTargetSignature(fixture, MYLIB_TESTS_TARGET),
