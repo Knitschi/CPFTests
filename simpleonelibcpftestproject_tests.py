@@ -52,7 +52,7 @@ target_signatures = {
     ACYCLIC_TARGET : ['-nv','CPFDependencies.dot'],
     VALGRIND_TARGET : [], # bundle target only
     OPENCPPCOVERAGE_TARGET : ['OpenCppCoverage.exe', '--export_type=html'],
-    INSTALL_TARGET : ['Install the project...', 'Installing:'],
+    INSTALL_TARGET : lambda fixture: getInstallTargetSignature(fixture) ,
     ABI_COMPLIANCE_CHECKER_TARGET : [], # bundle target only
     MYLIB_TARGET : lambda fixture: getBinaryTargetSignature(fixture, MYLIB_TARGET),
     MYLIB_TESTS_TARGET : lambda fixture: getBinaryTargetSignature(fixture, MYLIB_TESTS_TARGET),
@@ -78,7 +78,11 @@ def getBinaryTargetSignature(test_fixture, binary_target):
     else:
         raise Exception('Missing case in conditional')
 
-
+def getInstallTargetSignature(test_fixture):
+    if test_fixture.is_ninja_config() or test_fixture.is_make_config():
+        return ['Install the project...', 'Installing:']
+    if test_fixture.is_visual_studio_config():
+        return ['Install configuration: "{0}"'.format(testprojectfixture.PARENT_CONFIG), 'Installing:']
 
 
 ############################################################################################
