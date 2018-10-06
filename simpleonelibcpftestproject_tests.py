@@ -30,7 +30,6 @@ MYLIB_TARGET = 'MyLib'
 MYLIB_TESTS_TARGET = 'MyLib_tests'
 MYLIB_FIXTURES_TARGET = 'MyLib_fixtures'
 DISTRIBUTION_PACKAGES_MYLIB_TARGET = 'distributionPackages_MyLib'
-INSTALL_MYLIB_TARGET = 'install_MyLib'
 RUN_ALL_TESTS_MYLIB_TARGET = 'runAllTests_MyLib'
 RUN_FAST_TESTS_MYLIB_TARGET = 'runFastTests_MyLib'
 OPENCPPCOVERAGE_MYLIB_TARGET = 'opencppcoverage_MyLib'
@@ -53,13 +52,12 @@ target_signatures = {
     ACYCLIC_TARGET : ['-nv','CPFDependencies.dot'],
     VALGRIND_TARGET : [], # bundle target only
     OPENCPPCOVERAGE_TARGET : ['OpenCppCoverage.exe', '--export_type=html'],
-    INSTALL_TARGET : [], # bundle target only
+    INSTALL_TARGET : ['Install the project...'], # bundle target only
     ABI_COMPLIANCE_CHECKER_TARGET : [], # bundle target only
     MYLIB_TARGET : lambda fixture: getBinaryTargetSignature(fixture, MYLIB_TARGET),
     MYLIB_TESTS_TARGET : lambda fixture: getBinaryTargetSignature(fixture, MYLIB_TESTS_TARGET),
     MYLIB_FIXTURES_TARGET : lambda fixture: getBinaryTargetSignature(fixture, MYLIB_FIXTURES_TARGET),
     DISTRIBUTION_PACKAGES_MYLIB_TARGET : ['CPack: Create package'],
-    INSTALL_MYLIB_TARGET : ['-- Installing: '],
     RUN_ALL_TESTS_MYLIB_TARGET : ['$<TARGET_FILE:MyLib_tests> -TestFilesDir', '--gtest_filter=*'],
     RUN_FAST_TESTS_MYLIB_TARGET : ['$<TARGET_FILE:MyLib_tests> -TestFilesDir', '--gtest_filter=*FastFixture*:*FastTests*'],
     OPENCPPCOVERAGE_MYLIB_TARGET : ['OpenCppCoverage.exe', '--export_type=binary'],
@@ -213,7 +211,6 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         self.assert_output_contains_signature(output, target, MYLIB_TESTS_TARGET)
         self.assert_output_contains_signature(output, target, MYLIB_FIXTURES_TARGET)
         self.assert_output_contains_signature(output, target, DISTRIBUTION_PACKAGES_MYLIB_TARGET)
-        self.assert_output_contains_signature(output, target, INSTALL_MYLIB_TARGET)
 
         # Config specific tools are run
         if self.is_visual_studio_config() and self.is_debug_compiler_config():
@@ -338,11 +335,11 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
 
     def test_install_target(self):
         # Setup
-        self.generate_project()
+        self.generate_project(d_options=['CMAKE_INSTALL_PREFIX="{0}"'.format(self.cpf_root_dir / 'install_tree')])
         target = INSTALL_TARGET
 
         # Execute
-        self.do_basic_target_tests(target, INSTALL_MYLIB_TARGET)
+        self.do_basic_target_tests(target, target)
 
 
     def test_MyLib_target(self):
@@ -370,22 +367,6 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
 
         # Execute
         self.do_basic_target_tests(target, target)
-
-
-    def test_install_MyLib_target(self):
-        # Setup
-        self.generate_project()
-        target = INSTALL_MYLIB_TARGET
-        version = self.get_package_version('MyLib')
-
-        sources = [
-            'Sources/MyLib/function.cpp'
-        ]
-        [package_files, package_symlinks] = self.get_expected_package_content('InstallStage/MyLib', version)
-
-        # Execute
-        self.do_basic_target_tests(target, target, source_files=sources, output_files=package_files)
-        self.assert_symlinks_exist(package_symlinks)
 
 
     def get_expected_package_content(self, prefix_dir, version):
@@ -531,13 +512,13 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         self.generate_project()
         target = DISTRIBUTION_PACKAGES_MYLIB_TARGET
         version = self.get_package_version('MyLib')
-        os = self.osa.system()
+        system = self.osa.system()
 
         sources = [
             'Sources/MyLib/function.cpp'
         ]
         # Check the zip file is created.
-        packageFileWE = 'MyLib.{0}.{1}.dev-bin.{2}'.format(version, os, testprojectfixture.COMPILER_CONFIG)
+        packageFileWE = 'MyLib.{0}.{1}.dev.{2}'.format(version, system, testprojectfixture.COMPILER_CONFIG)
         packageFileShort = packageFileWE + '.7z'
         packageFileDir = self.locations.get_full_path_config_makefile_folder(testprojectfixture.PARENT_CONFIG)  / 'html/Downloads/MyLib/LastBuild'
         output = [
