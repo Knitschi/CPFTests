@@ -397,14 +397,14 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         fixtureLibBaseName = self.get_target_binary_base_name('MyLib_fixtures', testprojectfixture.COMPILER_CONFIG)
         
         exeVersionPostfix = ''
+        versionExtension = ''
         if self.is_linux():
             exeVersionPostfix += '-' + version
+            versionExtension = '.' + version
 
         sharedLibExtension = self.get_shared_lib_extension()
         staticLibExtension = self.get_static_lib_extension()
         exeExtension = self.get_exe_extension()
-        versionExtension = '.' + version
-
 
         # Assemble pathes for package files.
 
