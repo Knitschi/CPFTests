@@ -82,7 +82,7 @@ def getInstallTargetSignature(test_fixture):
     if test_fixture.is_ninja_config() or test_fixture.is_make_config():
         return ['Install the project...', 'Installing:']
     if test_fixture.is_visual_studio_config():
-        return ['Install configuration: "{0}"'.format(testprojectfixture.PARENT_CONFIG), 'Installing:']
+        return ['Install configuration: "{0}"'.format(testprojectfixture.COMPILER_CONFIG), 'Installing:']
 
 
 ############################################################################################
