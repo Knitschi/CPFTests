@@ -41,11 +41,10 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         return  packageFileDir / packageFileWE / package
 
 
-    def get_expected_package_content(self, prefix_dir, package, packageType, packageNamespace):
+    def get_expected_package_content(self, prefix_dir, package, packageType, packageNamespace, packageDependencies=[]):
         """
         Returns absolute pathes to files and symlinks that are expected in the distribution package.
         """
-
         packageFiles = []
         symlinks = []
 
@@ -57,7 +56,7 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
 
         # runtime dependencies component
         if packageType == 'CT_RUNTIME_PORTABLE':
-            [packageFilesComponent, symlinksCompnent] = self.get_runtime_portable_package_content(prefix_dir, package, packageType, packageNamespace)
+            [packageFilesComponent, symlinksCompnent] = self.get_runtime_portable_package_content(prefix_dir, package, packageType, packageNamespace, packageDependencies)
             packageFiles.extend(packageFilesComponent)
             symlinks.extend(symlinksCompnent)
 
@@ -83,19 +82,129 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         packageFiles = []
         symlinks = []
 
+        isExePackage = self.is_exe_package(packageType)
+        version = self.get_package_version(package)
 
+        # Executable
+        if isExePackage:
+            packageFiles.append( self.get_package_executable_path(prefix_dir, package, version) ) 
+
+            # Symlink for executable
+            if self.is_linux():
+                symlinks.append( self.get_package_exe_symlink_path(prefix_dir, package, version) )
+
+        # Shared library
+        if self.is_shared_libraries_config():
+            packageFiles.append( self.get_package_shared_lib_path(prefix_dir, package, packageType, version) )
+
+            # Shared libary symlinks
+            if self.is_linux():
+                symlinks.extend( self.get_package_shared_lib_symlink_paths(prefix_dir, package, packageType, version) )
 
         return [packageFiles, symlinks]
 
 
-    def get_runtime_portable_package_content(self, prefix_dir, package, packageType, packageNamespace):
+    def get_package_executable_path(self, prefix_dir, package, version, target_postfix=''):
+        runtimeOutputDir = self.get_runtime_dir(prefix_dir)
+        exeBaseName = self.get_target_binary_base_name( package + target_postfix, testprojectfixture.COMPILER_CONFIG)
+        exeVersionPostfix = self.get_exe_version_postfix(version)
+        exeExtension = self.get_exe_extension()
+        return runtimeOutputDir / (exeBaseName + exeVersionPostfix + exeExtension)
+
+
+    def get_package_exe_symlink_path(self, prefix_dir, package, version, target_postfix=''):
+        runtimeOutputDir = self.get_runtime_dir(prefix_dir)
+        exeBaseName = self.get_target_binary_base_name( package + target_postfix, testprojectfixture.COMPILER_CONFIG)
+        return runtimeOutputDir / exeBaseName
+
+
+    def get_package_shared_lib_path(self, prefix_dir, package, packageType, version, target_postfix=''):
+        sharedLibOutputDir = self.get_shared_lib_dir(prefix_dir)
+        libBaseName = self.get_package_lib_basename( package + target_postfix, packageType)
+        libExtension = self.get_shared_lib_extension()
+        versionExtension = self.get_version_extension(version)
+        return sharedLibOutputDir / (libBaseName + libExtension + versionExtension)
+
+
+    def get_package_shared_lib_symlink_paths(self, prefix_dir, package, packageType, version, target_postfix=''):
+        sharedLibOutputDir = self.get_shared_lib_dir(prefix_dir)
+        libBaseName = self.get_package_lib_basename( package + target_postfix, packageType)
+        libExtension = self.get_shared_lib_extension()
+        twoDigitsVersionExtension = '.' + '.'.join(version.split('.')[0:2])
+
+        noVersionSymlink = sharedLibOutputDir / (libBaseName + libExtension)
+        mayourMinorVersionSymlink = sharedLibOutputDir / (libBaseName + libExtension + twoDigitsVersionExtension)
+        
+        return [ noVersionSymlink, mayourMinorVersionSymlink]
+
+
+    def get_package_static_lib_path(self, prefix_dir, package, packageType, target_postfix=''):
+        staticLibOutputDir = self.get_static_lib_dir(prefix_dir)
+        libBaseName = self.get_package_lib_basename( package + target_postfix, packageType)
+        libExtension = self.get_static_lib_extension()
+        return staticLibOutputDir / (libBaseName + libExtension )
+
+
+    def get_package_lib_basename(self, package, packageType):
+        if self.is_exe_package(packageType):
+            return self.get_target_binary_base_name('lib' + package, testprojectfixture.COMPILER_CONFIG)
+        else:
+            return self.get_target_binary_base_name(package, testprojectfixture.COMPILER_CONFIG)
+
+
+    def get_version_extension(self, version):
+        versionExtension = ''
+        if self.is_linux():
+            versionExtension = '.' + version
+        return versionExtension
+
+
+    def get_exe_version_postfix(self, version):
+        exeVersionPostfix = ''
+        if self.is_linux():
+            exeVersionPostfix += '-' + version
+        return exeVersionPostfix
+
+
+    def get_runtime_dir(self, prefix_dir):
+        if self.is_windows():
+            return prefix_dir
+        else:
+            return prefix_dir / 'bin'
+
+
+    def get_shared_lib_dir(self, prefix_dir):
+        if self.is_windows():
+            return prefix_dir
+        else:
+            return prefix_dir / 'lib'
+
+
+    def get_static_lib_dir(self, prefix_dir):
+        return prefix_dir / 'lib'
+
+
+    def is_exe_package(self, packageType):
+        return packageType == 'CONSOLE_APP' or packageType == 'GUI_APP'
+
+
+    def get_runtime_portable_package_content(self, prefix_dir, package, packageType, packageNamespace, packageDependencies):
         """
         Returns the package files from the runtime-portable install component.
         """
         packageFiles = []
         symlinks = []
 
+        # Shared external libraries
+        if self.is_shared_libraries_config():
+            for dependency in packageDependencies:
 
+                version = self.get_package_version(dependency)
+                packageFiles.append( self.get_package_shared_lib_path(prefix_dir, dependency, 'LIB', version) )
+
+                # Shared libary symlinks
+                if self.is_linux():
+                    symlinks.extend( self.get_package_shared_lib_symlink_paths(prefix_dir, dependency, 'LIB', version) )
 
         return [packageFiles, symlinks]
 
@@ -110,46 +219,41 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         config = testprojectfixture.COMPILER_CONFIG.lower()
         version = self.get_package_version(package)
 
-        # location primitives
-        prefix_dir = PurePosixPath(prefix_dir)
-        sharedLibOutputDir = ''
-        if self.is_windows():
-            sharedLibOutputDir = prefix_dir
-        else:
-            sharedLibOutputDir = prefix_dir / 'lib'
-
-        runtimeOutputDir = ''
-        if self.is_windows():
-            runtimeOutputDir = prefix_dir
-        else:
-            runtimeOutputDir = prefix_dir / 'bin'
-
-        staticLibOutputDir = prefix_dir / 'lib'
-        
-        libBaseName = self.get_target_binary_base_name(package, testprojectfixture.COMPILER_CONFIG)
-        testExeBaseName = self.get_target_binary_base_name( package + '_tests', testprojectfixture.COMPILER_CONFIG)
-        fixtureLibBaseName = self.get_target_binary_base_name( package + '_fixtures', testprojectfixture.COMPILER_CONFIG)
-        
-        exeVersionPostfix = ''
+        # Static library files
         if self.is_linux():
-            exeVersionPostfix += '-' + version
+            if not self.is_shared_libraries_config():
+                packageFiles.append(self.get_package_static_lib_path(prefix_dir, package, packageType))
+        else:
+            # we always have libs on windows
+            packageFiles.append(self.get_package_static_lib_path(prefix_dir, package, packageType))
 
-        sharedLibExtension = self.get_shared_lib_extension()
-        staticLibExtension = self.get_static_lib_extension()
-        exeExtension = self.get_exe_extension()
-        versionExtension = '.' + version
+
+        # Test executable
+        packageFiles.append(self.get_package_executable_path(prefix_dir, package, version, target_postfix='_tests'))
+        # test exe  symlinks
+        if self.is_linux():
+            symlinks.extend( self.get_package_exe_symlink_path(prefix_dir, package, version, target_postfix='_tests') )
 
 
-        # Assemble pathes for package files.
+        # Fixture library files
+        if self.is_shared_libraries_config():
+            packageFiles.append(self.get_package_shared_lib_path(prefix_dir, package, 'LIB', version, target_postfix='_fixtures'))
+            # libary symlinks
+            if self.is_linux():
+                symlinks.extend( self.get_package_shared_lib_symlink_paths(prefix_dir, package, 'LIB', version, target_postfix='_fixtures') )
+        else:
+            packageFiles.append(self.get_package_static_lib_path(prefix_dir, package, 'LIB', target_postfix='_fixtures'))
+
 
         # CMake package files
-        cmakeFilesPath = staticLibOutputDir / 'cmake' / package
+        cmakeFilesPath = self.get_static_lib_dir(prefix_dir) / 'cmake' / package
         packageFiles.extend([
             cmakeFilesPath / (package + 'Config.cmake'),
             cmakeFilesPath / (package + 'ConfigVersion.cmake'),
             cmakeFilesPath / (package + 'Targets-{0}.cmake'.format(config)),
             cmakeFilesPath / (package + 'Targets.cmake'),
         ])
+
 
         # Public header files
         includePath = prefix_dir / 'include' / package
@@ -161,42 +265,22 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
             includePath / 'cpfPackageVersion_{0}.h'.format(package)
         ])
 
-        # Library files
-        if self.is_shared_libraries_config():
-            packageFiles.extend([
-                sharedLibOutputDir / (libBaseName + sharedLibExtension + versionExtension),
-                sharedLibOutputDir / (fixtureLibBaseName + sharedLibExtension + versionExtension)
-            ])
-        else:
-            packageFiles.extend([
-                staticLibOutputDir / (libBaseName + staticLibExtension ),
-                staticLibOutputDir / (fixtureLibBaseName + staticLibExtension )
-            ])
 
-        # Test executable
-        packageFiles.extend([
-            runtimeOutputDir / (testExeBaseName + exeVersionPostfix + exeExtension),
-        ])
+        # Pdb files and sources
+        libBaseName = self.get_package_lib_basename(package, packageType)
+        fixtureLibBaseName = self.get_package_lib_basename(package + '_fixture', 'LIB')
 
-        # Platform dependend files
         if self.is_windows():
-
-            # On windows .lib files are also created for shared libraris.
-            if self.is_shared_libraries_config():
-                packageFiles.extend([
-                    staticLibOutputDir / (libBaseName + staticLibExtension),
-                    staticLibOutputDir / (fixtureLibBaseName  + staticLibExtension)
-                ])
-
-            # pdb and source files
             if self.is_debug_compiler_config():
-
                 if self.is_shared_libraries_config():
+                    sharedLibOutputDir = self.get_shared_lib_dir(prefix_dir)
                     packageFiles.extend([
                         sharedLibOutputDir / '{0}.pdb'.format(libBaseName),
                         sharedLibOutputDir / '{0}.pdb'.format(fixtureLibBaseName)
                     ])
 
+                staticLibOutputDir = self.get_static_lib_dir(prefix_dir)
+                testExeBaseName = self.get_target_binary_base_name( package + '_tests', testprojectfixture.COMPILER_CONFIG)
                 packageFiles.extend([
                     staticLibOutputDir / '{0}-compiler.pdb'.format(libBaseName),
                     staticLibOutputDir / '{0}-compiler.pdb'.format(fixtureLibBaseName),
@@ -215,6 +299,8 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
                     sourcePath / (packageNamespace + '_tests_export.h')
                 ])
 
+
+        # ABI dump files
         if self.is_linux():
 
             # Abi dumps
@@ -223,18 +309,6 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
                 packageFiles.extend([
                     otherPath / 'ABI_{0}.{1}.dump'.format(libBaseName, version),
                     otherPath / 'ABI_{0}.{1}.dump'.format(fixtureLibBaseName, version),
-                ])
-
-            # Check that symlinks for compatible versions exist.
-            if self.is_shared_libraries_config():
-
-                twoDigitsVersionExtension = '.' + '.'.join(version.split('.')[0:2])
-                symlinks.extend([
-                    runtimeOutputDir / (testExeBaseName),
-                    sharedLibOutputDir / (libBaseName + sharedLibExtension),
-                    sharedLibOutputDir / (libBaseName + sharedLibExtension + twoDigitsVersionExtension),
-                    sharedLibOutputDir / (fixtureLibBaseName + sharedLibExtension),
-                    sharedLibOutputDir / (libBaseName + sharedLibExtension + twoDigitsVersionExtension)
                 ])
 
 
@@ -249,7 +323,7 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         packageFiles = []
         symlinks = []
 
-
+        
 
         return [packageFiles, symlinks]
 
