@@ -19,6 +19,7 @@ from .testprojectfixture import BASE_TEST_DIR, PARENT_CONFIG
 # tests
 from .acpftestproject_tests import *
 from .bcpftestproject_tests import *
+from .ccpftestproject_tests import *
 from .misc_tests import *
 from .simpleonelibcpftestproject_tests import *
 from .distpackageconsumption_tests import *
