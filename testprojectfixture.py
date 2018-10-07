@@ -115,6 +115,20 @@ class TestProjectFixture(unittest.TestCase):
         print(command)
         self.run_python_command(command)
 
+    def build_targets(self, targets):
+        for target in targets:
+            self.build_target(target)
+
+    def build_target(self, target, config=None ):
+        command = '3_Make.py --target {0}'.format(target)
+        if self.is_visual_studio_config():
+            if config:
+                command += ' --config {0}'.format(config)
+            else:
+                command += ' --config {0}'.format(COMPILER_CONFIG)
+        print(command) # We do our own abbreviated command printing here.
+        outputlist = self.run_python_command(command)
+        return '\n'.join(outputlist)
 
     def cleanup_generated_files(self):
         # We delete all generated files to make sure they do not interfere with the test case.
@@ -238,21 +252,6 @@ class TestProjectFixture(unittest.TestCase):
             print_command=False
         )[0]
 
-    def build_targets(self, targets):
-        for target in targets:
-            self.build_target(target)
-
-    def build_target(self, target, config=None ):
-        command = '3_Make.py --target {0}'.format(target)
-        if self.is_visual_studio_config():
-            if config:
-                command += ' --config {0}'.format(config)
-            else:
-                command += ' --config {0}'.format(COMPILER_CONFIG)
-        print(command) # We do our own abbreviated command printing here.
-        outputlist = self.run_python_command(command)
-        return '\n'.join(outputlist)
-
     def get_package_runtime_path_in_build_tree(self, package, config, compilerConfig):
         buildTreePath = self.locations.get_full_path_binary_output_folder(package, config, compilerConfig)
         if self.is_linux():
@@ -274,7 +273,6 @@ class TestProjectFixture(unittest.TestCase):
             return baseName + extension
         else:
             return baseName + '-' + version + extension
-        
 
     def get_target_binary_base_name(self, target, compilerConfig):
         if self.is_release_compiler_config():
@@ -305,6 +303,49 @@ class TestProjectFixture(unittest.TestCase):
             return '.lib'
 
         raise Exception('Unknown platform!. Add case.')
+
+    def get_full_distribution_package_path(self, package, packageGenerator, contentType):
+        """
+        Returns the full path to a distribution package in the html-LastBuild download directory.
+        """
+        return self.get_distribution_package_directory(package) / self.get_distribution_package_short_name(package, packageGenerator, contentType)
+       
+    def get_distribution_package_directory(self, package):
+        return self.locations.get_full_path_config_makefile_folder(PARENT_CONFIG)  / 'html/Downloads/{0}/LastBuild'.format(package)
+
+    def get_distribution_package_short_name(self, package, packageGenerator, contentType):
+        """
+        Returns the short filename of the package file.
+        """
+        return self.get_distribution_package_name_we(package, contentType) + '.' + self.get_distribution_package_extension(packageGenerator)
+
+    def get_distribution_package_name_we(self, package, contentType):
+        version = self.get_package_version(package)
+        system = self.osa.system()
+        contentTypeString = self.get_content_type_path_string(contentType)
+
+        return '{0}.{1}.{2}.{3}.{4}'.format(package ,version, system, contentTypeString, COMPILER_CONFIG)
+
+    def get_content_type_path_string(self, contentType):
+        if contentType == 'CT_RUNTIME':
+            return 'runtime'
+        elif contentType == 'CT_RUNTIME_PORTABLE':
+            return 'runtime-port'
+        elif contentType == 'CT_DEVELOPER':
+            return 'dev'
+        elif contentType == 'CT_SOURCES':
+            return 'src'
+        else:
+            raise Exception('Unknown content type "{0}"!'.format(contentType))
+
+    def get_distribution_package_extension(self, packageGenerator):
+        if packageGenerator == '7Z':
+            return '7z'
+        elif packageGenerator == 'ZIP':
+            return 'zip'
+        else:
+            raise Exception('Unhandled packageGenerator "{0}"'.format(packageGenerator))
+
 
     def assert_target_does_not_exist(self, target):
         target_misses_signature = ''

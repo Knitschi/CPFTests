@@ -369,177 +369,28 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         self.do_basic_target_tests(target, target)
 
 
-    def get_expected_package_content(self, prefix_dir, version):
-
-        packageFiles = []
-        symlinks = []
-
-        config = testprojectfixture.COMPILER_CONFIG.lower()
-
-        # location primitives
-        prefix_dir = PurePosixPath(prefix_dir)
-        sharedLibOutputDir = ''
-        if self.is_windows():
-            sharedLibOutputDir = prefix_dir
-        else:
-            sharedLibOutputDir = prefix_dir / 'lib'
-
-        runtimeOutputDir = ''
-        if self.is_windows():
-            runtimeOutputDir = prefix_dir
-        else:
-            runtimeOutputDir = prefix_dir / 'bin'
-
-        staticLibOutputDir = prefix_dir / 'lib'
-        
-        libBaseName = self.get_target_binary_base_name('MyLib', testprojectfixture.COMPILER_CONFIG)
-        testExeBaseName = self.get_target_binary_base_name('MyLib_tests', testprojectfixture.COMPILER_CONFIG)
-        fixtureLibBaseName = self.get_target_binary_base_name('MyLib_fixtures', testprojectfixture.COMPILER_CONFIG)
-        
-        exeVersionPostfix = ''
-        if self.is_linux():
-            exeVersionPostfix += '-' + version
-
-        sharedLibExtension = self.get_shared_lib_extension()
-        staticLibExtension = self.get_static_lib_extension()
-        exeExtension = self.get_exe_extension()
-        versionExtension = '.' + version
-
-
-        # Assemble pathes for package files.
-
-        # CMake package files
-        cmakeFilesPath = staticLibOutputDir / 'cmake/MyLib'
-        packageFiles.extend([
-            cmakeFilesPath / 'MyLibConfig.cmake',
-            cmakeFilesPath / 'MyLibConfigVersion.cmake',
-            cmakeFilesPath / 'MyLibTargets-{0}.cmake'.format(config),
-            cmakeFilesPath / 'MyLibTargets.cmake',
-        ])
-
-        # Public header files
-        includePath = prefix_dir / 'include/MyLib'
-        packageFiles.extend([
-            includePath / 'function.h',
-            includePath / 'fixture.h',
-            includePath / 'mylib_export.h',
-            includePath / 'mylib_tests_export.h',
-            includePath / 'cpfPackageVersion_MyLib.h'
-        ])
-
-        # Library files
-        if self.is_shared_libraries_config():
-            packageFiles.extend([
-                sharedLibOutputDir / (libBaseName + sharedLibExtension + versionExtension),
-                sharedLibOutputDir / (fixtureLibBaseName + sharedLibExtension + versionExtension)
-            ])
-        else:
-            packageFiles.extend([
-                staticLibOutputDir / (libBaseName + staticLibExtension ),
-                staticLibOutputDir / (fixtureLibBaseName + staticLibExtension )
-            ])
-
-        # Test executable
-        packageFiles.extend([
-            runtimeOutputDir / (testExeBaseName + exeVersionPostfix + exeExtension),
-        ])
-
-        # Platform dependend files
-        if self.is_windows():
-
-            # On windows .lib files are also created for shared libraris.
-            if self.is_shared_libraries_config():
-                packageFiles.extend([
-                    staticLibOutputDir / (libBaseName + staticLibExtension),
-                    staticLibOutputDir / (fixtureLibBaseName  + staticLibExtension)
-                ])
-
-            # pdb and source files
-            if self.is_debug_compiler_config():
-
-                if self.is_shared_libraries_config():
-                    packageFiles.extend([
-                        sharedLibOutputDir / '{0}.pdb'.format(libBaseName),
-                        sharedLibOutputDir / '{0}.pdb'.format(fixtureLibBaseName)
-                    ])
-
-                packageFiles.extend([
-                    staticLibOutputDir / '{0}-compiler.pdb'.format(libBaseName),
-                    staticLibOutputDir / '{0}-compiler.pdb'.format(fixtureLibBaseName),
-                    staticLibOutputDir / '{0}-compiler.pdb'.format(testExeBaseName)
-                ])
-
-                # Source files are required for debugging with pdb files.
-                sourcePath = prefix_dir / 'src/MyLib'
-                packageFiles.extend([
-                    sourcePath / 'cpfPackageVersion_MyLib.h',
-                    sourcePath / 'fixture.cpp',
-                    sourcePath / 'fixture.h',
-                    sourcePath / 'function.cpp',
-                    sourcePath / 'function.h',
-                    sourcePath / 'mylib_export.h',
-                    sourcePath / 'mylib_tests_export.h'
-                ])
-
-        if self.is_linux():
-
-            # Abi dumps
-            otherPath = prefix_dir / 'other'
-            if self.is_debug_compiler_config():
-                packageFiles.extend([
-                    otherPath / 'ABI_{0}.{1}.dump'.format(libBaseName, version),
-                    otherPath / 'ABI_{0}.{1}.dump'.format(fixtureLibBaseName, version),
-                ])
-
-            # Check that symlinks for compatible versions exist.
-            if self.is_shared_libraries_config():
-
-                twoDigitsVersionExtension = '.' + '.'.join(version.split('.')[0:2])
-                symlinks.extend([
-                    runtimeOutputDir / (testExeBaseName),
-                    sharedLibOutputDir / (libBaseName + sharedLibExtension),
-                    sharedLibOutputDir / (libBaseName + sharedLibExtension + twoDigitsVersionExtension),
-                    sharedLibOutputDir / (fixtureLibBaseName + sharedLibExtension),
-                    sharedLibOutputDir / (libBaseName + sharedLibExtension + twoDigitsVersionExtension)
-                ])
-
-
-        return [packageFiles, symlinks]
-
-
     def test_distributionPackages_MyLib_target(self):
+        """
+        Not that this test only tests if the package is created
+        and if it is properly rebuild. The correctness of the 
+        the package content is tested in acpftestproject_tests.
+        """
         # Setup
         self.generate_project()
         target = DISTRIBUTION_PACKAGES_MYLIB_TARGET
-        version = self.get_package_version('MyLib')
-        system = self.osa.system()
 
         sources = [
             'Sources/MyLib/function.cpp'
         ]
+
         # Check the zip file is created.
-        packageFileWE = 'MyLib.{0}.{1}.dev.{2}'.format(version, system, testprojectfixture.COMPILER_CONFIG)
-        packageFileShort = packageFileWE + '.7z'
-        packageFileDir = self.locations.get_full_path_config_makefile_folder(testprojectfixture.PARENT_CONFIG)  / 'html/Downloads/MyLib/LastBuild'
+        distPackagePath = self.get_full_distribution_package_path('MyLib', '7Z', 'CT_DEVELOPER')
         output = [
-            packageFileDir / packageFileShort
+            distPackagePath
         ]
 
         # Execute
         self.do_basic_target_tests(target, target, source_files=sources, output_files=output)
-
-        # Extract the zip file and check its content
-        self.osa.execute_command_output(
-            "cmake -E tar xzf " + packageFileShort,
-            cwd=packageFileDir,
-            print_output=miscosaccess.OutputMode.ON_ERROR
-            )
-
-        # Check the content of the package is correct.
-        [package_files, package_symlinks] = self.get_expected_package_content(packageFileDir / packageFileWE / 'MyLib', version)
-        self.assert_files_exist(package_files)
-        self.assert_symlinks_exist(package_symlinks)
-
 
     def test_runAllTests_MyLib_target(self):
         # Setup
