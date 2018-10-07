@@ -278,7 +278,7 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
 
         # Pdb files and sources
         libBaseName = self.get_package_lib_basename(package, packageType)
-        fixtureLibBaseName = self.get_package_lib_basename(package + '_fixtures', 'LIB')
+        fixtureLibBaseName = self.get_package_lib_basename(package + '_fixtures', packageType)
 
         if self.is_windows():
             if self.is_debug_compiler_config():
