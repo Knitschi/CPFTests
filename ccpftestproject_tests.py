@@ -290,7 +290,7 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
                     ])
 
                 staticLibOutputDir = self.get_static_lib_dir(prefix_dir)
-                testExeBaseName = self.get_target_binary_base_name( package + '_tests', testprojectfixture.COMPILER_CONFIG)
+                testExeBaseName = self.get_package_lib_basename(package + '_tests', packageType)
                 packageFiles.extend([
                     staticLibOutputDir / '{0}-compiler.pdb'.format(libBaseName),
                     staticLibOutputDir / '{0}-compiler.pdb'.format(fixtureLibBaseName),
@@ -298,7 +298,7 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
                 ])
 
                 # Source files are required for debugging with pdb files.
-                sourcePath = prefix_dir / 'src/MyLib'
+                sourcePath = prefix_dir / 'src' / package
                 packageFiles.extend([
                     sourcePath / 'cpfPackageVersion_{0}.h'.format(package),
                     sourcePath / 'fixture.cpp',
