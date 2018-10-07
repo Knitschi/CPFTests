@@ -41,7 +41,7 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         return  packageFileDir / packageFileWE / package
 
 
-    def get_expected_package_content(self, prefix_dir, package, packageType, packageNamespace, packageDependencies=[]):
+    def get_expected_package_content(self, prefix_dir, package, contentType, packageType, packageNamespace, packageDependencies=[]):
         """
         Returns absolute pathes to files and symlinks that are expected in the distribution package.
         """
@@ -49,25 +49,25 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         symlinks = []
 
         # runtime package component
-        if packageType == 'CT_RUNTIME' or packageType == 'CT_RUNTIME_PORTABLE' or packageType == 'CT_DEVELOPER':
+        if contentType == 'CT_RUNTIME' or contentType == 'CT_RUNTIME_PORTABLE' or contentType == 'CT_DEVELOPER':
             [packageFilesComponent, symlinksCompnent] = self.get_runtime_package_content(prefix_dir, package, packageType, packageNamespace)
             packageFiles.extend(packageFilesComponent)
             symlinks.extend(symlinksCompnent)
 
         # runtime dependencies component
-        if packageType == 'CT_RUNTIME_PORTABLE':
+        if contentType == 'CT_RUNTIME_PORTABLE':
             [packageFilesComponent, symlinksCompnent] = self.get_runtime_portable_package_content(prefix_dir, package, packageType, packageNamespace, packageDependencies)
             packageFiles.extend(packageFilesComponent)
             symlinks.extend(symlinksCompnent)
 
         # developer component
-        if packageType == 'CT_DEVELOPER':
+        if contentType == 'CT_DEVELOPER':
             [packageFilesComponent, symlinksCompnent] = self.get_developer_package_content(prefix_dir, package, packageType, packageNamespace)
             packageFiles.extend(packageFilesComponent)
             symlinks.extend(symlinksCompnent)
 
         # sources component
-        if packageType == 'CT_SOURCES':
+        if contentType == 'CT_SOURCES':
             [packageFilesComponent, symlinksCompnent] = self.get_sources_package_content(prefix_dir, package, packageType, packageNamespace)
             packageFiles.extend(packageFilesComponent)
             symlinks.extend(symlinksCompnent)
@@ -92,14 +92,14 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
             # Symlink for executable
             if self.is_linux():
                 symlinks.append( self.get_package_exe_symlink_path(prefix_dir, package, version) )
+        else:
+            # Shared library
+            if self.is_shared_libraries_config():
+                packageFiles.append( self.get_package_shared_lib_path(prefix_dir, package, packageType, version) )
 
-        # Shared library
-        if self.is_shared_libraries_config():
-            packageFiles.append( self.get_package_shared_lib_path(prefix_dir, package, packageType, version) )
-
-            # Shared libary symlinks
-            if self.is_linux():
-                symlinks.extend( self.get_package_shared_lib_symlink_paths(prefix_dir, package, packageType, version) )
+                # Shared libary symlinks
+                if self.is_linux():
+                    symlinks.extend( self.get_package_shared_lib_symlink_paths(prefix_dir, package, packageType, version) )
 
         return [packageFiles, symlinks]
 
@@ -218,6 +218,7 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
 
         config = testprojectfixture.COMPILER_CONFIG.lower()
         version = self.get_package_version(package)
+        isExePackage = self.is_exe_package(packageType)
 
         # Static library files
         if self.is_linux():
@@ -228,21 +229,30 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
             packageFiles.append(self.get_package_static_lib_path(prefix_dir, package, packageType))
 
 
+        # Implementation static libs for exe packages
+        if isExePackage:
+            packageFiles.append(self.get_package_static_lib_path(prefix_dir, package, packageType))
+
+
         # Test executable
-        packageFiles.append(self.get_package_executable_path(prefix_dir, package, version, target_postfix='_tests'))
+        testPackageBaseName = package
+        if isExePackage:
+            testPackageBaseName = 'lib' + package
+
+        packageFiles.append(self.get_package_executable_path(prefix_dir, testPackageBaseName, version, target_postfix='_tests'))
         # test exe  symlinks
         if self.is_linux():
-            symlinks.extend( self.get_package_exe_symlink_path(prefix_dir, package, version, target_postfix='_tests') )
+            symlinks.append( self.get_package_exe_symlink_path(prefix_dir, testPackageBaseName, version, target_postfix='_tests') )
 
 
         # Fixture library files
-        if self.is_shared_libraries_config():
-            packageFiles.append(self.get_package_shared_lib_path(prefix_dir, package, 'LIB', version, target_postfix='_fixtures'))
+        if self.is_shared_libraries_config() and not isExePackage:  # for exe packages the fixture lib is always static
+            packageFiles.append(self.get_package_shared_lib_path(prefix_dir, package, packageType, version, target_postfix='_fixtures'))
             # libary symlinks
             if self.is_linux():
-                symlinks.extend( self.get_package_shared_lib_symlink_paths(prefix_dir, package, 'LIB', version, target_postfix='_fixtures') )
+                symlinks.extend( self.get_package_shared_lib_symlink_paths(prefix_dir, package, packageType, version, target_postfix='_fixtures') )
         else:
-            packageFiles.append(self.get_package_static_lib_path(prefix_dir, package, 'LIB', target_postfix='_fixtures'))
+            packageFiles.append(self.get_package_static_lib_path(prefix_dir, package, packageType, target_postfix='_fixtures'))
 
 
         # CMake package files
@@ -268,7 +278,7 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
 
         # Pdb files and sources
         libBaseName = self.get_package_lib_basename(package, packageType)
-        fixtureLibBaseName = self.get_package_lib_basename(package + '_fixture', 'LIB')
+        fixtureLibBaseName = self.get_package_lib_basename(package + '_fixtures', 'LIB')
 
         if self.is_windows():
             if self.is_debug_compiler_config():
@@ -301,7 +311,7 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
 
 
         # ABI dump files
-        if self.is_linux():
+        if self.is_linux() and not isExePackage: # dump files are only generated for libraries
 
             # Abi dumps
             otherPath = prefix_dir / 'other'
@@ -323,9 +333,25 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         packageFiles = []
         symlinks = []
 
-        
+
 
         return [packageFiles, symlinks]
+
+
+    def assert_APackage_content(self, contentType):
+        package = 'APackage'
+        unpackedPackageDir = self.unpack_archive_package(package, '7Z', contentType)
+        [package_files, package_symlinks] = self.get_expected_package_content(unpackedPackageDir, package, contentType, 'CONSOLE_APP', 'a', ['BPackage'])
+        self.assert_files_exist(package_files)
+        self.assert_symlinks_exist(package_symlinks)
+
+
+    def assert_BPackage_content(self, contentType):
+        package = 'BPackage'
+        unpackedPackageDir = self.unpack_archive_package(package, '7Z', contentType)
+        [package_files, package_symlinks] = self.get_expected_package_content(unpackedPackageDir, package, contentType, 'LIB', 'b')
+        self.assert_files_exist(package_files)
+        self.assert_symlinks_exist(package_symlinks)
 
 
     #####################################################################################################
@@ -341,9 +367,20 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
 
         # Verify the contents of the various packages.
         
-        # developer library package
-        package = 'BPackage'
-        unpackedPackageDir = self.unpack_archive_package(package, '7Z', 'CT_DEVELOPER')
-        [package_files, package_symlinks] = self.get_expected_package_content(unpackedPackageDir, package, 'LIB', 'b')
-        self.assert_files_exist(package_files)
-        self.assert_symlinks_exist(package_symlinks)
+        # runtime packages
+        self.assert_APackage_content('CT_RUNTIME')
+        self.assert_BPackage_content('CT_RUNTIME')
+
+        # runtime portable packages
+        #self.assert_APackage_content('CT_RUNTIME_PORTABLE')
+        #self.assert_BPackage_content('CT_RUNTIME_PORTABLE')
+
+        # developer packages
+        self.assert_APackage_content('CT_DEVELOPER')
+        self.assert_BPackage_content('CT_DEVELOPER')
+
+        # source packages
+        #self.assert_APackage_content('CT_SOURCES')
+        #self.assert_BPackage_content('CT_SOURCES')
+
+
