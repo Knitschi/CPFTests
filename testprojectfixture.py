@@ -440,7 +440,7 @@ class TestProjectFixture(unittest.TestCase):
                 missing_objects.append(str(abs_path))
 
         if missing_objects:
-            raise Exception('Test error! The following {0} were not produced as expected: {1}'.format(objects_name, '; '.join(missing_objects)))
+            raise Exception('Test error! The following {0} were not produced as expected:\n{1}'.format(objects_name, '\n'.join(missing_objects)))
 
 
     def assert_files_do_not_exist(self, files):

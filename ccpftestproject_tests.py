@@ -282,7 +282,7 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
 
         if self.is_windows():
             if self.is_debug_compiler_config():
-                if self.is_shared_libraries_config():
+                if self.is_shared_libraries_config() and not isExePackage:
                     sharedLibOutputDir = self.get_shared_lib_dir(prefix_dir)
                     packageFiles.extend([
                         sharedLibOutputDir / '{0}.pdb'.format(libBaseName),
