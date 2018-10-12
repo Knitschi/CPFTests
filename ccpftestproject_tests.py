@@ -372,8 +372,8 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         self.assert_BPackage_content('CT_RUNTIME')
 
         # runtime portable packages
-        #self.assert_APackage_content('CT_RUNTIME_PORTABLE')
-        #self.assert_BPackage_content('CT_RUNTIME_PORTABLE')
+        self.assert_APackage_content('CT_RUNTIME_PORTABLE')
+        self.assert_BPackage_content('CT_RUNTIME_PORTABLE')
 
         # developer packages
         self.assert_APackage_content('CT_DEVELOPER')
