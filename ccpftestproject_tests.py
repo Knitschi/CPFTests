@@ -41,7 +41,7 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         return  packageFileDir / packageFileWE / package
 
 
-    def get_expected_package_content(self, prefix_dir, package, contentType, packageType, packageNamespace, packageDependencies=[]):
+    def get_expected_package_content(self, prefix_dir, package, contentType, packageType, packageNamespace, packageDependencies=[], packagePluginDependencies={}):
         """
         Returns absolute pathes to files and symlinks that are expected in the distribution package.
         """
@@ -56,7 +56,7 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
 
         # runtime dependencies component
         if contentType == 'CT_RUNTIME_PORTABLE':
-            [packageFilesComponent, symlinksCompnent] = self.get_runtime_portable_package_content(prefix_dir, package, packageType, packageNamespace, packageDependencies)
+            [packageFilesComponent, symlinksCompnent] = self.get_runtime_portable_package_content(prefix_dir, package, packageType, packageNamespace, packageDependencies, packagePluginDependencies)
             packageFiles.extend(packageFilesComponent)
             symlinks.extend(symlinksCompnent)
 
@@ -120,10 +120,14 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
 
     def get_package_shared_lib_path(self, prefix_dir, package, packageType, version, target_postfix=''):
         sharedLibOutputDir = self.get_shared_lib_dir(prefix_dir)
+        sharedLibShortName = self.get_shared_lib_short_name(package, packageType, version, target_postfix)
+        return sharedLibOutputDir / sharedLibShortName
+
+    def get_shared_lib_short_name(self, package, packageType, version, target_postfix):
         libBaseName = self.get_package_lib_basename( package + target_postfix, packageType)
         libExtension = self.get_shared_lib_extension()
         versionExtension = self.get_version_extension(version)
-        return sharedLibOutputDir / (libBaseName + libExtension + versionExtension)
+        return libBaseName + libExtension + versionExtension
 
 
     def get_package_shared_lib_symlink_paths(self, prefix_dir, package, packageType, version, target_postfix=''):
@@ -188,7 +192,7 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         return packageType == 'CONSOLE_APP' or packageType == 'GUI_APP'
 
 
-    def get_runtime_portable_package_content(self, prefix_dir, package, packageType, packageNamespace, packageDependencies):
+    def get_runtime_portable_package_content(self, prefix_dir, package, packageType, packageNamespace, packageDependencies, packagePluginDependencies):
         """
         Returns the package files from the runtime-portable install component.
         """
@@ -205,6 +209,14 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
                 # Shared libary symlinks
                 if self.is_linux():
                     symlinks.extend( self.get_package_shared_lib_symlink_paths(prefix_dir, dependency, 'LIB', version) )
+
+        # plugins
+        for dir, targets in packagePluginDependencies.items():
+            fullPluginDir = self.get_runtime_dir(prefix_dir) / dir
+            for target in targets:
+                libShortName = self.get_shared_lib_short_name(package, packageType, version, '')
+                packageFiles.append( fullPluginDir / libShortName )
+
 
         return [packageFiles, symlinks]
 
@@ -341,7 +353,7 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
     def assert_APackage_content(self, contentType):
         package = 'APackage'
         unpackedPackageDir = self.unpack_archive_package(package, '7Z', contentType)
-        [package_files, package_symlinks] = self.get_expected_package_content(unpackedPackageDir, package, contentType, 'CONSOLE_APP', 'a', ['BPackage'])
+        [package_files, package_symlinks] = self.get_expected_package_content(unpackedPackageDir, package, contentType, 'CONSOLE_APP', 'a', ['BPackage'], { 'plugins' : ['DPackage'] })
         self.assert_files_exist(package_files)
         self.assert_symlinks_exist(package_symlinks)
 
