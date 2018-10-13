@@ -27,8 +27,8 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
     def setUp(self):
         super(CCPFTestProjectFixture, self).setUp(self.project, self.cpf_root_dir)        
 
-    def unpack_archive_package(self, package, packageGenerator, contentType):
-        packageFileShort = self.get_distribution_package_short_name(package, packageGenerator, contentType)
+    def unpack_archive_package(self, package, packageGenerator, contentType, excludedTargets ):
+        packageFileShort = self.get_distribution_package_short_name(package, packageGenerator, contentType, excludedTargets)
         packageFileDir = self.get_distribution_package_directory(package)
 
         self.osa.execute_command_output(
@@ -37,7 +37,7 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
             print_output=miscosaccess.OutputMode.ON_ERROR
             )
 
-        packageFileWE = self.get_distribution_package_name_we(package, contentType)
+        packageFileWE = self.get_distribution_package_name_we(package, contentType, excludedTargets)
         return  packageFileDir / packageFileWE / package
 
 
@@ -207,14 +207,15 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
                 packageFiles.append( self.get_package_shared_lib_path(prefix_dir, dependency, 'LIB', version) )
 
                 # Shared libary symlinks
-                if self.is_linux():
-                    symlinks.extend( self.get_package_shared_lib_symlink_paths(prefix_dir, dependency, 'LIB', version) )
+                #if self.is_linux():
+                #    symlinks.extend( self.get_package_shared_lib_symlink_paths(prefix_dir, dependency, 'LIB', version) )
 
         # plugins
         for dir, targets in packagePluginDependencies.items():
             fullPluginDir = self.get_runtime_dir(prefix_dir) / dir
             for target in targets:
-                libShortName = self.get_shared_lib_short_name(package, packageType, version, '')
+                version = self.get_package_version(target)
+                libShortName = self.get_shared_lib_short_name(target, 'LIB', version, '')
                 packageFiles.append( fullPluginDir / libShortName )
 
 
@@ -350,17 +351,17 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         return [packageFiles, symlinks]
 
 
-    def assert_APackage_content(self, contentType):
+    def assert_APackage_content(self, contentType, excludedTargets=[]):
         package = 'APackage'
-        unpackedPackageDir = self.unpack_archive_package(package, '7Z', contentType)
+        unpackedPackageDir = self.unpack_archive_package(package, '7Z', contentType, excludedTargets)
         [package_files, package_symlinks] = self.get_expected_package_content(unpackedPackageDir, package, contentType, 'CONSOLE_APP', 'a', ['BPackage'], { 'plugins' : ['DPackage'] })
         self.assert_files_exist(package_files)
         self.assert_symlinks_exist(package_symlinks)
 
 
-    def assert_BPackage_content(self, contentType):
+    def assert_BPackage_content(self, contentType, excludedTargets=[]):
         package = 'BPackage'
-        unpackedPackageDir = self.unpack_archive_package(package, '7Z', contentType)
+        unpackedPackageDir = self.unpack_archive_package(package, '7Z', contentType, excludedTargets )
         [package_files, package_symlinks] = self.get_expected_package_content(unpackedPackageDir, package, contentType, 'LIB', 'b')
         self.assert_files_exist(package_files)
         self.assert_symlinks_exist(package_symlinks)
@@ -384,7 +385,8 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         self.assert_BPackage_content('CT_RUNTIME')
 
         # runtime portable packages
-        self.assert_APackage_content('CT_RUNTIME_PORTABLE')
+        excludedTargets = ['CPackage']
+        self.assert_APackage_content('CT_RUNTIME_PORTABLE', excludedTargets)
         self.assert_BPackage_content('CT_RUNTIME_PORTABLE')
 
         # developer packages

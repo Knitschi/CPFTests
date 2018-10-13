@@ -1,5 +1,5 @@
 include(cpfLocations)
-include(cpfAddPackage)
+include(cpfAddCppPackage)
 include(cpfMiscUtilities)
 
 cpfInitPackageProject(

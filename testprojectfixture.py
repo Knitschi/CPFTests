@@ -9,6 +9,7 @@ import unittest
 from pathlib import PurePosixPath
 import shutil
 import pprint
+import hashlib
 
 from Sources.CPFBuildscripts.python import miscosaccess
 from Sources.CPFBuildscripts.python import filesystemaccess
@@ -304,33 +305,37 @@ class TestProjectFixture(unittest.TestCase):
 
         raise Exception('Unknown platform!. Add case.')
 
-    def get_full_distribution_package_path(self, package, packageGenerator, contentType):
+    def get_full_distribution_package_path(self, package, packageGenerator, contentType, excludedTargets=[]):
         """
         Returns the full path to a distribution package in the html-LastBuild download directory.
         """
-        return self.get_distribution_package_directory(package) / self.get_distribution_package_short_name(package, packageGenerator, contentType)
+        return self.get_distribution_package_directory(package) / self.get_distribution_package_short_name(package, packageGenerator, contentType, excludedTargets)
        
     def get_distribution_package_directory(self, package):
         return self.locations.get_full_path_config_makefile_folder(PARENT_CONFIG)  / 'html/Downloads/{0}/LastBuild'.format(package)
 
-    def get_distribution_package_short_name(self, package, packageGenerator, contentType):
+    def get_distribution_package_short_name(self, package, packageGenerator, contentType, excludedTargets):
         """
         Returns the short filename of the package file.
         """
-        return self.get_distribution_package_name_we(package, contentType) + '.' + self.get_distribution_package_extension(packageGenerator)
+        return self.get_distribution_package_name_we(package, contentType, excludedTargets) + '.' + self.get_distribution_package_extension(packageGenerator)
 
-    def get_distribution_package_name_we(self, package, contentType):
+    def get_distribution_package_name_we(self, package, contentType, excludedTargets):
         version = self.get_package_version(package)
         system = self.osa.system()
-        contentTypeString = self.get_content_type_path_string(contentType)
+        contentTypeString = self.get_content_type_path_string(contentType, excludedTargets)
 
         return '{0}.{1}.{2}.{3}.{4}'.format(package ,version, system, contentTypeString, COMPILER_CONFIG)
 
-    def get_content_type_path_string(self, contentType):
+    def get_content_type_path_string(self, contentType, excludedTargets):
         if contentType == 'CT_RUNTIME':
             return 'runtime'
         elif contentType == 'CT_RUNTIME_PORTABLE':
-            return 'runtime-port'
+            contentId = 'runtime-port'
+            if excludedTargets:
+                md5 = hashlib.md5(';'.join(excludedTargets).encode('utf-8')).hexdigest()
+                contentId += '-' + md5[0:8]
+            return contentId
         elif contentType == 'CT_DEVELOPER':
             return 'dev'
         elif contentType == 'CT_SOURCES':
