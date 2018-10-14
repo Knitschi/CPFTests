@@ -463,5 +463,97 @@ class TestProjectFixture(unittest.TestCase):
                 existing_files.append(str(full_file))
 
         if existing_files:
-            raise Exception('Test error! The following files were unexpectedly produced: {1}'.format('; '.join(existing_files)))
+            raise Exception('Test error! The following files were unexpectedly produced:\n{1}'.format('\n'.join(existing_files)))
 
+
+    def assert_filetree_is_equal(self, root_directory, files, symlinks):
+        """
+        This function asserts that a root_directory contains exactly the given files and symlinks.
+        The paths can be either relative to root_directory or absolute.
+        """
+        expectedFiles = self.get_rel_paths(root_directory, files)
+        actualFiles = self.get_files_in_tree(root_directory)
+        errorFiles = self.assert_filesystem_objects_are_equal(expectedFiles, actualFiles, 'files')
+
+        expectedSymlinks = self.get_rel_paths(root_directory, symlinks)
+        actualSymlinks = self.get_symlinks_in_tree(root_directory)
+        errorSymlinks = self.assert_filesystem_objects_are_equal(expectedSymlinks, actualSymlinks, 'symlinks')
+
+        if errorFiles or errorSymlinks:
+            errorString = 'Test Error! Directory "{0}" did not contain the expected objects.\n'.format(str(root_directory)) + errorFiles + errorSymlinks
+            raise Exception(errorString)
+        
+
+    def get_rel_paths(self, root_directory, paths):
+        # Make all paths relative.
+        relPaths = []
+        for path in paths:
+            if os.path.isabs(str(path)):
+                relPaths.append(os.path.relpath(str(path), str(root_directory)))
+            else:
+                relPaths.append(path)
+        return relPaths
+
+
+    def get_files_in_tree(self, directory):
+        return self.get_filsystem_object_in_tree(directory, self.fsa.isfile )
+
+
+    def get_symlinks_in_tree(self, directory):
+        return self.get_filsystem_object_in_tree(directory, os.path.islink )
+
+
+    def get_filsystem_object_in_tree(self, directory, object_checker):
+        paths = self.get_paths_in_tree(directory)
+        objects = []
+        for path in paths:
+            if object_checker(str( directory / path)):
+                objects.append(path)
+
+        return objects
+
+
+    def get_paths_in_tree(self, directory):
+        paths = os.listdir(str(directory))
+        for path in paths:
+            absSubDir = directory / path
+            if os.path.isdir( str( absSubDir )):
+                subPaths = self.get_paths_in_tree(absSubDir)
+                for subPath in subPaths:
+                    paths.append( path + '/' + subPath )
+
+        return paths
+
+
+    def assert_filesystem_objects_are_equal(self, expected_objects, actual_objects, object_name_plural):
+        """
+        This assertion can be used to compare objects in a filesystem tree.
+        """
+        # Transform everything to strings.
+        expected_objects = [ str(obj) for obj in expected_objects]
+        actual_objects = [ str(obj) for obj in actual_objects]
+
+        # Find the missing objects
+        missing_objects = []
+        for obj in expected_objects:
+            if not obj in actual_objects:
+                missing_objects.append(obj)
+
+        errorStringMissing = ''
+        if missing_objects:
+            errorStringMissing = 'The folling expected {0} were missing:\n{1}'.format(object_name_plural, '\n'.join(missing_objects)) + '\n\n'
+
+        # Find the objects that existed while they should not.
+        unexpected_objects = []
+        for obj in actual_objects:
+            if not obj in expected_objects:
+                unexpected_objects.append(obj)
+
+        errorStringUnexpected = ''
+        if unexpected_objects:
+            errorStringUnexpected = 'The following {0} existed while they should not:\n{1}'.format(object_name_plural, '\n'.join(unexpected_objects)) + '\n\n'
+
+        if missing_objects or unexpected_objects:
+            return errorStringMissing + errorStringUnexpected
+        else:
+            return ''
