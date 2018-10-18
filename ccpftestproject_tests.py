@@ -315,7 +315,7 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
                 ])
 
                 # Source files are required for debugging with pdb files.
-                sourcePath = 'src' / package
+                sourcePath = PurePosixPath('src') / package
                 packageFiles.extend([
                     sourcePath / 'cpfPackageVersion_{0}.h'.format(package),
                     sourcePath / 'fixture.cpp',
