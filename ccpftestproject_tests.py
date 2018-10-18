@@ -90,8 +90,10 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
             packageFiles.append( self.get_package_executable_path(package, version) ) 
 
             # Symlink for executable
-            #if self.is_linux():
-            #    symlinks.append( self.get_package_exe_symlink_path(package, version) )
+            # I could not find a way to suppress the generation of the name-link
+            # for executables. So this is always expected.
+            if self.is_linux():
+                symlinks.append( self.get_package_exe_symlink_path(package, version) )
 
         else:
             # Shared library
