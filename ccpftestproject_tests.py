@@ -5,6 +5,7 @@ This module contains automated tests that operate on the CCPFTestProject project
 import unittest
 from . import testprojectfixture
 from pathlib import PureWindowsPath, PurePosixPath, PurePath
+import pprint
 
 from Sources.CPFBuildscripts.python import miscosaccess
 
@@ -257,8 +258,8 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
 
         packageFiles.append(self.get_package_executable_path(testPackageBaseName, version, target_postfix='_tests'))
         # test exe  symlinks
-        #if self.is_linux():
-        #    symlinks.append( self.get_package_exe_symlink_path(testPackageBaseName, version, target_postfix='_tests') )
+        if self.is_linux():
+            symlinks.append( self.get_package_exe_symlink_path(testPackageBaseName, version, target_postfix='_tests') )
 
 
         # Fixture library files
@@ -282,7 +283,7 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
 
 
         # Public header files
-        includePath = 'include' / package
+        includePath = PurePosixPath('include') / package
         packageFiles.extend([
             includePath / 'function.h',
             includePath / 'fixture.h',
@@ -330,7 +331,7 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         if self.is_linux() and not isExePackage: # dump files are only generated for libraries
 
             # Abi dumps
-            otherPath = 'other'
+            otherPath = PurePosixPath('other')
             if self.is_debug_compiler_config():
                 packageFiles.extend([
                     otherPath / 'ABI_{0}.{1}.dump'.format(libBaseName, version),
