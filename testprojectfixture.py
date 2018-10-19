@@ -496,14 +496,18 @@ class TestProjectFixture(unittest.TestCase):
 
 
     def get_files_in_tree(self, directory):
-        return self.get_filsystem_object_in_tree(directory, self.fsa.isfile )
+        return self.get_filsystem_objects_in_tree(directory, self.fsa.isfile )
 
 
     def get_symlinks_in_tree(self, directory):
-        return self.get_filsystem_object_in_tree(directory, os.path.islink )
+        return self.get_filsystem_objects_in_tree(directory, os.path.islink )
 
 
-    def get_filsystem_object_in_tree(self, directory, object_checker):
+    def get_filsystem_objects_in_tree(self, directory, object_checker):
+        
+        if not os.path.isdir(str(directory)):
+            return []
+        
         paths = self.get_paths_in_tree(directory)
         objects = []
         for path in paths:
