@@ -241,8 +241,8 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         if self.is_linux():
             if not self.is_shared_libraries_config():
                 packageFiles.append(self.get_package_static_lib_path(package, packageType))
-        else:
-            # we always have libs on windows
+        elif self.is_visual_studio_config():
+            # We get additional libs for dlls with msvc
             packageFiles.append(self.get_package_static_lib_path(package, packageType))
 
 
@@ -263,13 +263,22 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
 
 
         # Fixture library files
-        if self.is_shared_libraries_config() and not isExePackage:  # for exe packages the fixture lib is always static
-            packageFiles.append(self.get_package_shared_lib_path(package, packageType, version, target_postfix='_fixtures'))
+        if self.is_shared_libraries_config():
+            
+            if not isExePackage:  # for exe packages the fixture lib is always static
+                packageFiles.append(self.get_package_shared_lib_path(package, packageType, version, target_postfix='_fixtures'))
+            
+            # We get additional libs for dlls with msvc
+            if self.is_visual_studio_config():
+                packageFiles.append(self.get_package_static_lib_path(package, packageType, target_postfix='_fixtures'))
+
             # libary symlinks
             #if self.is_linux():
             #    symlinks.extend( self.get_package_shared_lib_symlink_paths(package, packageType, version, target_postfix='_fixtures') )
         else:
             packageFiles.append(self.get_package_static_lib_path(package, packageType, target_postfix='_fixtures'))
+
+        # Visual studio also creates libs for shared libraries.
 
 
         # CMake package files
@@ -297,8 +306,15 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         libBaseName = self.get_package_lib_basename(package, packageType)
         fixtureLibBaseName = self.get_package_lib_basename(package + '_fixtures', packageType)
 
-        if self.is_windows():
+        if self.is_visual_studio_config():
             if self.is_debug_compiler_config():
+
+                exeBaseName = self.get_target_binary_base_name( package , testprojectfixture.COMPILER_CONFIG)
+                testExeBaseName = self.get_package_lib_basename(package + '_tests', packageType)
+                runtimeOutputDir = self.get_runtime_dir()
+                staticLibOutputDir = self.get_static_lib_dir()
+
+                # linker pdb files
                 if self.is_shared_libraries_config() and not isExePackage:
                     sharedLibOutputDir = self.get_shared_lib_dir()
                     packageFiles.extend([
@@ -306,8 +322,13 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
                         sharedLibOutputDir / '{0}.pdb'.format(fixtureLibBaseName)
                     ])
 
-                staticLibOutputDir = self.get_static_lib_dir()
-                testExeBaseName = self.get_package_lib_basename(package + '_tests', packageType)
+                if isExePackage:
+                    packageFiles.append( runtimeOutputDir / '{0}.pdb'.format(exeBaseName))
+                    packageFiles.append( staticLibOutputDir / '{0}-compiler.pdb'.format(exeBaseName))
+                
+                packageFiles.append(runtimeOutputDir / '{0}.pdb'.format(testExeBaseName))
+
+                # compiler pdb for libraries
                 packageFiles.extend([
                     staticLibOutputDir / '{0}-compiler.pdb'.format(libBaseName),
                     staticLibOutputDir / '{0}-compiler.pdb'.format(fixtureLibBaseName),
@@ -322,9 +343,15 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
                     sourcePath / 'fixture.h',
                     sourcePath / 'function.cpp',
                     sourcePath / 'function.h',
+                    sourcePath / 'tests_main.cpp',
                     sourcePath / (packageNamespace + '_export.h'),
                     sourcePath / (packageNamespace + '_tests_export.h')
                 ])
+
+                if isExePackage:
+                    packageFiles.extend([
+                        sourcePath / 'main.cpp',
+                    ])
 
 
         # ABI dump files

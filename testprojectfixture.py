@@ -504,10 +504,6 @@ class TestProjectFixture(unittest.TestCase):
 
 
     def get_filsystem_objects_in_tree(self, directory, object_checker):
-        
-        if not os.path.isdir(str(directory)):
-            return []
-        
         paths = self.get_paths_in_tree(directory)
         objects = []
         for path in paths:
@@ -518,15 +514,22 @@ class TestProjectFixture(unittest.TestCase):
 
 
     def get_paths_in_tree(self, directory):
+        
+        if not os.path.isdir(str(directory)):
+            return []
+        
         paths = os.listdir(str(directory))
+        returnedPaths = []
         for path in paths:
             absSubDir = directory / path
             if os.path.isdir( str( absSubDir )):
                 subPaths = self.get_paths_in_tree(absSubDir)
                 for subPath in subPaths:
-                    paths.append( path + '/' + subPath )
+                    returnedPaths.append( path + '/' + subPath )
+            else:
+                returnedPaths.append(path)
 
-        return paths
+        return returnedPaths
 
 
     def assert_filesystem_objects_are_equal(self, expected_objects, actual_objects, object_name_plural):
