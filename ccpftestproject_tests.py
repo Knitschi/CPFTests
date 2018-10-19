@@ -88,6 +88,8 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
 
         # Executable
         if isExePackage:
+            
+            # package executable
             packageFiles.append( self.get_package_executable_path(package, version) ) 
 
             # Symlink for executable
@@ -96,10 +98,9 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
             if self.is_linux():
                 symlinks.append( self.get_package_exe_symlink_path(package, version) )
 
-        else:
-            # Shared library
-            if self.is_shared_libraries_config():
-                packageFiles.append( self.get_package_shared_lib_path(package, packageType, version) )
+        # Production library
+        if self.is_shared_libraries_config():
+            packageFiles.append( self.get_package_shared_lib_path(package, packageType, version) )
 
                 # Shared libary symlinks
                 #if self.is_linux():
@@ -241,14 +242,15 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         if self.is_linux():
             if not self.is_shared_libraries_config():
                 packageFiles.append(self.get_package_static_lib_path(package, packageType))
+
         elif self.is_visual_studio_config():
             # We get additional libs for dlls with msvc
             packageFiles.append(self.get_package_static_lib_path(package, packageType))
 
-
-        # Implementation static libs for exe packages
+        # Implementation libs for exe packages
         if isExePackage:
-            packageFiles.append(self.get_package_static_lib_path(package, packageType))
+            if not self.is_shared_libraries_config():
+                packageFiles.append(self.get_package_static_lib_path(package, packageType))
 
 
         # Test executable
@@ -265,8 +267,7 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         # Fixture library files
         if self.is_shared_libraries_config():
             
-            if not isExePackage:  # for exe packages the fixture lib is always static
-                packageFiles.append(self.get_package_shared_lib_path(package, packageType, version, target_postfix='_fixtures'))
+            packageFiles.append(self.get_package_shared_lib_path(package, packageType, version, target_postfix='_fixtures'))
             
             # We get additional libs for dlls with msvc
             if self.is_visual_studio_config():
@@ -275,6 +276,7 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
             # libary symlinks
             #if self.is_linux():
             #    symlinks.extend( self.get_package_shared_lib_symlink_paths(package, packageType, version, target_postfix='_fixtures') )
+        
         else:
             packageFiles.append(self.get_package_static_lib_path(package, packageType, target_postfix='_fixtures'))
 
