@@ -338,22 +338,15 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
                 ])
 
                 # Source files are required for debugging with pdb files.
-                sourcePath = PurePosixPath('src') / package
-                packageFiles.extend([
-                    sourcePath / 'cpfPackageVersion_{0}.h'.format(package),
-                    sourcePath / 'fixture.cpp',
-                    sourcePath / 'fixture.h',
-                    sourcePath / 'function.cpp',
-                    sourcePath / 'function.h',
-                    sourcePath / 'tests_main.cpp',
-                    sourcePath / (packageNamespace + '_export.h'),
-                    sourcePath / (packageNamespace + '_tests_export.h')
-                ])
+                allSources = self.get_package_source_files(package, packageType, packageNamespace)
+                cppSources = []
+                # The component will only install the cpp source files.
+                cppExtensions = ['.cpp', '.h']
+                for source in allSources:
+                    if source.suffix in cppExtensions:
+                        cppSources.append(source)
 
-                if isExePackage:
-                    packageFiles.extend([
-                        sourcePath / 'main.cpp',
-                    ])
+                packageFiles.extend(cppSources)
 
 
         # ABI dump files
@@ -371,7 +364,6 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         return [packageFiles, symlinks]
 
 
-
     def get_sources_package_content(self, package, packageType, packageNamespace):
         """
         Returns the package files from the sources install component.
@@ -379,9 +371,34 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         packageFiles = []
         symlinks = []
 
-
+        packageFiles = self.get_package_source_files(package, packageType, packageNamespace)
 
         return [packageFiles, symlinks]
+
+
+    def get_package_source_files(self, package, packageType, packageNamespace):
+
+        sourceFiles = []
+
+        sourcePath = PurePosixPath('src') / package
+        sourceFiles.extend([
+            sourcePath / 'cpfPackageVersion_{0}.cmake'.format(package),
+            sourcePath / 'cpfPackageVersion_{0}.h'.format(package),
+            sourcePath / 'fixture.cpp',
+            sourcePath / 'fixture.h',
+            sourcePath / 'function.cpp',
+            sourcePath / 'function.h',
+            sourcePath / 'tests_main.cpp',
+            sourcePath / (packageNamespace + '_export.h'),
+            sourcePath / (packageNamespace + '_tests_export.h')
+        ])
+
+        if self.is_exe_package(packageType):
+            sourceFiles.extend([
+                sourcePath / 'main.cpp',
+            ])
+
+        return sourceFiles
 
 
     def assert_APackage_content(self, contentType, excludedTargets=[]):
@@ -425,7 +442,7 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         self.assert_BPackage_content('CT_DEVELOPER')
 
         # source packages
-        #self.assert_APackage_content('CT_SOURCES')
-        #self.assert_BPackage_content('CT_SOURCES')
+        self.assert_APackage_content('CT_SOURCES')
+        self.assert_BPackage_content('CT_SOURCES')
 
 
