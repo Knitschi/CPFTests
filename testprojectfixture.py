@@ -314,7 +314,7 @@ class TestProjectFixture(unittest.TestCase):
     def get_distribution_package_directory(self, package):
         return self.locations.get_full_path_config_makefile_folder(PARENT_CONFIG)  / 'html/Downloads/{0}/LastBuild'.format(package)
 
-    def get_distribution_package_short_name(self, package, packageGenerator, contentType, excludedTargets):
+    def get_distribution_package_short_name(self, package, packageGenerator, contentType, excludedTargets=[]):
         """
         Returns the short filename of the package file.
         """
@@ -348,6 +348,8 @@ class TestProjectFixture(unittest.TestCase):
             return '7z'
         elif packageGenerator == 'ZIP':
             return 'zip'
+        elif packageGenerator == 'TGZ':
+            return 'tar.gz'
         else:
             raise Exception('Unhandled packageGenerator "{0}"'.format(packageGenerator))
 
@@ -466,7 +468,7 @@ class TestProjectFixture(unittest.TestCase):
             raise Exception('Test error! The following files were unexpectedly produced:\n{1}'.format('\n'.join(existing_files)))
 
 
-    def assert_filetree_is_equal(self, root_directory, files, symlinks):
+    def assert_filetree_is_equal(self, root_directory, files, symlinks=[]):
         """
         This function asserts that a root_directory contains exactly the given files and symlinks.
         The paths can be either relative to root_directory or absolute.

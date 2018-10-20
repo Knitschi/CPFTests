@@ -426,8 +426,22 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         self.generate_project()
         self.build_target('distributionPackages')
 
+
+        # Verify all packages were created.
+        # We only check APackage packages, because the other use the same code.
+        expectedDistPackageFiles = []
+        expectedDistPackageFiles.append(self.get_distribution_package_short_name('APackage', '7Z', 'CT_RUNTIME'))
+        expectedDistPackageFiles.append(self.get_distribution_package_short_name('APackage', 'ZIP', 'CT_RUNTIME'))
+        expectedDistPackageFiles.append(self.get_distribution_package_short_name('APackage', 'TGZ', 'CT_RUNTIME'))
+        expectedDistPackageFiles.append(self.get_distribution_package_short_name('APackage', '7Z', 'CT_RUNTIME_PORTABLE', ['CPackage']))
+        expectedDistPackageFiles.append(self.get_distribution_package_short_name('APackage', '7Z', 'CT_DEVELOPER'))
+        expectedDistPackageFiles.append(self.get_distribution_package_short_name('APackage', '7Z', 'CT_SOURCES'))
+        packageFileDir = self.get_distribution_package_directory('APackage')
+        self.assert_filetree_is_equal( packageFileDir , expectedDistPackageFiles)
+
+
         # Verify the contents of the various packages.
-        
+
         # runtime packages
         self.assert_APackage_content('CT_RUNTIME')
         self.assert_BPackage_content('CT_RUNTIME')
