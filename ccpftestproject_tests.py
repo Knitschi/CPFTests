@@ -297,11 +297,14 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         includePath = PurePosixPath('include') / package
         packageFiles.extend([
             includePath / 'function.h',
-            includePath / 'fixture.h',
+            includePath / 'Tests/fixture.h',
             includePath / (packageNamespace + '_export.h'),
             includePath / (packageNamespace + '_tests_export.h'),
             includePath / 'cpfPackageVersion_{0}.h'.format(package)
         ])
+
+        if package == 'APackage':
+            packageFiles.append( includePath / 'Tests/generatedHeader.h' )
 
 
         # Pdb files and sources
@@ -382,16 +385,22 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
 
         sourcePath = PurePosixPath('src') / package
         sourceFiles.extend([
+            sourcePath / 'CMakeLists.txt',
             sourcePath / 'cpfPackageVersion_{0}.cmake'.format(package),
             sourcePath / 'cpfPackageVersion_{0}.h'.format(package),
-            sourcePath / 'fixture.cpp',
-            sourcePath / 'fixture.h',
             sourcePath / 'function.cpp',
             sourcePath / 'function.h',
-            sourcePath / 'tests_main.cpp',
+            sourcePath / 'Tests/fixture.cpp',
+            sourcePath / 'Tests/fixture.h',
+            sourcePath / 'Tests/tests_main.cpp',
             sourcePath / (packageNamespace + '_export.h'),
-            sourcePath / (packageNamespace + '_tests_export.h')
+            sourcePath / (packageNamespace + '_tests_export.h'),
+            
         ])
+
+        # The generated header is only in APackage
+        if package == 'APackage':
+            sourceFiles.append( sourcePath / 'Tests/generatedHeader.h' )
 
         if self.is_exe_package(packageType):
             sourceFiles.extend([
