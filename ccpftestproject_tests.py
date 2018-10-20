@@ -317,7 +317,7 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
                 staticLibOutputDir = self.get_static_lib_dir()
 
                 # linker pdb files
-                if self.is_shared_libraries_config() and not isExePackage:
+                if self.is_shared_libraries_config():
                     sharedLibOutputDir = self.get_shared_lib_dir()
                     packageFiles.extend([
                         sharedLibOutputDir / '{0}.pdb'.format(libBaseName),
