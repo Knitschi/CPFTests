@@ -394,7 +394,7 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
             sourcePath / 'Tests/fixture.h',
             sourcePath / 'Tests/tests_main.cpp',
             sourcePath / (packageNamespace + '_export.h'),
-            sourcePath / (packageNamespace + '_tests_export.h'),
+            sourcePath / (packageNamespace + '_tests_export.h')
             
         ])
 
