@@ -324,6 +324,9 @@ class TestProjectFixture(unittest.TestCase):
         version = self.get_package_version(package)
         system = self.osa.system()
         contentTypeString = self.get_content_type_path_string(contentType, excludedTargets)
+        
+        if contentType == 'CT_SOURCES':
+            return '{0}.{1}.{2}'.format(package ,version, contentTypeString)
 
         return '{0}.{1}.{2}.{3}.{4}'.format(package ,version, system, contentTypeString, COMPILER_CONFIG)
 
