@@ -240,8 +240,10 @@ class TestProjectFixture(unittest.TestCase):
         for line in outputList:
             splitLine = line.split('=')
             if len(splitLine) > 0:
+                # in case of cache variables we have to remove the type
+                variableFromLine = splitLine[0].split(':')[0]
                 for variable in selectedVariables:
-                    if variable == splitLine[0]:
+                    if variable == variableFromLine:
                         if len(splitLine) > 1:
                             variableValueMap[variable] = splitLine[1]
                         else:
