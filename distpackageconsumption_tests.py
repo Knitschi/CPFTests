@@ -81,8 +81,12 @@ class DistPackageFixture(unittest.TestCase):
             print_output=miscosaccess.OutputMode.ON_ERROR
         )
 
-        # Assert .pdb files are deployed in debug configuration when MyLib is a shared library.
-        # This tests the pdb deployment for imported targets.
+
+    def assert_pdb_files_from_external_package_are_deployed_to_build_tree(self):
+        """
+        Assert .pdb files are deployed in debug configuration when MyLib is a shared library.
+        This tests the pdb deployment for imported targets.
+        """
         if self.consumerProjectFixture.is_shared_libraries_config() and self.consumerProjectFixture.is_windows():
             debugConfig = "Debug"
             binaryOutputDirConfig = self.consumerProjectFixture.locations.get_full_path_binary_output_folder(
@@ -146,7 +150,7 @@ class DistPackageFixture(unittest.TestCase):
 
         # ------------------- Verify -----------------------
         self.assert_consumer_project_builds_and_runs()
-
+        self.assert_pdb_files_from_external_package_are_deployed_to_build_tree()
 
 
 
@@ -158,7 +162,7 @@ class DistPackageFixture(unittest.TestCase):
         """
         # ------------------- Setup -----------------------
 
-        # Execute the install target for each compiler.
+        # Execute the install target for each compiler configuration.
         installPrefix = self.consumerProjectFixture.cpf_root_dir / "install"
         self.libraryProjectFixture.generate_project(d_options=['CMAKE_INSTALL_PREFIX={0}'.format(installPrefix)])
         compilerConfigs = self.libraryProjectFixture.get_compiler_configs()
@@ -185,4 +189,42 @@ class DistPackageFixture(unittest.TestCase):
 
         # ------------------- Verify -----------------------
         self.assert_consumer_project_builds_and_runs()
+        self.assert_pdb_files_from_external_package_are_deployed_to_build_tree()
+
+
+
+    def test_consume_the_simple_test_project_library_with_a_single_compiler_configuration_from_direct_install(self):
+        """
+        This test checks if the consumer project builds in all compiler configurations
+        if the external package only provides a Release configuration.
+        """
+        # ------------------- Setup -----------------------
+
+        # Execute the install target of the external package for Release configuration only.
+        installPrefix = self.consumerProjectFixture.cpf_root_dir / "install"
+        self.libraryProjectFixture.generate_project(d_options=['CMAKE_INSTALL_PREFIX={0}'.format(installPrefix)])
+        compilerConfigs = self.libraryProjectFixture.get_compiler_configs()
+        myLibVersion = self.libraryProjectFixture.get_package_version("MyLib")
+
+        # Build and install the library project
+        self.libraryProjectFixture.build_target("install", config="Release")
+
+        # Delete the library project to make sure unwanted references to
+        # the original directory cause errors.
+        self.fsa.rmtree(self.libraryProjectFixture.cpf_root_dir)
+
+
+        # ------------------- Execute -----------------------
+
+        # Build the consumer project.
+        packageFileWE = self.get_package_file_we(myLibVersion, testprojectfixture.COMPILER_CONFIG)
+        self.consumerProjectFixture.generate_project([
+            "MYLIB_VERSION={0}".format(myLibVersion),
+            "MYLIB_LOCATION={0}".format(installPrefix)
+            ])
+        self.consumerProjectFixture.build_target("MyLibConsumer")
+
+        # ------------------- Verify -----------------------
+        self.assert_consumer_project_builds_and_runs()
+
 
