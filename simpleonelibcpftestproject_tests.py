@@ -460,29 +460,71 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         self.do_basic_target_tests(target, target, self.is_linux_debug_config())
 
 
-""" 
-    how can we test do this? how can we download previous reports?
-    def test_abi_compliance_checker_target_works(self):
-
-    def test__target(self):
+    def test_new_version_is_propagated_to_ConfigVersion_file(self):
+        """
+        This test was introduced to reproduce bug #31.
+        With this bug, the MyLibConfigVersion.cmake file did not contain
+        the correct version after an incremental cmake generate step.
+        """
         # Setup
         self.generate_project()
-        target = ABI_COMPLIANCE_CHECKER_TARGET
+        self.build_target(DISTRIBUTION_PACKAGES_MYLIB_TARGET)
 
         # Execute
-        if self.is_linux_debug_config():
-        output = self.build_target(target)
+        # Make a dummy change
+        sourceFile = self.locations.get_full_path_source_folder() / "MyLib/function.cpp"
+        with open(str(sourceFile), "a") as f:
+            f.write("\n")
+        # Commit the change
+        self.osa.execute_command_output(
+            'git commit . -m "Dummy change"',
+            cwd=self.cpf_root_dir,
+            print_output=miscosaccess.OutputMode.ON_ERROR
+        )
+        # Do the incremental generate
+        self.run_python_command('2_Generate.py')
+        # Build the distribution package target
+        self.build_target(DISTRIBUTION_PACKAGES_MYLIB_TARGET)
+
+        # Verify
+        packageVersionFromGit = self.get_package_version("MyLib") # The version from git
+        packageVersionVar = 'PACKAGE_VERSION'
+        packageVersionConfigFile = self.locations.get_full_path_config_makefile_folder(testprojectfixture.PARENT_CONFIG) / "_pckg/{0}/dev/MyLib/MyLib/lib/cmake/MyLib/MyLibConfigVersion.cmake".format(testprojectfixture.COMPILER_CONFIG)
+        packageVersionFromConfigFile = self.get_cmake_variables_in_file([packageVersionVar], packageVersionConfigFile)[packageVersionVar]
+
+        self.assertEqual(packageVersionFromConfigFile, packageVersionFromGit)
 
 
-    def test__target(self):
-        # Setup
-        self.generate_project()
-        target = ABI_COMPLIANCE_CHECKER_MYLIB_TARGET
+    """ 
+        how can we test do this? how can we download previous reports?
+        def test_abi_compliance_checker_target_works(self):
 
-        # Execute
-        if self.is_linux_debug_config():
-        output = self.build_target(target)
-"""
+        def test__target(self):
+            # Setup
+            self.generate_project()
+            target = ABI_COMPLIANCE_CHECKER_TARGET
+
+            # Execute
+            if self.is_linux_debug_config():
+            output = self.build_target(target)
+
+
+        def test__target(self):
+            # Setup
+            self.generate_project()
+            target = ABI_COMPLIANCE_CHECKER_MYLIB_TARGET
+
+            # Execute
+            if self.is_linux_debug_config():
+            output = self.build_target(target)
+    """
+
+
+
+
+
+
+
        
 
 

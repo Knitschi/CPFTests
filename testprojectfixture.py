@@ -224,24 +224,46 @@ class TestProjectFixture(unittest.TestCase):
 
     def get_cache_variable_values(self, variables):
         build_dir = self.locations.get_full_path_config_makefile_folder(PARENT_CONFIG)
-        allVariables = self.osa.execute_command_output(
+        variablesOutputList = self.osa.execute_command_output(
             'cmake -LA -N',
             cwd=build_dir,
             print_output=miscosaccess.OutputMode.ON_ERROR,
             print_command=False
         )
         
+        return self.get_selected_variables_from_output_string(variablesOutputList, variables)
+
+
+    def get_selected_variables_from_output_string(self, outputList, selectedVariables ):
+        
         variableValueMap = {} 
-        for line in allVariables:
-            for variable in variables:
-                if variable in line:
-                    splitLine = line.split('=')
-                    if len(splitLine) > 1:
-                        variableValueMap[variable] = splitLine[1]
-                    else:
-                        variableValueMap[variable] = ""
+        for line in outputList:
+            splitLine = line.split('=')
+            if len(splitLine) > 0:
+                for variable in selectedVariables:
+                    if variable == splitLine[0]:
+                        if len(splitLine) > 1:
+                            variableValueMap[variable] = splitLine[1]
+                        else:
+                            variableValueMap[variable] = ""
 
         return variableValueMap
+
+
+    def get_cmake_variables_in_file(self, variables, file):
+        """
+        Returns a map with the values of the given variables in the given cmake script file.
+        """
+        printVariablesScript = self.locations.get_full_path_source_folder() / "CPFCMake/Scripts/printScriptFileVariables.cmake"
+        variablesOutputList = self.osa.execute_command_output(
+            'cmake -DSCRIPT_PATH="{0}" -P "{1}"'.format(str(file), printVariablesScript),
+            cwd=self.cpf_root_dir,
+            print_output=miscosaccess.OutputMode.ON_ERROR,
+            print_command=False
+        )
+
+        return self.get_selected_variables_from_output_string(variablesOutputList, variables)
+
 
     def get_package_version(self, package):
         package_dir = self.cpf_root_dir.joinpath('Sources/{0}'.format(package))
