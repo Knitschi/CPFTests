@@ -73,10 +73,27 @@ def replace_package_in_test_project_with_local(package, cpf_root_dir):
     # We delete the package in the the copy the content of this package over
     fsa.rmtree(test_project_package_dir)
     shutil.copytree(str(this_package_dir), str(test_project_package_dir))
-    # We also commit the changes to make sure the repository is not dirty
-    # which is expected after a "fresh" checkout.
-    osa.execute_command_output('git commit --allow-empty . -m "Set package content to local developer files."', cwd=test_project_package_dir, print_output=miscosaccess.OutputMode.ON_ERROR)
-    osa.execute_command_output('git commit --allow-empty . -m "Update {0}"'.format(package), cwd=cpf_root_dir, print_output=miscosaccess.OutputMode.ON_ERROR)
+    # We also commit and add the changes to make sure the repository is not dirty
+    # which is expected after a "fresh" checkout. We have to call git add for the
+    # case that we added files to the cpf projects, which are not picket up by
+    # git commit only.
+    osa.execute_command_output(
+        'git add .',
+        cwd=test_project_package_dir,
+        print_output=miscosaccess.OutputMode.ON_ERROR
+    )
+    
+    osa.execute_command_output(
+        'git commit --allow-empty . -m "Set package content to local developer files."',
+        cwd=test_project_package_dir,
+        print_output=miscosaccess.OutputMode.ON_ERROR
+    )
+
+    osa.execute_command_output(
+        'git commit --allow-empty . -m "Update {0}"'.format(package),
+        cwd=cpf_root_dir,
+        print_output=miscosaccess.OutputMode.ON_ERROR
+    )
 
 
 
