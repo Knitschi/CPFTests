@@ -1,9 +1,9 @@
 include(cpfLocations)
-include(cpfAddCppPackage)
+include(cpfInitPackageProject)
+include(cpfAddFilePackage)
 include(cpfMiscUtilities)
 
 cpfInitPackageProject(
-	PACKAGE_NAME
 	CPFT
 )
 
@@ -24,9 +24,7 @@ set( files
 )
 
 # Add the target.
-cpfAddFilePackage(${PACKAGE_NAME} "${files}")
-
-
+cpfAddFilePackage(SOURCES "${files}")
 
 # Add a test target
 set(dependedOnPackages CPFCMake CPFBuildscripts)
@@ -40,4 +38,4 @@ cpfAssertDefinedMessage(CPF_PARENT_CONFIG "Error! Your config file is missing a 
 # set( CPFTESTS_TEST_NAME = "misc_tests.ExcecuteCommandCase.test_execute_command" )     -> runs only one test function
 #
 set(testScriptArgs  "test_dir=\"${CPF_TEST_FILES_DIR}/$<CONFIG>\" parent_config=${CPF_PARENT_CONFIG} compiler_config=$<CONFIG> test_name=${CPFTESTS_TEST_NAME}")
-cpfAddRunPython3TestTarget( ${PACKAGE_NAME} run_tests.py ${testScriptArgs} "${files}" "${dependedOnPackages}" "${configFile}" ) # We also make this depend on the config file to make sure tests are retriggered when the CPFTESTS_TEST_NAME variable is changed.
+cpfAddRunPython3TestTarget( run_tests.py ${testScriptArgs} "${files}" "${dependedOnPackages}" "${configFile}" ) # We also make this depend on the config file to make sure tests are retriggered when the CPFTESTS_TEST_NAME variable is changed.
