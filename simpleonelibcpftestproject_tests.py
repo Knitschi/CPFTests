@@ -15,7 +15,7 @@ from . import testprojectfixture
 
 # Target names
 PIPELINE_TARGET = 'pipeline'
-DOXYGEN_TARGET = 'doxygen'
+DOXYGEN_TARGET = 'documentation'
 DISTRIBUTION_PACKAGES_TARGET = 'distributionPackages'
 RUN_ALL_TESTS_TARGET = 'runAllTests'
 RUN_FAST_TESTS_TARGET = 'runFastTests'
@@ -238,11 +238,11 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         # More or less every change to a file should trigger doxygen.
         # We restrain ourselves to two files here to save time.
         sources = [
-            'Sources/documentation/DoxygenConfig.txt',
+            'Sources/CPFDoxygenConfig/DoxygenConfig.txt',
             'Sources/MyLib/function.cpp',
         ]
         output = [
-            '_CPF/doxygen/tempDoxygenConfig.txt',                           # test the production of the temp config file works
+            '_CPF/documentation/tempDoxygenConfig.txt',                           # test the production of the temp config file works
             'html/doxygen/external/CPFDependenciesTransitiveReduced.dot',   # test the dependency dot files are produced.
             'html/doxygen/index.html'                                       # test the entry file is produced.
         ]
