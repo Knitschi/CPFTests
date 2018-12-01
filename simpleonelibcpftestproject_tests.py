@@ -184,7 +184,7 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
 
         # Check that configuring an existing variable works.
         # Test overriding existing variables and setting variables with whitespaces.
-        self.run_python_command('1_Configure.py MyConfig --inherits {0} -D CPF_ENABLE_DOXYGEN_TARGET=OFF -D BLUB="bli bla"'.format(testprojectfixture.PARENT_CONFIG))
+        self.run_python_command('1_Configure.py MyConfig --inherits {0} -D CPF_ENABLE_RUN_TESTS_TARGET=OFF -D BLUB="bli bla"'.format(testprojectfixture.PARENT_CONFIG))
         self.run_python_command('2_Generate.py MyConfig')
         cmakeCacheVariables = self.osa.execute_command_output(
             'cmake Generated/MyConfig -L',
@@ -192,7 +192,7 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
             print_output=miscosaccess.OutputMode.ON_ERROR
             )
         # Note that variables that are added via 1_Configure.py are always of type string
-        self.assertIn('CPF_ENABLE_DOXYGEN_TARGET:STRING=OFF', cmakeCacheVariables)
+        self.assertIn('CPF_ENABLE_RUN_TESTS_TARGET:STRING=OFF', cmakeCacheVariables)
         self.assertIn('BLUB:STRING=bli bla', cmakeCacheVariables)
 
 
