@@ -3,9 +3,7 @@ include(cpfInitPackageProject)
 include(cpfAddFilePackage)
 include(cpfMiscUtilities)
 
-cpfInitPackageProject(
-	CPFT
-)
+cpfInitPackageProject()
 
 set( files
     __init__.py
