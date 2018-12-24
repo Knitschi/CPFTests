@@ -238,7 +238,7 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         # More or less every change to a file should trigger doxygen.
         # We restrain ourselves to two files here to save time.
         sources = [
-            'Sources/CPFDoxygenConfig/DoxygenConfig.txt',
+            'Sources/documentation/DoxygenConfig.txt',
             'Sources/MyLib/function.cpp',
         ]
         output = [
