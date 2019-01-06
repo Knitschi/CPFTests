@@ -197,6 +197,10 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         return packageType == 'CONSOLE_APP' or packageType == 'GUI_APP'
 
 
+    def is_not_interface_lib(self, packageType):
+        return not (packageType == 'INTERFACE_LIB')
+
+
     def get_runtime_portable_package_content(self, package, packageType, packageNamespace, packageDependencies, packagePluginDependencies):
         """
         Returns the package files from the runtime-portable install component.
@@ -237,50 +241,48 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         config = testprojectfixture.COMPILER_CONFIG.lower()
         version = self.get_package_version(package)
         isExePackage = self.is_exe_package(packageType)
+        isNotInterfaceLib = self.is_not_interface_lib(packageType)
 
-        # Static library files
-        if self.is_linux():
-            if not self.is_shared_libraries_config():
+        if isNotInterfaceLib:   # Interface libraries have not binary files.
+
+            # Static library files
+            if self.is_linux():
+                if not self.is_shared_libraries_config():
+                    packageFiles.append(self.get_package_static_lib_path(package, packageType))
+
+            elif self.is_visual_studio_config():
+                # We get additional libs for dlls with msvc
                 packageFiles.append(self.get_package_static_lib_path(package, packageType))
 
-        elif self.is_visual_studio_config():
-            # We get additional libs for dlls with msvc
-            packageFiles.append(self.get_package_static_lib_path(package, packageType))
+            # Implementation libs for exe packages
+            if isExePackage:
+                if not self.is_shared_libraries_config():
+                    packageFiles.append(self.get_package_static_lib_path(package, packageType))
+                else:
+                    packageFiles.append(self.get_package_shared_lib_path(package, packageType))
 
-        # Implementation libs for exe packages
-        if isExePackage:
-            if not self.is_shared_libraries_config():
-                packageFiles.append(self.get_package_static_lib_path(package, packageType))
+            # Test executable
+            testPackageBaseName = package
+            if isExePackage:
+                testPackageBaseName = 'lib' + package
 
-
-        # Test executable
-        testPackageBaseName = package
-        if isExePackage:
-            testPackageBaseName = 'lib' + package
-
-        packageFiles.append(self.get_package_executable_path(testPackageBaseName, version, target_postfix='_tests'))
-        # test exe  symlinks
-        if self.is_linux():
-            symlinks.append( self.get_package_exe_symlink_path(testPackageBaseName, version, target_postfix='_tests') )
+            packageFiles.append(self.get_package_executable_path(testPackageBaseName, version, target_postfix='_tests'))
+            # test exe  symlinks
+            if self.is_linux():
+                symlinks.append( self.get_package_exe_symlink_path(testPackageBaseName, version, target_postfix='_tests') )
 
 
-        # Fixture library files
-        if self.is_shared_libraries_config():
+            # Fixture library files
+            if self.is_shared_libraries_config():
+                
+                packageFiles.append(self.get_package_shared_lib_path(package, packageType, version, target_postfix='_fixtures'))
+                
+                # We get additional libs for dlls with msvc
+                if self.is_visual_studio_config():
+                    packageFiles.append(self.get_package_static_lib_path(package, packageType, target_postfix='_fixtures'))
             
-            packageFiles.append(self.get_package_shared_lib_path(package, packageType, version, target_postfix='_fixtures'))
-            
-            # We get additional libs for dlls with msvc
-            if self.is_visual_studio_config():
+            else:
                 packageFiles.append(self.get_package_static_lib_path(package, packageType, target_postfix='_fixtures'))
-
-            # libary symlinks
-            #if self.is_linux():
-            #    symlinks.extend( self.get_package_shared_lib_symlink_paths(package, packageType, version, target_postfix='_fixtures') )
-        
-        else:
-            packageFiles.append(self.get_package_static_lib_path(package, packageType, target_postfix='_fixtures'))
-
-        # Visual studio also creates libs for shared libraries.
 
 
         # CMake package files
@@ -312,7 +314,7 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         fixtureLibBaseName = self.get_package_lib_basename(package + '_fixtures', packageType)
 
         if self.is_visual_studio_config():
-            if self.is_debug_compiler_config():
+            if self.is_debug_compiler_config() and isNotInterfaceLib:
 
                 exeBaseName = self.get_target_binary_base_name( package , testprojectfixture.COMPILER_CONFIG)
                 testExeBaseName = self.get_package_lib_basename(package + '_tests', packageType)
@@ -343,7 +345,7 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
                 # Source files are required for debugging with pdb files.
                 allSources = self.get_package_source_files(package, packageType, packageNamespace)
                 cppSources = []
-                # The component will only install the cpp source files.
+                # The component will only install the h and cpp files.
                 cppExtensions = ['.cpp', '.h']
                 for source in allSources:
                     if source.suffix in cppExtensions:
@@ -402,6 +404,11 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         if package == 'APackage':
             sourceFiles.append( sourcePath / 'Tests/generatedHeader.h' )
 
+        # The interface library has no function.cpp and export macro header.
+        if package == 'EPackage':
+            sourceFiles.remove(sourcePath / 'function.cpp')
+            sourceFiles.remove(sourcePath / (packageNamespace + '_export.h'))
+
         if self.is_exe_package(packageType):
             sourceFiles.extend([
                 sourcePath / 'main.cpp',
@@ -421,6 +428,13 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         package = 'BPackage'
         unpackedPackageDir = self.unpack_archive_package(package, '7Z', contentType, excludedTargets )
         [package_files, package_symlinks] = self.get_expected_package_content(package, contentType, 'LIB', 'b')
+        self.assert_filetree_is_equal( unpackedPackageDir , package_files, package_symlinks)
+
+
+    def assert_EPackage_content(self, contentType, excludedTargets=[]):
+        package = 'EPackage'
+        unpackedPackageDir = self.unpack_archive_package(package, '7Z', contentType, excludedTargets )
+        [package_files, package_symlinks] = self.get_expected_package_content(package, contentType, 'INTERFACE_LIB', 'e')
         self.assert_filetree_is_equal( unpackedPackageDir , package_files, package_symlinks)
 
 
@@ -463,9 +477,11 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         # developer packages
         self.assert_APackage_content('CT_DEVELOPER')
         self.assert_BPackage_content('CT_DEVELOPER')
+        self.assert_EPackage_content('CT_DEVELOPER')
 
         # source packages
         self.assert_APackage_content('CT_SOURCES')
         self.assert_BPackage_content('CT_SOURCES')
+        self.assert_EPackage_content('CT_SOURCES')
 
 
