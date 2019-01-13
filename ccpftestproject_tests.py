@@ -355,9 +355,9 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         # ABI dump files
         if self.is_linux() and not isExePackage: # dump files are only generated for libraries
 
-            # Abi dumps
+            # Abi dumps (interface libs have no binaries so no dumps are created)
             otherPath = PurePosixPath('other')
-            if self.is_debug_compiler_config():
+            if self.is_debug_compiler_config() and isNotInterfaceLib:
                 packageFiles.extend([
                     otherPath / 'ABI_{0}.{1}.dump'.format(libBaseName, version),
                     otherPath / 'ABI_{0}.{1}.dump'.format(fixtureLibBaseName, version),
