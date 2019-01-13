@@ -46,40 +46,36 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         """
         Returns absolute pathes to files and symlinks that are expected in the distribution package.
         """
-        packageFiles = []
-        symlinks = []
-
         # runtime package component
-        if contentType == 'CT_RUNTIME' or contentType == 'CT_RUNTIME_PORTABLE' or contentType == 'CT_DEVELOPER':
-            [packageFilesComponent, symlinksCompnent] = self.get_runtime_package_content(package, packageType, packageNamespace)
-            packageFiles.extend(packageFilesComponent)
-            symlinks.extend(symlinksCompnent)
+        if contentType == 'CT_RUNTIME':
+            return self.get_runtime_package_content(package, packageType, packageNamespace)
 
         # runtime dependencies component
         if contentType == 'CT_RUNTIME_PORTABLE':
-            [packageFilesComponent, symlinksCompnent] = self.get_runtime_portable_package_content(package, packageType, packageNamespace, packageDependencies, packagePluginDependencies)
-            packageFiles.extend(packageFilesComponent)
-            symlinks.extend(symlinksCompnent)
+            return self.get_runtime_portable_package_content(package, packageType, packageNamespace, packageDependencies, packagePluginDependencies)
 
         # developer component
         if contentType == 'CT_DEVELOPER':
-            [packageFilesComponent, symlinksCompnent] = self.get_developer_package_content(package, packageType, packageNamespace)
-            packageFiles.extend(packageFilesComponent)
-            symlinks.extend(symlinksCompnent)
+            return self.get_developer_package_content(package, packageType, packageNamespace)
 
         # sources component
         if contentType == 'CT_SOURCES':
-            [packageFilesComponent, symlinksCompnent] = self.get_sources_package_content(package, packageType, packageNamespace)
-            packageFiles.extend(packageFilesComponent)
-            symlinks.extend(symlinksCompnent)
+            return self.get_sources_package_content(package, packageType, packageNamespace)
         
-        return [packageFiles, symlinks]
+        raise Exception("Missing case!")
+
+        return []
 
 
     def get_runtime_package_content(self, package, packageType, packageNamespace):
         """
         Returns the package files from the runtime install component.
         """
+        # Interface libraries have no runtime files.
+        isNotInterfaceLib = self.is_not_interface_lib(packageType)
+        if not isNotInterfaceLib:
+            return [[],[]]
+
         packageFiles = []
         symlinks = []
 
@@ -205,8 +201,7 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         """
         Returns the package files from the runtime-portable install component.
         """
-        packageFiles = []
-        symlinks = []
+        [packageFiles, symlinks] = self.get_runtime_package_content(package, packageType, packageNamespace)
 
         # Shared external libraries
         if self.is_shared_libraries_config():
@@ -231,35 +226,34 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         """
         Returns the package files from the developer install component.
         """
-        packageFiles = []
-        symlinks = []
-
         config = testprojectfixture.COMPILER_CONFIG.lower()
         version = self.get_package_version(package)
         isExePackage = self.is_exe_package(packageType)
         isNotInterfaceLib = self.is_not_interface_lib(packageType)
+        isInterfaceLib = not isNotInterfaceLib
 
+        # The developer package also contains the main binaries.
+        [packageFiles, symlinks] = self.get_runtime_package_content(package, packageType, packageNamespace)
+
+        # We have to add the static libraries for the developer package.
         if isNotInterfaceLib:   # Interface libraries have no binary files.
-
             # Main binary file
             if isExePackage:
-                packageFiles.append(self.get_package_executable_path(package, version))
-
                 # Implementation libs for exe packages
-                if not self.is_shared_libraries_config():
-                    packageFiles.append(self.get_package_static_lib_path(package, packageType))
-                else:
-                    packageFiles.append(self.get_package_shared_lib_path(package, packageType, version))
+                if self.is_shared_libraries_config():
                     if self.is_visual_studio_config():
-                        # We get additional libs for dlls with msvc
+                        # We get an additional libs for the implementation dlls with msvc
                         packageFiles.append(self.get_package_static_lib_path(package, packageType))
+                else:
+                    # The static implementation lib
+                    packageFiles.append(self.get_package_static_lib_path(package, packageType))
             else:
                 if self.is_shared_libraries_config():
-                    packageFiles.append(self.get_package_shared_lib_path(package, packageType, version))
                     if self.is_visual_studio_config():
                         # We get additional libs for dlls with msvc
                         packageFiles.append(self.get_package_static_lib_path(package, packageType))
                 else:
+                    # Add the static main library.
                     packageFiles.append(self.get_package_static_lib_path(package, packageType))
 
         # Test executable
@@ -348,6 +342,13 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
                     if source.suffix in cppExtensions:
                         cppSources.append(source)
 
+                # The interface library does not install any source files because
+                # they are all public headers and availabe in the include directory.
+                sourcePath = PurePosixPath('src') / package
+                if isInterfaceLib:
+                    cppSources.remove(sourcePath / 'function.h')
+                    cppSources.remove(sourcePath / 'cpfPackageVersion_{0}.h'.format(package))
+
                 packageFiles.extend(cppSources)
 
 
@@ -379,6 +380,8 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
 
     def get_package_source_files(self, package, packageType, packageNamespace):
 
+        isInterfaceLib = not self.is_not_interface_lib(packageType)
+
         sourceFiles = []
 
         sourcePath = PurePosixPath('src') / package
@@ -393,17 +396,16 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
             sourcePath / 'Tests/tests_main.cpp',
             sourcePath / (packageNamespace + '_export.h'),
             sourcePath / (packageNamespace + '_tests_export.h')
-            
         ])
+
+        # The interface library has no cpp file and export macro header
+        if isInterfaceLib:
+            sourceFiles.remove( sourcePath / 'function.cpp')
+            sourceFiles.remove( sourcePath / (packageNamespace + '_export.h'))
 
         # The generated header is only in APackage
         if package == 'APackage':
             sourceFiles.append( sourcePath / 'Tests/generatedHeader.h' )
-
-        # The interface library has no function.cpp and export macro header.
-        if package == 'EPackage':
-            sourceFiles.remove(sourcePath / 'function.cpp')
-            sourceFiles.remove(sourcePath / (packageNamespace + '_export.h'))
 
         if self.is_exe_package(packageType):
             sourceFiles.extend([
@@ -431,13 +433,6 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         package = 'EPackage'
         unpackedPackageDir = self.unpack_archive_package(package, '7Z', contentType, excludedTargets )
         [package_files, package_symlinks] = self.get_expected_package_content(package, contentType, 'INTERFACE_LIB', 'e')
-
-        # debug
-        print('------------------------------ Files')
-        pprint.pprint(package_files)
-        print('------------------------------ Links')
-        pprint.pprint(package_symlinks)
-
         self.assert_filetree_is_equal( unpackedPackageDir , package_files, package_symlinks)
 
 
@@ -469,20 +464,24 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         # Verify the contents of the various packages.
 
         # runtime packages
+        print('-- assert runtime packages')
         self.assert_APackage_content('CT_RUNTIME')
         self.assert_BPackage_content('CT_RUNTIME')
 
         # runtime portable packages
+        print('-- assert runtime portable packages')
         excludedTargets = ['CPackage']
         self.assert_APackage_content('CT_RUNTIME_PORTABLE', excludedTargets)
         self.assert_BPackage_content('CT_RUNTIME_PORTABLE')
 
         # developer packages
+        print('-- assert developer packages')
         self.assert_APackage_content('CT_DEVELOPER')
         self.assert_BPackage_content('CT_DEVELOPER')
         self.assert_EPackage_content('CT_DEVELOPER')
 
         # source packages
+        print('-- assert source packages')
         self.assert_APackage_content('CT_SOURCES')
         self.assert_BPackage_content('CT_SOURCES')
         self.assert_EPackage_content('CT_SOURCES')

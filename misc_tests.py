@@ -32,3 +32,11 @@ class ExcecuteCommandCase(unittest.TestCase):
         else:
             raise Exception('Unknown OS')
 
+
+    def return_lists(self):
+        list1 = ['bli','blub']
+        list2 = ['blab','bleb']
+        return [list1, list2]
+
+    def test_return_value_unpacking(self):
+        [list1, list2] = self.return_lists()
