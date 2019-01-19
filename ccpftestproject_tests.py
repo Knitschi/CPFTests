@@ -381,6 +381,7 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
     def get_package_source_files(self, package, packageType, packageNamespace):
 
         isInterfaceLib = not self.is_not_interface_lib(packageType)
+        isExePackage = self.is_exe_package(packageType)
 
         sourceFiles = []
 
@@ -397,6 +398,22 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
             sourcePath / (packageNamespace + '_export.h'),
             sourcePath / (packageNamespace + '_tests_export.h')
         ])
+
+        # The version.rc file is only generated for the visual studio configs.
+        if self.is_visual_studio_config():
+            
+            packageLib = package
+            if isExePackage:
+                packageLib = 'lib' + package
+                sourceFiles.append( sourcePath / (package + '_version.rc') )
+            
+            sourceFiles.extend([
+                 sourcePath / (packageLib + '_fixtures_version.rc'),
+                 sourcePath / (packageLib + '_tests_version.rc')
+            ])
+
+            if not isInterfaceLib:  # Interface have no binaries so nothing can be compiled into them.
+                sourceFiles.append(sourcePath / (packageLib + '_version.rc'))
 
         # The interface library has no cpp file and export macro header
         if isInterfaceLib:
