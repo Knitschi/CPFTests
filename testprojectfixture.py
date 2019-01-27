@@ -10,6 +10,7 @@ from pathlib import PurePosixPath
 import shutil
 import pprint
 import hashlib
+import win32api
 
 from Sources.CPFBuildscripts.python import miscosaccess
 from Sources.CPFBuildscripts.python import filesystemaccess
@@ -346,6 +347,89 @@ class TestProjectFixture(unittest.TestCase):
 
         raise Exception('Unknown platform!. Add case.')
 
+    def get_package_executable_path(self, package, version, target_postfix=''):
+        runtimeOutputDir = self.get_runtime_dir()
+        exeBaseName = self.get_target_binary_base_name( package + target_postfix, COMPILER_CONFIG)
+        exeVersionPostfix = self.get_exe_version_postfix(version)
+        exeExtension = self.get_exe_extension()
+        return runtimeOutputDir / (exeBaseName + exeVersionPostfix + exeExtension)
+
+    def get_package_exe_symlink_path(self, package, version, target_postfix=''):
+        runtimeOutputDir = self.get_runtime_dir()
+        exeBaseName = self.get_target_binary_base_name( package + target_postfix, COMPILER_CONFIG)
+        return runtimeOutputDir / exeBaseName
+
+    def get_package_shared_lib_path(self, package, packageType, version, target_postfix=''):
+        sharedLibOutputDir = self.get_shared_lib_dir()
+        sharedLibShortName = self.get_shared_lib_short_name(package, packageType, version, target_postfix)
+        return sharedLibOutputDir / sharedLibShortName
+
+    def get_shared_lib_short_name(self, package, packageType, version, target_postfix=''):
+        libBaseName = self.get_package_lib_basename( package + target_postfix, packageType)
+        libExtension = self.get_shared_lib_extension()
+        versionExtension = self.get_version_extension(version)
+        return libBaseName + libExtension + versionExtension
+
+    def get_package_shared_lib_symlink_paths(self, package, packageType, version, target_postfix=''):
+        sharedLibOutputDir = self.get_shared_lib_dir()
+        libBaseName = self.get_package_lib_basename( package + target_postfix, packageType)
+        libExtension = self.get_shared_lib_extension()
+        twoDigitsVersionExtension = '.' + '.'.join(version.split('.')[0:2])
+
+        noVersionSymlink = sharedLibOutputDir / (libBaseName + libExtension)
+        mayourMinorVersionSymlink = sharedLibOutputDir / (libBaseName + libExtension + twoDigitsVersionExtension)
+        
+        return [ noVersionSymlink, mayourMinorVersionSymlink]
+
+    def get_package_static_lib_path(self, package, packageType, target_postfix=''):
+        staticLibOutputDir = self.get_static_lib_dir()
+        shortName = self.get_package_static_lib_short_name(package, packageType, target_postfix)
+        return staticLibOutputDir / shortName
+
+    def get_package_static_lib_short_name(self, package, packageType, target_postfix=''):
+        libBaseName = self.get_package_lib_basename( package + target_postfix, packageType)
+        libExtension = self.get_static_lib_extension()
+        return libBaseName + libExtension
+
+    def get_package_lib_basename(self, package, packageType):
+        if self.is_exe_package(packageType):
+            return self.get_target_binary_base_name('lib' + package, COMPILER_CONFIG)
+        else:
+            return self.get_target_binary_base_name(package, COMPILER_CONFIG)
+
+    def get_version_extension(self, version):
+        versionExtension = ''
+        if self.is_linux():
+            versionExtension = '.' + version
+        return versionExtension
+
+    def get_exe_version_postfix(self, version):
+        exeVersionPostfix = ''
+        if self.is_linux():
+            exeVersionPostfix += '-' + version
+        return exeVersionPostfix
+
+    def get_runtime_dir(self):
+        if self.is_windows():
+            return PurePosixPath('')
+        else:
+            return PurePosixPath('bin')
+
+    def get_shared_lib_dir(self):
+        if self.is_windows():
+            return PurePosixPath('')
+        else:
+            return PurePosixPath('lib')
+
+    def get_static_lib_dir(self):
+        return PurePosixPath('lib')
+
+    def is_exe_package(self, packageType):
+        return packageType == 'CONSOLE_APP' or packageType == 'GUI_APP'
+
+    def is_not_interface_lib(self, packageType):
+        return not (packageType == 'INTERFACE_LIB')
+
     def get_full_distribution_package_path(self, package, packageGenerator, contentType, excludedTargets=[]):
         """
         Returns the full path to a distribution package in the html-LastBuild download directory.
@@ -610,3 +694,44 @@ class TestProjectFixture(unittest.TestCase):
             return errorStringMissing + errorStringUnexpected
         else:
             return ''
+
+
+
+def get_file_properties(fname):
+    """
+    Read all properties of the given file return them as a dictionary.
+    """
+    propNames = ('Comments', 'InternalName', 'ProductName',
+        'CompanyName', 'LegalCopyright', 'ProductVersion',
+        'FileDescription', 'LegalTrademarks', 'PrivateBuild',
+        'FileVersion', 'OriginalFilename', 'SpecialBuild')
+
+    props = {'FixedFileInfo': None, 'StringFileInfo': None, 'FileVersion': None}
+
+    try:
+        # backslash as parm returns dictionary of numeric info corresponding to VS_FIXEDFILEINFO struc
+        fixedInfo = win32api.GetFileVersionInfo(fname, '\\')
+        props['FixedFileInfo'] = fixedInfo
+        props['FileVersion'] = "%d.%d.%d.%d" % (fixedInfo['FileVersionMS'] / 65536,
+                fixedInfo['FileVersionMS'] % 65536, fixedInfo['FileVersionLS'] / 65536,
+                fixedInfo['FileVersionLS'] % 65536)
+
+        # \VarFileInfo\Translation returns list of available (language, codepage)
+        # pairs that can be used to retreive string info. We are using only the first pair.
+        lang, codepage = win32api.GetFileVersionInfo(fname, '\\VarFileInfo\\Translation')[0]
+
+        # any other must be of the form \StringfileInfo\%04X%04X\parm_name, middle
+        # two are language/codepage pair returned from above
+
+        strInfo = {}
+        for propName in propNames:
+            strInfoPath = u'\\StringFileInfo\\%04X%04X\\%s' % (lang, codepage, propName)
+            ## print str_info
+            strInfo[propName] = win32api.GetFileVersionInfo(fname, strInfoPath)
+
+        props['StringFileInfo'] = strInfo
+
+    except:
+        pass
+
+    return props
