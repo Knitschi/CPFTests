@@ -10,7 +10,11 @@ from pathlib import PurePosixPath
 import shutil
 import pprint
 import hashlib
-import win32api
+try:
+    # installed with: pip install pypiwin32 on windows
+    import win32api
+except ImportError:
+    bla = 'blub'
 
 from Sources.CPFBuildscripts.python import miscosaccess
 from Sources.CPFBuildscripts.python import filesystemaccess
