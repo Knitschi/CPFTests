@@ -290,6 +290,7 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
 
         isInterfaceLib = not self.is_not_interface_lib(packageType)
         isExePackage = self.is_exe_package(packageType)
+        isSharedLibPackage = self.is_shared_libraries_config()
 
         sourceFiles = []
 
@@ -320,7 +321,7 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
                  sourcePath / (packageLib + '_tests_version.rc')
             ])
 
-            if not isInterfaceLib:  # Interface have no binaries so nothing can be compiled into them.
+            if not (isInterfaceLib or isSharedLibPackage):  # Interface have no binaries so nothing can be compiled into them. Static libs do not have version information compiled into them.
                 sourceFiles.append(sourcePath / (packageLib + '_version.rc'))
 
         # The interface library has no cpp file and export macro header
