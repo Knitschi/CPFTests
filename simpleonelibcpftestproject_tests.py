@@ -505,7 +505,7 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         This test verifies that this mechanism works.
         """
         # This functionality is only provided by the msvc compiler.
-        if not self.is_visual_studio_config():
+        if not (self.is_visual_studio_config() and self.is_shared_libraries_config()):
             return
 
         self.generate_project()
@@ -518,16 +518,9 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         version = self.get_package_version(package)
         binBaseDir = self.locations.get_full_path_binary_output_folder(package, testprojectfixture.PARENT_CONFIG, testprojectfixture.COMPILER_CONFIG)
         
-        libFile = ''
-        shortLibFile = ''
-        if self.is_shared_libraries_config():
-            libFile = binBaseDir / self.get_package_shared_lib_path(package, packageType, version)
-            shortLibFile = self.get_shared_lib_short_name(package, packageType, version)
-        else:
-            libFile = binBaseDir / self.get_package_static_lib_path(package, packageType, version)
-            shortLibFile = self.get_package_static_lib_short_name(package, packageType, version)
+        libFile = binBaseDir / self.get_package_shared_lib_path(package, packageType, version)
+        shortLibFile = self.get_shared_lib_short_name(package, packageType, version)
 
-        
         # Read the properties from the binary file.
         props = testprojectfixture.get_file_properties(str(libFile))['StringFileInfo']
 
