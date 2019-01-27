@@ -311,18 +311,24 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         # The version.rc file is only generated for the visual studio configs.
         if self.is_visual_studio_config():
             
+            # for exe
             packageLib = package
             if isExePackage:
                 packageLib = 'lib' + package
                 sourceFiles.append( sourcePath / (package + '_version.rc') )
             
-            sourceFiles.extend([
-                 sourcePath / (packageLib + '_fixtures_version.rc'),
-                 sourcePath / (packageLib + '_tests_version.rc')
-            ])
-
-            if not (isInterfaceLib or isSharedLibPackage):  # Interface have no binaries so nothing can be compiled into them. Static libs do not have version information compiled into them.
+            # for lib
+            if not isInterfaceLib and isSharedLibPackage:  # Interface have no binaries so nothing can be compiled into them. Static libs do not have version information compiled into them.
                 sourceFiles.append(sourcePath / (packageLib + '_version.rc'))
+
+            # for fixture lib
+            if isSharedLibPackage:
+                sourceFiles.append(sourcePath / (packageLib + '_fixtures_version.rc'))
+
+            # for test exe
+            sourceFiles.append(sourcePath / (packageLib + '_tests_version.rc'))
+
+
 
         # The interface library has no cpp file and export macro header
         if isInterfaceLib:
