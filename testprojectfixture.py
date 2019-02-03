@@ -125,6 +125,9 @@ class TestProjectFixture(unittest.TestCase):
         """
         Setup helper that runs all steps up to the generate step.
         Previously existing configurations or generated files are deleted.
+
+        d_options can be a list of BLA=blub strings.
+
         """
         self.cleanup_generated_files()
 

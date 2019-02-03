@@ -26,7 +26,7 @@ VALGRIND_TARGET = 'valgrind'
 OPENCPPCOVERAGE_TARGET = 'opencppcoverage'
 INSTALL_TARGET = 'install'
 ABI_COMPLIANCE_CHECKER_TARGET = 'abi-compliance-checker'
-
+COTIRE_TARGET = 'clean_cotire'
 MYLIB_TARGET = 'MyLib'
 MYLIB_TESTS_TARGET = 'MyLib_tests'
 MYLIB_FIXTURES_TARGET = 'MyLib_fixtures'
@@ -55,6 +55,7 @@ target_signatures = {
     OPENCPPCOVERAGE_TARGET : ['OpenCppCoverage.exe', '--export_type=html'],
     INSTALL_TARGET : lambda fixture: getInstallTargetSignature(fixture) ,
     ABI_COMPLIANCE_CHECKER_TARGET : [], # bundle target only
+    COTIRE_TARGET : ['Cleaning up all cotire generated files'], # The clean cotire target is never out-dated so giving a signature will fail for the rebuild.
     MYLIB_TARGET : lambda fixture: getBinaryTargetSignature(fixture, MYLIB_TARGET),
     MYLIB_TESTS_TARGET : lambda fixture: getBinaryTargetSignature(fixture, MYLIB_TESTS_TARGET),
     MYLIB_FIXTURES_TARGET : lambda fixture: getBinaryTargetSignature(fixture, MYLIB_FIXTURES_TARGET),
@@ -119,7 +120,7 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         super(SimpleOneLibCPFTestProjectFixture, self).assert_output_has_not_signature(output, target, self.get_signature(signature_target))
 
 
-    def do_basic_target_tests(self, built_target, signature_target, target_exists = True, is_dummy_target = False, source_files = [], output_files = []):
+    def do_basic_target_tests(self, built_target, signature_target, target_exists = True, is_dummy_target = False, source_files = [], output_files = [], do_uptodate_test = True):
         """
         This functions does basic tests for created targets.
         For bundle targets that do not produce their own signature,
@@ -130,11 +131,11 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         is defined by signature_target.
         2. Check that the given target does not exist if target_exits is set to False.
         3. Check that the target does not produce the output signature if is_dummy_target is set to True.
-        This is the case for targets in multiconfig generators that only do something for a certain compiler config.
-        4. Check the given built_target is not build a second time, when it is up-to-date.
+            This is the case for targets in multiconfig generators that only do something for a certain compiler config.
+        4. Check the given built_target is not build a second time, when it is up-to-date. This test can be skipped by setting the do_uptodate_test argument to False.
         5. Check the target is rebuild after touching any of the given source_files. Note that
-        one build is done for each file, so adding a lot of files will drive test times in the sky.
-        The pathes of the source_files must be relative to the cpf_root_directory.
+            one build is done for each file, so adding a lot of files will drive test times in the sky.
+            The pathes of the source_files must be relative to the cpf_root_directory.
         6. Check that the specified output files are produced. Paths must be relative to CMAKE_BINARY_DIR.
         """
 
@@ -148,8 +149,9 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
                 self.assert_files_exist(output_files)
 
                 # Check the target is not build again when it is up-to-date.
-                output = self.build_target(built_target)
-                self.assert_output_has_not_signature(output, built_target, signature_target)
+                if do_uptodate_test:
+                    output = self.build_target(built_target)
+                    self.assert_output_has_not_signature(output, built_target, signature_target)
 
                 # Check that changes to source files out-date the target
                 if not self.is_ninja_config():  # This test fails for ninja. Strangly the behavior is correct when the file changes
@@ -459,6 +461,18 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
 
         # Execute
         self.do_basic_target_tests(target, target, self.is_linux_debug_config())
+
+
+    def test_cotire(self):
+        """
+        The test only verifies that a cotire generated target is available.
+        """
+        # Setup
+        self.generate_project(['CPF_ENABLE_PRECOMPILED_HEADER=ON', 'COTIRE_MINIMUM_NUMBER_OF_TARGET_SOURCES=1'])
+        target = COTIRE_TARGET
+
+        # Execute
+        self.do_basic_target_tests(target, target, do_uptodate_test=False)
 
 
     def test_new_version_is_propagated_to_ConfigVersion_file(self):
