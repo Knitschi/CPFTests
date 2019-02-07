@@ -250,7 +250,7 @@ class TestProjectFixture(unittest.TestCase):
     def get_cache_variable_values(self, variables):
         build_dir = self.locations.get_full_path_config_makefile_folder(PARENT_CONFIG)
         variablesOutputList = self.osa.execute_command_output(
-            'cmake -LA -N',
+            'cmake -LA -N -B.',
             cwd=build_dir,
             print_output=miscosaccess.OutputMode.ON_ERROR,
             print_command=False
