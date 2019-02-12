@@ -97,8 +97,6 @@ class ACPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         bDll = binaryOutputDir / self.get_package_static_lib_path(package, 'CONSOLE_APP')
         files.append(bDll)
 
-        pprint.pprint(files)
-
         self.assert_files_exist(files)
 
 
