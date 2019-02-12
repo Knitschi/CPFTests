@@ -145,8 +145,12 @@ class TestProjectFixture(unittest.TestCase):
         for target in targets:
             self.build_target(target)
 
-    def build_target(self, target, config=None ):
-        command = '3_Make.py --target {0}'.format(target)
+    def build_target(self, target=None, config=None ):
+        command = '3_Make.py'
+
+        if target:
+            command += ' --target {0}'.format(target)
+
         if self.is_visual_studio_config():
             if config:
                 command += ' --config {0}'.format(config)

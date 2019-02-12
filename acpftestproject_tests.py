@@ -3,6 +3,7 @@ This module contains automated tests that operate on the ACPFTestProject project
 """
 
 import unittest
+import pprint
 from . import testprojectfixture
 from pathlib import PureWindowsPath, PurePosixPath, PurePath
 
@@ -60,4 +61,51 @@ class ACPFTestProjectFixture(testprojectfixture.TestProjectFixture):
                 version
             )
             self.osa.execute_command_output(str(exe), cwd=str(self.cpf_root_dir), print_output=miscosaccess.OutputMode.ON_ERROR)
+
+
+    def test_forced_linkage_in_packages_file_works(self):
+        """
+        This test verifies that STATIC and SHARED keywords override the BUILD_SHARED_LIBS option
+        from the configuration.
+
+        The testproject uses the following forced linkage options:
+
+        SHARED EPackage
+        STATIC BPackage
+        STATIC APackage
+        """
+        # Setup
+        self.generate_project()
+
+        # Test the pipeline works
+        self.build_target()
+
+        # Verify
+        package = 'EPackage'
+        versionE = self.get_package_version(package)
+        binaryOutputDir = self.locations.get_full_path_binary_output_folder(package, testprojectfixture.PARENT_CONFIG, testprojectfixture.COMPILER_CONFIG)
+        eDll = binaryOutputDir / self.get_package_shared_lib_path(package, 'LIB', versionE)
+        files = [eDll]
+
+        package = 'BPackage'
+        binaryOutputDir = self.locations.get_full_path_binary_output_folder(package, testprojectfixture.PARENT_CONFIG, testprojectfixture.COMPILER_CONFIG)
+        bDll = binaryOutputDir / self.get_package_static_lib_path(package, 'LIB')
+        files.append(bDll)
+
+        package = 'APackage'
+        binaryOutputDir = self.locations.get_full_path_binary_output_folder(package, testprojectfixture.PARENT_CONFIG, testprojectfixture.COMPILER_CONFIG)
+        bDll = binaryOutputDir / self.get_package_static_lib_path(package, 'CONSOLE_APP')
+        files.append(bDll)
+
+        pprint.pprint(files)
+
+        self.assert_files_exist(files)
+
+
+
+
+
+
+
+
     
