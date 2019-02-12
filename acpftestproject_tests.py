@@ -81,23 +81,34 @@ class ACPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         self.build_target()
 
         # Verify
+
+        # shared EPackage
         package = 'EPackage'
-        versionE = self.get_package_version(package)
+        version = self.get_package_version(package)
         binaryOutputDir = self.locations.get_full_path_binary_output_folder(package, testprojectfixture.PARENT_CONFIG, testprojectfixture.COMPILER_CONFIG)
-        eDll = binaryOutputDir / self.get_package_shared_lib_path(package, 'LIB', versionE)
-        files = [eDll]
+        dll = binaryOutputDir / self.get_package_shared_lib_path(package, 'LIB', version)
+        expectedFiles = [dll]
 
+        # static BPackage
         package = 'BPackage'
+        version = self.get_package_version(package)
         binaryOutputDir = self.locations.get_full_path_binary_output_folder(package, testprojectfixture.PARENT_CONFIG, testprojectfixture.COMPILER_CONFIG)
-        bDll = binaryOutputDir / self.get_package_static_lib_path(package, 'LIB')
-        files.append(bDll)
-
+        lib = binaryOutputDir / self.get_package_static_lib_path(package, 'LIB')
+        expectedFiles.append(lib)
+        dll = binaryOutputDir / self.get_package_shared_lib_path(package, 'LIB', version)
+        unexpectedFiles = [dll]
+        
+        # static APackage
         package = 'APackage'
+        version = self.get_package_version(package)
         binaryOutputDir = self.locations.get_full_path_binary_output_folder(package, testprojectfixture.PARENT_CONFIG, testprojectfixture.COMPILER_CONFIG)
-        bDll = binaryOutputDir / self.get_package_static_lib_path(package, 'CONSOLE_APP')
-        files.append(bDll)
+        lib = binaryOutputDir / self.get_package_static_lib_path(package, 'CONSOLE_APP')
+        expectedFiles.append(lib)
+        dll = binaryOutputDir / self.get_package_shared_lib_path(package, 'LIB', version)
+        unexpectedFiles.append(dll)
 
-        self.assert_files_exist(files)
+        self.assert_files_exist(expectedFiles)
+        self.assert_files_do_not_exist(unexpectedFiles)
 
 
 
