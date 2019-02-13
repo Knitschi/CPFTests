@@ -597,7 +597,7 @@ class TestProjectFixture(unittest.TestCase):
         existing_files = []
         for file in files:
             full_file = file
-            if not os.path.isabs(full_file):
+            if not os.path.isabs(str(full_file)):
                 full_file = self.locations.get_full_path_config_makefile_folder(PARENT_CONFIG) / file
 
             if self.fsa.exists(full_file):
