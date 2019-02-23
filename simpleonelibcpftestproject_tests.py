@@ -183,7 +183,7 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
 
         # EXECUTE
         # Check that a failed call causes an test exception.
-        self.assertRaises(miscosaccess.CalledProcessError, self.run_python_command, '1_Configure.py {0}'.format(testprojectfixture.PARENT_CONFIG))
+        self.assertRaises(miscosaccess.CalledProcessError, self.run_python_command, '1_Configure.py')
 
         # Check that configuring an existing variable works.
         # Test overriding existing variables and setting variables with whitespaces.
