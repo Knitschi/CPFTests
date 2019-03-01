@@ -20,6 +20,7 @@ DOXYGEN_TARGET = 'documentation'
 DISTRIBUTION_PACKAGES_TARGET = 'distributionPackages'
 RUN_ALL_TESTS_TARGET = 'runAllTests'
 RUN_FAST_TESTS_TARGET = 'runFastTests'
+CLANGFORMAT_TARGET = 'clang-format'
 CLANGTIDY_TARGET = 'clang-tidy'
 ACYCLIC_TARGET = 'acyclic'
 VALGRIND_TARGET = 'valgrind'
@@ -34,6 +35,7 @@ DISTRIBUTION_PACKAGES_MYLIB_TARGET = 'distributionPackages_MyLib'
 RUN_ALL_TESTS_MYLIB_TARGET = 'runAllTests_MyLib'
 RUN_FAST_TESTS_MYLIB_TARGET = 'runFastTests_MyLib'
 OPENCPPCOVERAGE_MYLIB_TARGET = 'opencppcoverage_MyLib'
+CLANG_FORMAT_MYLIB_TARGET = 'clang-format_MyLib'
 CLANG_TIDY_MYLIB_TARGET = 'clang-tidy_MyLib'
 VALGRIND_MYLIB_TARGET = 'valgrind_MyLib'
 ABI_COMPLIANCE_CHECKER_MYLIB_TARGET = 'abi-compliance-checker_MyLib'
@@ -63,6 +65,7 @@ target_signatures = {
     RUN_ALL_TESTS_MYLIB_TARGET : ['$<TARGET_FILE:MyLib_tests> -TestFilesDir', '--gtest_filter=*'],
     RUN_FAST_TESTS_MYLIB_TARGET : ['$<TARGET_FILE:MyLib_tests> -TestFilesDir', '--gtest_filter=*FastFixture*:*FastTests*'],
     OPENCPPCOVERAGE_MYLIB_TARGET : ['OpenCppCoverage.exe', '--export_type=binary'],
+    CLANG_FORMAT_MYLIB_TARGET   : ['clang-format', '-style=file'],
     CLANG_TIDY_MYLIB_TARGET : ['clang-tidy', '-checks='],
     VALGRIND_MYLIB_TARGET : ['valgrind', '--leak-check=full'],
     ABI_COMPLIANCE_CHECKER_MYLIB_TARGET : ['abi-compliance-checker','-DBINARY_NAME='],
@@ -281,6 +284,16 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         self.do_basic_target_tests(target, RUN_FAST_TESTS_MYLIB_TARGET)
 
 
+    def test_clangformat_target(self):
+        # Setup
+        self.generate_project()
+        target = CLANGFORMAT_TARGET
+
+        # Execute
+        # Check the target builds
+        self.do_basic_target_tests(target, CLANG_FORMAT_MYLIB_TARGET)
+
+
     def test_clangtidy_target(self):
         # Setup
         self.generate_project()
@@ -443,6 +456,15 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
             source_files=sources,
             output_files=output
         )
+
+
+    def test_clangformat_MyLib_target(self):
+        # Setup
+        self.generate_project()
+        target = CLANG_FORMAT_MYLIB_TARGET
+
+        # Execute
+        self.do_basic_target_tests(target, target)
 
 
     def test_clangtidy_MyLib_target(self):
