@@ -8,7 +8,8 @@ The script takes keyword arguments in the form
 test_dir="C:/mytests" -> A base directory in which the script can put temporary files for tests.
 parent_config=VS      -> The configuration from which the current config derives. Testprojects will be build in this configuration.
 compiler_config=Debug -> For multi-configuration generators, the compiler config that is used to build Testprojects.
-test_name             -> Determines the tests that is run. If the value is empty, it will run all tests.
+module                -> The module (python '*_tests.py' file) from which we want to run the tests. e.g. acpftestproject_tests
+test_filter           -> Only run test cases with names that contain the filter string. e.g. test_distributionPackages_content
 """
 
 import unittest
@@ -61,6 +62,54 @@ def getKeywordArgument(keyword, keywordargs):
     return keywordargs[keyword]
 
 
+def getTestNames():
+    """
+    Returns a list with all the dotted test names that can be found, e.g. 
+    ['Sources.CPFTests.simpleonelibcpftestproject_tests.SimpleOneLibCPFTestProjectFixture.test_doxygen_target',
+    'Sources.CPFTests.simpleonelibcpftestproject_tests.ACPFTestProjectFixture.test_pipeline_works'
+    ]
+    """
+
+    # Get a list with all full test function names so we can filter them.
+    test_loader = unittest.TestLoader()
+    suite = test_loader.loadTestsFromName('Sources.CPFTests.run_tests')
+    return getTestNamesFromSuite(suite, test_loader)
+
+
+def getTestNamesFromSuite(suite, test_loader):
+    fullTestNames = []
+    for moduleTests in suite._tests:
+        for test in moduleTests._tests:
+            testNames = test_loader.getTestCaseNames(test)
+            for testName in testNames:
+                fullTestNames.append(test.__class__.__module__ + '.' + test.__class__.__name__ + '.' + testName)
+
+    # Remove duplicates (which exist for unknown reasons)
+    fullTestNames = list(dict.fromkeys(fullTestNames))
+    return fullTestNames
+
+
+def filterTests(module, testFilter, testNames):
+    """
+    Filters out all test names that do not belong to the given module and do not contain the testFilter string.
+    """
+    filteredNames = []
+    for testName in testNames:
+        if (module in testName) and (testFilter in testName):
+            filteredNames.append(testName)
+
+    return filteredNames
+
+
+def runTests(testNames):
+
+    test_loader = unittest.TestLoader()
+    suite = test_loader.loadTestsFromNames(testNames)
+    names = getTestNamesFromSuite(suite, test_loader)
+    result = unittest.TextTestRunner(failfast=True).run(suite)
+    return not result.wasSuccessful()
+
+
 if __name__ == '__main__':
 
     # Get the script arguments
@@ -68,15 +117,20 @@ if __name__ == '__main__':
     testprojectfixture.BASE_TEST_DIR = getKeywordArgument('test_dir', keywordargs)
     testprojectfixture.PARENT_CONFIG = getKeywordArgument('parent_config', keywordargs)
     testprojectfixture.COMPILER_CONFIG = getKeywordArgument('compiler_config', keywordargs)
-    test_name = getKeywordArgument('test_name', keywordargs)
-    # run all tests by default
-    if test_name == '':
-        test_name = 'run_tests'
+    testFilter = getKeywordArgument('test_filter', keywordargs)
+    module = getKeywordArgument('module', keywordargs)
+    
+    # Get all tests in the suite
+    allTests = getTestNames()
+    # Remove test names that do not contain the filter and module string.
+    filteredTests = filterTests(module, testFilter, allTests)
+    # Run the selected Tests
+    retVal = 0
+    if filteredTests:
+        result = runTests(filteredTests)
 
-    # Run the tests
-    test_loader = unittest.TestLoader()
-    suite = test_loader.loadTestsFromName('Sources.CPFTests.' + test_name)
-    result = unittest.TextTestRunner(failfast=True).run(suite)
-    sys.exit(not result.wasSuccessful())
+    sys.exit(retVal)
+
+
 
 
