@@ -3,6 +3,7 @@ This module contains automated tests that operate on the BCPFTestProject project
 """
 
 import unittest
+import sys
 from . import testprojectfixture
 
 
@@ -16,13 +17,14 @@ class BCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
     project = ''
 
     @classmethod
-    def setUpClass(cls):
+    def setUpClass(cls, instantiating_test_module=__name__.split('.')[-1]):
+        cls.instantiating_module = instantiating_test_module
         cls.project = 'BCPFTestProject'
-        cls.cpf_root_dir = testprojectfixture.prepareTestProject('https://github.com/Knitschi/BCPFTestProject.git', cls.project)
+        cls.cpf_root_dir = testprojectfixture.prepareTestProject('https://github.com/Knitschi/BCPFTestProject.git', cls.project, instantiating_test_module)
 
 
     def setUp(self):
-        super(BCPFTestProjectFixture, self).setUp(self.project, self.cpf_root_dir)  
+        super(BCPFTestProjectFixture, self).setUp(self.project, self.cpf_root_dir, self.instantiating_module)  
 
 
     def test_pipeline_works(self):

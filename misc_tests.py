@@ -5,19 +5,14 @@ This module contains automated tests that do not fit into any other file.
 import unittest
 from Sources.CPFBuildscripts.python import miscosaccess
 
-class ExcecuteCommandCase(unittest.TestCase):
+class ExecuteCommandCase(unittest.TestCase):
     """
     This test case is used to test the execute_command_output() function.
     """
 
-    @classmethod
-    def setUpClass(cls):
-        print('-- ExcecuteCommandCase')
-
     def setUp(self):
         # add a big fat line to help with manual output parsing when an error occurs.
-        print('-- Run test: {0}'.format(self._testMethodName))
-
+        printWithModulePrefix('Run test: {0}'.format(self._testMethodName))
 
     def test_execute_command(self):
         """
@@ -32,3 +27,6 @@ class ExcecuteCommandCase(unittest.TestCase):
         else:
             raise Exception('Unknown OS')
 
+
+def printWithModulePrefix(string):
+    print('[' + __name__.split('.')[-1]  + '] ' + string)

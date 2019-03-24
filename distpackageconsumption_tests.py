@@ -3,10 +3,11 @@ This module contains tests of the created distribution packages.
 """
 
 import unittest
+import sys
 import pprint
 
 from . import testprojectfixture
-from . import simpleonelibcpftestproject_tests
+from . import simpleonelibcpftestproject_tests1
 from . import cpfpackageconsumertestprojectfixture
 
 from Sources.CPFBuildscripts.python import miscosaccess
@@ -20,14 +21,15 @@ class DistPackageFixture(unittest.TestCase):
 
     def setUp(self):
 
-        print('-- Run test: {0}'.format(self._testMethodName))
+        module = __name__.split('.')[-1]
+        print('[{0}] Run test: {1}'.format(module, self._testMethodName))
 
         self.fsa = filesystemaccess.FileSystemAccess()
         self.osa = miscosaccess.MiscOsAccess()
 
         # Checkout the library project.
-        simpleonelibcpftestproject_tests.SimpleOneLibCPFTestProjectFixture.setUpClass()
-        self.libraryProjectFixture = simpleonelibcpftestproject_tests.SimpleOneLibCPFTestProjectFixture()
+        simpleonelibcpftestproject_tests1.SimpleOneLibCPFTestProjectFixture1.setUpClass(module)
+        self.libraryProjectFixture = simpleonelibcpftestproject_tests1.SimpleOneLibCPFTestProjectFixture1()
         self.libraryProjectFixture.setUp()
         # For now set a release version tag, because the cmake package files only work for release
         # versions.
@@ -39,7 +41,7 @@ class DistPackageFixture(unittest.TestCase):
             )
 
         # Checkout the consumer project.
-        cpfpackageconsumertestprojectfixture.CPFPackageConsumerTestProjectFixture.setUpClass()
+        cpfpackageconsumertestprojectfixture.CPFPackageConsumerTestProjectFixture.setUpClass(module)
         self.consumerProjectFixture = cpfpackageconsumertestprojectfixture.CPFPackageConsumerTestProjectFixture()
         
         self.consumerProjectFixture.setUp()

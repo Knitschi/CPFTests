@@ -26,7 +26,7 @@ PARENT_CONFIG = ''
 COMPILER_CONFIG = ''
 
 
-def prepareTestProject(repository, project):
+def prepareTestProject(repository, project, instantiating_test_module):
     """
     This method clones a given repository of a CPF test project into the testdirectory 
     that is stored in the global BASE_TEST_DIR variable. After that it copies the
@@ -38,21 +38,26 @@ def prepareTestProject(repository, project):
     All source files in the test project should be left unchanged to
     prevent coupling of single tests. All Generated files are deleted
     before each test, so they can be changed by test cases.
+
+    The instantiating_test_module string is used to keep test-file directories for
+    fixtures instances that run in parallel apart.
     """
 
-    print('-- Prepare test-project: {0}'.format(project))
+    print('[{0}] Prepare test-project: {1}'.format(instantiating_test_module, project))
 
     fsa = filesystemaccess.FileSystemAccess()
     osa = miscosaccess.MiscOsAccess()
 
     # clone fresh project
-    cpf_root_dir = PurePosixPath(BASE_TEST_DIR).joinpath(project)
+    root_parent_dir = PurePosixPath(BASE_TEST_DIR).joinpath(instantiating_test_module)
+    cpf_root_dir = root_parent_dir.joinpath(project)
+
     if fsa.exists(cpf_root_dir):
         # we remove remaining testfiles at the beginning of a test, so we
         # have the project still available for debugging if the test fails.
         fsa.rmtree(cpf_root_dir)
-    fsa.mkdirs(BASE_TEST_DIR)
-    osa.execute_command_output('git clone --recursive {0}'.format(repository), cwd=BASE_TEST_DIR, print_output=miscosaccess.OutputMode.ON_ERROR)
+    fsa.mkdirs(root_parent_dir)
+    osa.execute_command_output('git clone --recursive {0}'.format(repository), cwd=root_parent_dir, print_output=miscosaccess.OutputMode.ON_ERROR)
     
     # Replace the CPFCMake and CPFBuildscripts packages in the test project with the ones
     # that are used by this repository. This makes sure that we test the versions that
@@ -106,20 +111,22 @@ class TestProjectFixture(unittest.TestCase):
     """
     This fixture offers utilities for tests that work on checked out test projects.
     """
-
-    def setUp(self, project, cpf_root_dir):
+    def setUp(self, project, cpf_root_dir, instantiating_module):
 
         self.fsa = filesystemaccess.FileSystemAccess()
         self.osa = miscosaccess.MiscOsAccess()
 
         self.project = project
         self.cpf_root_dir = cpf_root_dir
+        self.instantiating_module = instantiating_module
         self.locations = filelocations.FileLocations(cpf_root_dir)
 
         # add a big fat line to help with manual output parsing when an error occurs.
         if str(self._testMethodName) != "runTest":
-            print('-- Run test: {0}'.format(self._testMethodName))
+            self.printPrefixed('-- Run test: {0}'.format(self._testMethodName))
 
+    def printPrefixed(self, text):
+        return print('[' + self.instantiating_module + '] ' + text)
 
     def generate_project(self, d_options=[]):
         """
@@ -138,7 +145,7 @@ class TestProjectFixture(unittest.TestCase):
 
         self.run_python_command('1_Configure.py {0} --inherits {0} {1}'.format(PARENT_CONFIG, d_option_string))
         command = '2_Generate.py {0}'.format(PARENT_CONFIG)
-        print(command)
+        self.printPrefixed(command)
         self.run_python_command(command)
 
     def build_targets(self, targets):
@@ -156,7 +163,7 @@ class TestProjectFixture(unittest.TestCase):
                 command += ' --config {0}'.format(config)
             else:
                 command += ' --config {0}'.format(COMPILER_CONFIG)
-        print(command) # We do our own abbreviated command printing here.
+        self.printPrefixed(command) # We do our own abbreviated command printing here.
         outputlist = self.run_python_command(command)
         return '\n'.join(outputlist)
 
@@ -535,9 +542,9 @@ class TestProjectFixture(unittest.TestCase):
             raise Exception(error_string)
 
     def print_build_output(self, output):
-        print('------------------------- Start test-build output ------------------')
+        self.printPrefixed('------------------------- Start test-build output ------------------')
         print(output)
-        print('------------------------- End test-build output ------------------')
+        self.printPrefixed('------------------------- End test-build output ------------------')
 
     def assert_output_has_not_signature(self, output, target, signature):
         """

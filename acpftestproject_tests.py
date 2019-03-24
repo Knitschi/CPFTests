@@ -3,6 +3,7 @@ This module contains automated tests that operate on the ACPFTestProject project
 """
 
 import unittest
+import sys
 import pprint
 from . import testprojectfixture
 from pathlib import PureWindowsPath, PurePosixPath, PurePath
@@ -20,13 +21,14 @@ class ACPFTestProjectFixture(testprojectfixture.TestProjectFixture):
     project = ''
 
     @classmethod
-    def setUpClass(cls):
+    def setUpClass(cls, instantiating_test_module=__name__.split('.')[-1]):
+        cls.instantiating_module = instantiating_test_module
         cls.project = 'ACPFTestProject'
-        cls.cpf_root_dir = testprojectfixture.prepareTestProject('https://github.com/Knitschi/ACPFTestProject.git', cls.project)
+        cls.cpf_root_dir = testprojectfixture.prepareTestProject('https://github.com/Knitschi/ACPFTestProject.git', cls.project, instantiating_test_module)
 
 
     def setUp(self):
-        super(ACPFTestProjectFixture, self).setUp(self.project, self.cpf_root_dir)        
+        super(ACPFTestProjectFixture, self).setUp(self.project, self.cpf_root_dir, self.instantiating_module)        
 
 
     #####################################################################################################

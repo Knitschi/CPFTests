@@ -3,6 +3,7 @@ This module contains automated tests that operate on the CCPFTestProject project
 """
 
 import unittest
+import sys
 from . import testprojectfixture
 from pathlib import PureWindowsPath, PurePosixPath, PurePath
 import pprint
@@ -20,13 +21,14 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
     project = ''
 
     @classmethod
-    def setUpClass(cls):
+    def setUpClass(cls, instantiating_test_module=__name__.split('.')[-1]):
+        cls.instantiating_module = instantiating_test_module
         cls.project = 'CCPFTestProject'
-        cls.cpf_root_dir = testprojectfixture.prepareTestProject('https://github.com/Knitschi/CCPFTestProject.git', cls.project)
+        cls.cpf_root_dir = testprojectfixture.prepareTestProject('https://github.com/Knitschi/CCPFTestProject.git', cls.project, instantiating_test_module)
 
 
     def setUp(self):
-        super(CCPFTestProjectFixture, self).setUp(self.project, self.cpf_root_dir)        
+        super(CCPFTestProjectFixture, self).setUp(self.project, self.cpf_root_dir, self.instantiating_module)        
 
     def unpack_archive_package(self, package, packageGenerator, contentType, excludedTargets ):
         packageFileShort = self.get_distribution_package_short_name(package, packageGenerator, contentType, excludedTargets)

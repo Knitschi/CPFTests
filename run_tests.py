@@ -22,7 +22,11 @@ from .acpftestproject_tests import *
 from .bcpftestproject_tests import *
 from .ccpftestproject_tests import *
 from .misc_tests import *
-from .simpleonelibcpftestproject_tests import *
+from .simpleonelibcpftestproject_tests1 import *
+from .simpleonelibcpftestproject_tests2 import *
+from .simpleonelibcpftestproject_tests3 import *
+from .simpleonelibcpftestproject_tests4 import *
+from .simpleonelibcpftestproject_tests5 import *
 from .distpackageconsumption_tests import *
 
 
@@ -91,11 +95,19 @@ def getTestNamesFromSuite(suite, test_loader):
 
 def filterTests(module, testFilter, testNames):
     """
-    Filters out all test names that do not belong to the given module and do not contain the testFilter string.
+    Filters out all test names that do not belong to the given module or where one name component
+    equals the testFilter string.
     """
     filteredNames = []
     for testName in testNames:
-        if (module in testName) and (testFilter in testName):
+        nameComponents = testName.split('.')
+
+        testIsFromModule = module in nameComponents
+        hasTestFilter = True
+        if testFilter:
+            hasTestFilter = testFilter in nameComponents
+
+        if testIsFromModule and hasTestFilter:
             filteredNames.append(testName)
 
     return filteredNames
@@ -124,6 +136,9 @@ if __name__ == '__main__':
     allTests = getTestNames()
     # Remove test names that do not contain the filter and module string.
     filteredTests = filterTests(module, testFilter, allTests)
+
+    #pprint.pprint(filteredTests)
+
     # Run the selected Tests
     retVal = 0
     if filteredTests:
