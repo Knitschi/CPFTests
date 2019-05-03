@@ -21,7 +21,7 @@ set( testModules
 set( files
     __init__.py
     cpfpackageconsumertestprojectfixture.py
-    documentation/CPFTests.dox
+    documentation/CPFTests.rst
     ping.py
     README.md
     run_tests.py
