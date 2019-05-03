@@ -19,7 +19,7 @@ except ImportError:
 from Sources.CPFBuildscripts.python import miscosaccess
 from Sources.CPFBuildscripts.python import filesystemaccess
 from Sources.CPFBuildscripts.python import filelocations
-
+from Sources.CPFBuildscripts.python import projectutils
 
 BASE_TEST_DIR = ''
 PARENT_CONFIG = ''
@@ -302,16 +302,8 @@ class TestProjectFixture(unittest.TestCase):
 
         return self.get_selected_variables_from_output_string(variablesOutputList, variables)
 
-
     def get_package_version(self, package):
-        package_dir = self.cpf_root_dir.joinpath('Sources/{0}'.format(package))
-        script = self.cpf_root_dir.joinpath('Sources/CPFCMake/Scripts/getVersionFromRepository.cmake')
-        return self.osa.execute_command_output(
-            'cmake -DREPO_DIR="{0}" -P {1}'.format(package_dir, script),
-            cwd=self.cpf_root_dir,
-            print_output=miscosaccess.OutputMode.ON_ERROR,
-            print_command=False
-        )[0]
+        return projectutils.get_version_from_repository(self.cpf_root_dir, package)
 
     def get_package_runtime_path_in_build_tree(self, package, config, compilerConfig):
         buildTreePath = self.locations.get_full_path_binary_output_folder(package, config, compilerConfig)
