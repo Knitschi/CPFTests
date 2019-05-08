@@ -23,7 +23,7 @@ set( files
     cpfpackageconsumertestprojectfixture.py
     documentation/CPFTests.rst
     ping.py
-    README.md
+    README.rst
     run_tests.py
     testprojectfixture.py
 )

@@ -8,7 +8,10 @@ the CPF. As the tests in this package may test multiple packages at once and req
 to be run, they where put in their own package.
 
 
-
 Index
 -----
+
+.. toctree::
+
+  ../README
 
