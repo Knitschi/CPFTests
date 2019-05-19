@@ -143,7 +143,7 @@ class TestProjectFixture(unittest.TestCase):
         for option in d_options:
             d_option_string += '-D ' + option + ' '
 
-        self.run_python_command('1_Configure.py {0} --inherits {0} {1}'.format(PARENT_CONFIG, d_option_string))
+        self.run_python_command('1_Configure.py {0} {1}'.format(PARENT_CONFIG, d_option_string))
         command = '2_Generate.py {0}'.format(PARENT_CONFIG)
         self.printPrefixed(command)
         self.run_python_command(command)

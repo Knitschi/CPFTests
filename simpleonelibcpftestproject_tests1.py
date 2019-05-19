@@ -66,7 +66,7 @@ class SimpleOneLibCPFTestProjectFixture1(simpleonelibcpftestprojectfixture.Simpl
         Checks that the pipeline target builds and runs all tools.
         """
         # Setup
-        self.generate_project()
+        self.generate_project(d_options = ['CMAKE_VERBOSE_MAKEFILE=ON']) # we need more output here to verify the binary compile signature.
         target = simpleonelibcpftestprojectfixture.PIPELINE_TARGET
 
         # Execute

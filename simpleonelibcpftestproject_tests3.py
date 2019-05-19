@@ -70,7 +70,7 @@ class SimpleOneLibCPFTestProjectFixture3(simpleonelibcpftestprojectfixture.Simpl
 
     def test_MyLib_target(self):
         # Setup
-        self.generate_project()
+        self.generate_project(d_options = ['CMAKE_VERBOSE_MAKEFILE=ON'])
         target = simpleonelibcpftestprojectfixture.MYLIB_TARGET
 
         # Execute
@@ -79,7 +79,7 @@ class SimpleOneLibCPFTestProjectFixture3(simpleonelibcpftestprojectfixture.Simpl
 
     def test_MyLib_Tests_target(self):
         # Setup
-        self.generate_project()
+        self.generate_project(d_options = ['CMAKE_VERBOSE_MAKEFILE=ON'])
         target = simpleonelibcpftestprojectfixture.MYLIB_TESTS_TARGET
 
         # Execute
@@ -88,7 +88,7 @@ class SimpleOneLibCPFTestProjectFixture3(simpleonelibcpftestprojectfixture.Simpl
 
     def test_MyLib_Fixtures_target(self):
         # Setup
-        self.generate_project()
+        self.generate_project(d_options = ['CMAKE_VERBOSE_MAKEFILE=ON'])
         target = simpleonelibcpftestprojectfixture.MYLIB_FIXTURES_TARGET
 
         # Execute

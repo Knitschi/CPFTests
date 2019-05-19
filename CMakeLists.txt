@@ -26,6 +26,7 @@ set( files
     README.rst
     run_tests.py
     testprojectfixture.py
+	simpleonelibcpftestprojectfixture.py
 )
 
 # Add the target.

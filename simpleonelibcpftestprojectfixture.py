@@ -27,6 +27,7 @@ ACYCLIC_TARGET = 'acyclic'
 VALGRIND_TARGET = 'valgrind'
 OPENCPPCOVERAGE_TARGET = 'opencppcoverage'
 INSTALL_TARGET = 'install'
+INSTALL_ALL_TARGET = 'install_all'
 ABI_COMPLIANCE_CHECKER_TARGET = 'abi-compliance-checker'
 COTIRE_TARGET = 'clean_cotire'
 MYLIB_TARGET = 'MyLib'
@@ -76,7 +77,7 @@ target_signatures = {
 # config dependent signatures:
 def getBinaryTargetSignature(test_fixture, binary_target):
     if test_fixture.is_visual_studio_config():
-        return ['{0}.vcxproj'.format(binary_target), 'CL.exe']
+        return ['{0}.vcxproj ->'.format(binary_target), 'cl /c']    # Requires CMAKE_VERBOSE_MAKEFILE=ON
     elif test_fixture.is_make_config():
         return ['Built target {0}'.format(binary_target), 'Building CXX object']
     elif test_fixture.is_ninja_config():
