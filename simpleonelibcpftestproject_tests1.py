@@ -107,9 +107,9 @@ class SimpleOneLibCPFTestProjectFixture1(simpleonelibcpftestprojectfixture.Simpl
             'Sources/MyLib/function.cpp',
         ]
         output = [
-            '_CPF/documentation/tempDoxygenConfig.txt',                             # test the production of the temp config file works
-            'html/doxygen/external/CPFDependenciesTransitiveReduced.dot',           # test the dependency dot files are produced.
-            'html/doxygen/html/index.html'                                          # test the index html file is produced.
+            'documentation/tempDoxygenConfig.txt',                                  # test the production of the temp config file works
+            'documentation/doxygen/external/CPFDependenciesTransitiveReduced.dot',           # test the dependency dot files are produced.
+            'documentation/doxygen/html/index.html'                                          # test the index html file is produced.
         ]
 
         # Execute

@@ -94,7 +94,7 @@ class SimpleOneLibCPFTestProjectFixture5(simpleonelibcpftestprojectfixture.Simpl
         # Verify
         packageVersionFromGit = self.get_package_version("MyLib") # The version from git
         packageVersionVar = 'PACKAGE_VERSION'
-        packageVersionConfigFile = self.locations.get_full_path_config_makefile_folder(testprojectfixture.PARENT_CONFIG) / "_pckg/{0}/dev/MyLib/MyLib/lib/cmake/MyLib/MyLibConfigVersion.cmake".format(testprojectfixture.COMPILER_CONFIG)
+        packageVersionConfigFile = self.locations.get_full_path_config_makefile_folder(testprojectfixture.PARENT_CONFIG) / "MyLib/_pckg/dev/MyLib/MyLib/lib/cmake/MyLib/MyLibConfigVersion.cmake"
         packageVersionFromConfigFile = self.get_cmake_variables_in_file([packageVersionVar], packageVersionConfigFile)[packageVersionVar]
 
         self.assertEqual(packageVersionFromConfigFile, packageVersionFromGit)

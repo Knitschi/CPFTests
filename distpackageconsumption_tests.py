@@ -113,7 +113,7 @@ class DistPackageFixture(unittest.TestCase):
         self.libraryProjectFixture.generate_project()
         compilerConfigs = self.libraryProjectFixture.get_compiler_configs()
         myLibVersion = self.libraryProjectFixture.get_package_version("MyLib")
-        commonPackageDirectory = self.consumerProjectFixture.cpf_root_dir / "MyLib.{0}.{1}.dev".format(myLibVersion, self.osa.system()) / "MyLib"   # Note that the last MyLib is required or the pathes in the target properties will not be correct.
+        commonPackageDirectory = self.consumerProjectFixture.cpf_root_dir / "MyLib.{0}.{1}.dev".format(myLibVersion, self.osa.system()) / "MyLib"   # Note that the last MyLib is required or the paths in the target properties will not be correct.
  
         for config in compilerConfigs:
             
@@ -121,9 +121,9 @@ class DistPackageFixture(unittest.TestCase):
             self.libraryProjectFixture.build_target("distributionPackages", config=config)
 
             # Copy binary packages to the consumer package
-            packageFileWE = self.get_package_file_we(myLibVersion, config)
+            packageFileWE = self.libraryProjectFixture.get_distribution_package_name_we('MyLib', config, 'CT_DEVELOPER')
             packageFileShort = packageFileWE + ".7z"
-            packageFile = self.libraryProjectFixture.locations.get_full_path_config_makefile_folder(testprojectfixture.PARENT_CONFIG).joinpath("html/Downloads/MyLib/LastBuild").joinpath(packageFileShort)
+            packageFile = self.libraryProjectFixture.get_distribution_package_directory('MyLib', config, 'CT_DEVELOPER') / packageFileShort
             self.fsa.copyfile(packageFile, self.consumerProjectFixture.cpf_root_dir / packageFileShort)
 
             # Unzip the binary package

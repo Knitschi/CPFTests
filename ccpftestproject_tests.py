@@ -32,7 +32,7 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
 
     def unpack_archive_package(self, package, packageGenerator, contentType, excludedTargets ):
         packageFileShort = self.get_distribution_package_short_name(package, packageGenerator, contentType, excludedTargets)
-        packageFileDir = self.get_distribution_package_directory(package)
+        packageFileDir = self.get_distribution_package_install_directory(package)
 
         self.osa.execute_command_output(
             "cmake -E tar xzf " + packageFileShort,
@@ -40,7 +40,7 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
             print_output=miscosaccess.OutputMode.ON_ERROR
             )
 
-        packageFileWE = self.get_distribution_package_name_we(package, contentType, excludedTargets)
+        packageFileWE = self.get_distribution_package_name_we(package, testprojectfixture.COMPILER_CONFIG, contentType, excludedTargets)
         return  packageFileDir / packageFileWE / package
 
 
@@ -379,7 +379,7 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         """
         # Execute
         self.generate_project()
-        self.build_target('distributionPackages')
+        self.build_target('install_all')
 
 
         # Verify all packages were created.
@@ -391,7 +391,7 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         expectedDistPackageFiles.append(self.get_distribution_package_short_name('APackage', '7Z', 'CT_RUNTIME_PORTABLE', ['CPackage']))
         expectedDistPackageFiles.append(self.get_distribution_package_short_name('APackage', '7Z', 'CT_DEVELOPER'))
         expectedDistPackageFiles.append(self.get_distribution_package_short_name('APackage', '7Z', 'CT_SOURCES'))
-        packageFileDir = self.get_distribution_package_directory('APackage')
+        packageFileDir = self.get_distribution_package_install_directory('APackage')
         self.assert_filetree_is_equal( packageFileDir , expectedDistPackageFiles)
 
 

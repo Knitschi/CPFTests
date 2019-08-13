@@ -444,18 +444,18 @@ class TestProjectFixture(unittest.TestCase):
         """
         Returns the full path to a distribution package in the html-LastBuild download directory.
         """
-        return self.get_distribution_package_directory(package) / self.get_distribution_package_short_name(package, packageGenerator, contentType, excludedTargets)
+        return self.get_distribution_package_directory(package, COMPILER_CONFIG, contentType, excludedTargets) / self.get_distribution_package_short_name(package, packageGenerator, contentType, excludedTargets)
        
-    def get_distribution_package_directory(self, package):
-        return self.locations.get_full_path_config_makefile_folder(PARENT_CONFIG)  / 'html/Downloads/{0}/LastBuild'.format(package)
+    def get_distribution_package_directory(self, package, config, contentType, excludedTargets=[]):
+        return self.locations.get_full_path_config_makefile_folder(PARENT_CONFIG)  / '{0}/_pckg/{1}/{2}'.format(package, config, self.get_content_type_path_string(contentType, excludedTargets))
 
     def get_distribution_package_short_name(self, package, packageGenerator, contentType, excludedTargets=[]):
         """
         Returns the short filename of the package file.
         """
-        return self.get_distribution_package_name_we(package, contentType, excludedTargets) + '.' + self.get_distribution_package_extension(packageGenerator)
+        return self.get_distribution_package_name_we(package, COMPILER_CONFIG, contentType, excludedTargets) + '.' + self.get_distribution_package_extension(packageGenerator)
 
-    def get_distribution_package_name_we(self, package, contentType, excludedTargets):
+    def get_distribution_package_name_we(self, package, config, contentType, excludedTargets=[]):
         version = self.get_package_version(package)
         system = self.osa.system()
         contentTypeString = self.get_content_type_path_string(contentType, excludedTargets)
@@ -463,7 +463,7 @@ class TestProjectFixture(unittest.TestCase):
         if contentType == 'CT_SOURCES':
             return '{0}.{1}.{2}'.format(package ,version, contentTypeString)
 
-        return '{0}.{1}.{2}.{3}.{4}'.format(package ,version, system, contentTypeString, COMPILER_CONFIG)
+        return '{0}.{1}.{2}.{3}.{4}'.format(package ,version, system, contentTypeString, config)
 
     def get_content_type_path_string(self, contentType, excludedTargets):
         if contentType == 'CT_RUNTIME':
@@ -491,6 +491,8 @@ class TestProjectFixture(unittest.TestCase):
         else:
             raise Exception('Unhandled packageGenerator "{0}"'.format(packageGenerator))
 
+    def get_distribution_package_install_directory(self, package):
+        return self.locations.get_full_path_default_install_folder() / package / 'DistributionPackages'
 
     def assert_target_does_not_exist(self, target):
         target_misses_signature = ''
