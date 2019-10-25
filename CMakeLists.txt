@@ -23,7 +23,7 @@ set( files
     cpfpackageconsumertestprojectfixture.py
     documentation/CPFTests.rst
     ping.py
-    README.rst
+    README.md
     run_tests.py
     testprojectfixture.py
 	simpleonelibcpftestprojectfixture.py
@@ -34,7 +34,7 @@ cpfAddFilePackage(SOURCES "${files};${testModules}")
 
 # Add a test target
 set(dependedOnPackages CPFCMake CPFBuildscripts)
-cpfFindConfigFile(configFile "${CPF_CONFIG}")
+cpfFindConfigFile(configFile "${CPF_CONFIG}" TRUE)
 cpfAssertDefinedMessage(CPF_PARENT_CONFIG "Error! Your config file is missing a definition of variable CPF_PARENT_CONFIG")
 
 # The CPFTESTS_TEST_NAME variable can be specified to run only a subset of all tests. Its value should be set in the developers config file.
