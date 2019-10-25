@@ -81,7 +81,11 @@ def getBinaryTargetSignature(test_fixture, binary_target):
     elif test_fixture.is_make_config():
         return ['Built target {0}'.format(binary_target), 'Building CXX object']
     elif test_fixture.is_ninja_config():
-        return ['MyLib', 'Building CXX object'] # ninja only prints commands which vary with target type. This makes things complicated so I decided to skip that test for ninja builds.
+        # ninja only prints commands which vary with target type. This makes things complicated so I decided to skip that test for ninja builds.
+        if test_fixture.is_clang_config():
+            return ['clang++']
+        elif test_fixture.is_gcc_config():
+            return ['gcc'] 
     else:
         raise Exception('Missing case in conditional')
 

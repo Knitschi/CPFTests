@@ -220,6 +220,9 @@ class TestProjectFixture(unittest.TestCase):
     def is_clang_config(self):
         return PARENT_CONFIG == 'Clang-static-release' or PARENT_CONFIG == 'Clang-shared-debug'
 
+    def is_gcc_config(self):
+        return PARENT_CONFIG == 'Gcc-shared-debug'
+
     def is_make_config(self):
         return PARENT_CONFIG == 'Clang-shared-debug' or PARENT_CONFIG == 'Gcc-shared-debug'
 
