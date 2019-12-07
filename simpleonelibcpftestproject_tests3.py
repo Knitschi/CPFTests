@@ -45,7 +45,7 @@ class SimpleOneLibCPFTestProjectFixture3(simpleonelibcpftestprojectfixture.Simpl
         ]
         
         output = [
-            'html/OpenCppCoverage/index.html',
+            'opencppcoverage/OpenCppCoverage/index.html',
         ]
 
         # Execute
