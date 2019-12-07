@@ -91,7 +91,7 @@ class SimpleOneLibCPFTestProjectFixture4(simpleonelibcpftestprojectfixture.Simpl
         output = []
         if self.is_visual_studio_config() and self.is_debug_compiler_config():
             output.extend([
-                '_CPF/opencppcoverage_MyLib/MyLib_tests.cov'
+                'MyLib/opencppcoverage_MyLib/MyLib_tests.cov'
             ])
 
         # Execute
