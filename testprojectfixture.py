@@ -144,7 +144,7 @@ class TestProjectFixture(unittest.TestCase):
             d_option_string += '-D ' + option + ' '
 
         self.run_python_command('1_Configure.py {0} {1}'.format(PARENT_CONFIG, d_option_string))
-        command = '2_Generate.py {0}'.format(PARENT_CONFIG)
+        command = '3_Generate.py {0}'.format(PARENT_CONFIG)
         self.printPrefixed(command)
         self.run_python_command(command)
 
@@ -153,7 +153,7 @@ class TestProjectFixture(unittest.TestCase):
             self.build_target(target)
 
     def build_target(self, target=None, config=None ):
-        command = '3_Make.py'
+        command = '4_Make.py'
 
         if target:
             command += ' --target {0}'.format(target)
@@ -206,7 +206,7 @@ class TestProjectFixture(unittest.TestCase):
 
 
     def is_visual_studio_config(self):
-        return PARENT_CONFIG == 'VS2017-shared' or PARENT_CONFIG == 'VS2017-static'
+        return PARENT_CONFIG == 'VS2019-shared-debug' or PARENT_CONFIG == 'VS2019-static-release'
 
     def is_debug_compiler_config(self):
         return COMPILER_CONFIG == 'Debug'
@@ -512,7 +512,7 @@ class TestProjectFixture(unittest.TestCase):
             # The reason to not print the output of the failing call ist, that MSBuild seems to parse
             # its own output to determine if an error happened. When a nested MSBuild call fails, the
             # parent call itself will also fail even if the nested call was supposed to fail like here.
-            command = '3_Make.py --target {0}'.format(target)
+            command = '4_Make.py --target {0}'.format(target)
             print(command) # We do our own abbreviated command printing here.
             self.run_python_command(command, print_output=miscosaccess.OutputMode.NEVER)
         # error MSB1009 says that a project is missing, which means the target does not exist.
