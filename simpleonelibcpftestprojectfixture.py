@@ -64,8 +64,8 @@ target_signatures = {
     MYLIB_TESTS_TARGET : lambda fixture: getBinaryTargetSignature(fixture, MYLIB_TESTS_TARGET),
     MYLIB_FIXTURES_TARGET : lambda fixture: getBinaryTargetSignature(fixture, MYLIB_FIXTURES_TARGET),
     DISTRIBUTION_PACKAGES_MYLIB_TARGET : ['CPack: Create package'],
-    RUN_ALL_TESTS_MYLIB_TARGET : lambda fixture: getRunTestsTargetSignature(fixture, MYLIB_TARGET, false),
-    RUN_FAST_TESTS_MYLIB_TARGET : lambda fixture: getRunTestsTargetSignature(fixture, MYLIB_TARGET, true),
+    RUN_ALL_TESTS_MYLIB_TARGET : lambda fixture: getRunTestsTargetSignature(fixture, MYLIB_TARGET, False),
+    RUN_FAST_TESTS_MYLIB_TARGET : lambda fixture: getRunTestsTargetSignature(fixture, MYLIB_TARGET, True),
     OPENCPPCOVERAGE_MYLIB_TARGET : ['OpenCppCoverage.exe', '--export_type=binary'],
     CLANG_FORMAT_MYLIB_TARGET   : ['clang-format', '-style=file'],
     CLANG_TIDY_MYLIB_TARGET : ['clang-tidy', '-checks='],
@@ -98,12 +98,12 @@ def getInstallTargetSignature(test_fixture):
 def getRunTestsTargetSignature(test_fixture, binary_target, is_fast_tests_target):
     if test_fixture.is_ninja_config():
         # For the ninja config the generator expression is expanded in the output.
-        if is_fast_tests_target:
-            return ['MyLib_tests' + '--gtest_filter=*']
+        if not is_fast_tests_target:
+            return ['MyLib_tests', '--gtest_filter=*']
         else:
-            return ['MyLib_tests'  + '--gtest_filter=*FastFixture*:*FastTests*']
+            return ['MyLib_tests', '--gtest_filter=*FastFixture*:*FastTests*']
     else:
-        if is_fast_tests_target:
+        if not is_fast_tests_target:
             ['$<TARGET_FILE:MyLib_tests> --gtest_filter=*']
         else:
             ['$<TARGET_FILE:MyLib_tests> --gtest_filter=*FastFixture*:*FastTests*']
