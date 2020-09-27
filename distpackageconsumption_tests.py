@@ -209,7 +209,7 @@ class DistPackageFixture(unittest.TestCase):
         myLibVersion = self.libraryProjectFixture.get_package_version("MyLib")
 
         # Build and install the library project
-        self.libraryProjectFixture.build_target("install", config="Release")
+        self.libraryProjectFixture.build_target("install", config=testprojectfixture.COMPILER_CONFIG)
 
         # Delete the library project to make sure unwanted references to
         # the original directory cause errors.

@@ -245,7 +245,7 @@ class TestProjectFixture(unittest.TestCase):
         return self.osa.system() == 'Linux'
 
     def is_shared_libraries_config(self):
-        return PARENT_CONFIG == 'Gcc-shared-debug' or PARENT_CONFIG == 'Clang-shared-debug' or PARENT_CONFIG == 'VS2017-shared'
+        return PARENT_CONFIG == 'Gcc-shared-debug' or PARENT_CONFIG == 'Clang-shared-debug' or PARENT_CONFIG == 'VS2019-shared-debug'
 
     def get_compiler_configs(self):
         buildTypeKey = "CMAKE_BUILD_TYPE"                       # This should be defined for single config generators.
