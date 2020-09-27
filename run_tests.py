@@ -140,11 +140,11 @@ if __name__ == '__main__':
     #pprint.pprint(filteredTests)
 
     # Run the selected Tests
-    retVal = 0
+    result = 0
     if filteredTests:
         result = runTests(filteredTests)
 
-    sys.exit(retVal)
+    sys.exit(result)
 
 
 
