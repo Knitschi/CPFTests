@@ -506,7 +506,7 @@ class TestProjectFixture(unittest.TestCase):
         elif self.is_ninja_config():
             target_misses_signature = 'ninja: error: unknown target'
         else:
-            raise Exception('Error! Missing case for current buildtool.')
+            raise Exception('Error! Missing case for current configuration {0}.'.format(PARENT_CONFIG))
         
         with self.assertRaises(miscosaccess.CalledProcessError) as cm:
             # The reason to not print the output of the failing call ist, that MSBuild seems to parse
