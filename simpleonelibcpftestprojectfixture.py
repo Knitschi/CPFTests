@@ -104,9 +104,9 @@ def getRunTestsTargetSignature(test_fixture, binary_target, is_fast_tests_target
             return ['MyLib_tests', '--gtest_filter=*FastFixture*:*FastTests*']
     else:
         if not is_fast_tests_target:
-            ['$<TARGET_FILE:MyLib_tests> --gtest_filter=*']
+            return ['$<TARGET_FILE:MyLib_tests> --gtest_filter=*']
         else:
-            ['$<TARGET_FILE:MyLib_tests> --gtest_filter=*FastFixture*:*FastTests*']
+            return ['$<TARGET_FILE:MyLib_tests> --gtest_filter=*FastFixture*:*FastTests*']
 
 
 ############################################################################################
