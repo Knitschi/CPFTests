@@ -52,7 +52,7 @@ class SimpleOneLibCPFTestProjectFixture3(simpleonelibcpftestprojectfixture.Simpl
         self.do_basic_target_tests( 
             target, 
             target, 
-            target_exists=self.is_visual_studio_config(),
+            target_exists=self.is_visual_studio_debug_config(),
             is_dummy_target=testprojectfixture.COMPILER_CONFIG.lower() != 'debug',
             source_files=sources,
             output_files=output

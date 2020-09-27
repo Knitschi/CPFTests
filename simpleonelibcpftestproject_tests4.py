@@ -98,7 +98,7 @@ class SimpleOneLibCPFTestProjectFixture4(simpleonelibcpftestprojectfixture.Simpl
         self.do_basic_target_tests(
             target, 
             target, 
-            self.is_visual_studio_config(), 
+            self.is_visual_studio_debug_config(), 
             not self.is_debug_compiler_config(),
             source_files=sources,
             output_files=output

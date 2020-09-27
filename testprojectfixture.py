@@ -208,6 +208,9 @@ class TestProjectFixture(unittest.TestCase):
     def is_visual_studio_config(self):
         return PARENT_CONFIG == 'VS2019-shared-debug' or PARENT_CONFIG == 'VS2019-static-release'
 
+    def is_visual_studio_debug_config(self):
+        return PARENT_CONFIG == 'VS2019-shared-debug'
+
     def is_debug_compiler_config(self):
         return COMPILER_CONFIG == 'Debug'
 
