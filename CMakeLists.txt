@@ -1,9 +1,13 @@
 include(cpfLocations)
-include(cpfInitPackageProject)
-include(cpfAddFilePackage)
+include(cpfPackageProject)
+include(cpfAddFilePackageComponent)
 include(cpfMiscUtilities)
 
-cpfInitPackageProject()
+cpfPackageProject(
+    TARGET_NAMESPACE cpftests
+    COMPONENTS SINGLE_COMPONENT
+    LANGUAGES NONE
+)
 
 set( testModules
     acpftestproject_tests.py
@@ -30,7 +34,7 @@ set( files
 )
 
 # Add the target.
-cpfAddFilePackage(SOURCES "${files};${testModules}")
+cpfAddFilePackageComponent(SOURCES "${files};${testModules}")
 
 # Add a test target
 set(dependedOnPackages CPFCMake CPFBuildscripts)
