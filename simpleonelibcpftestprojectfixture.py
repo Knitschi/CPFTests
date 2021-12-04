@@ -18,7 +18,7 @@ from . import testprojectfixture
 # Target names
 PIPELINE_TARGET = 'pipeline'
 DOXYGEN_TARGET = 'documentation'
-DISTRIBUTION_PACKAGES_TARGET = 'distributionPackages'
+PACKAGE_ARCHIVES_TARGET = 'packageArchives'
 RUN_ALL_TESTS_TARGET = 'runAllTests'
 RUN_FAST_TESTS_TARGET = 'runFastTests'
 CLANGFORMAT_TARGET = 'clang-format'
@@ -33,7 +33,7 @@ COTIRE_TARGET = 'clean_cotire'
 MYLIB_TARGET = 'MyLib'
 MYLIB_TESTS_TARGET = 'MyLib_tests'
 MYLIB_FIXTURES_TARGET = 'MyLib_fixtures'
-DISTRIBUTION_PACKAGES_MYLIB_TARGET = 'distributionPackages_MyLib'
+PACKAGE_ARCHIVES_MYLIB_TARGET = 'distributionPackages_MyLib'
 RUN_ALL_TESTS_MYLIB_TARGET = 'runAllTests_MyLib'
 RUN_FAST_TESTS_MYLIB_TARGET = 'runFastTests_MyLib'
 OPENCPPCOVERAGE_MYLIB_TARGET = 'opencppcoverage_MyLib'
@@ -50,7 +50,7 @@ ABI_COMPLIANCE_CHECKER_MYLIB_TARGET = 'abi-compliance-checker_MyLib'
 # run.
 target_signatures = {
     DOXYGEN_TARGET : ['doxygen', 'Parsing layout file', 'lookup cache used'],
-    DISTRIBUTION_PACKAGES_TARGET : [], # bundle target only
+    PACKAGE_ARCHIVES_TARGET : [], # bundle target only
     RUN_ALL_TESTS_TARGET : [], # bundle target only
     RUN_FAST_TESTS_TARGET : [], # bundle target only
     CLANGTIDY_TARGET : [], # bundle target only
@@ -63,7 +63,7 @@ target_signatures = {
     MYLIB_TARGET : lambda fixture: getBinaryTargetSignature(fixture, MYLIB_TARGET),
     MYLIB_TESTS_TARGET : lambda fixture: getBinaryTargetSignature(fixture, MYLIB_TESTS_TARGET),
     MYLIB_FIXTURES_TARGET : lambda fixture: getBinaryTargetSignature(fixture, MYLIB_FIXTURES_TARGET),
-    DISTRIBUTION_PACKAGES_MYLIB_TARGET : ['CPack: Create package'],
+    PACKAGE_ARCHIVES_MYLIB_TARGET : ['CPack: Create package'],
     RUN_ALL_TESTS_MYLIB_TARGET : lambda fixture: getRunTestsTargetSignature(fixture, MYLIB_TARGET, False),
     RUN_FAST_TESTS_MYLIB_TARGET : lambda fixture: getRunTestsTargetSignature(fixture, MYLIB_TARGET, True),
     OPENCPPCOVERAGE_MYLIB_TARGET : ['OpenCppCoverage.exe', '--export_type=binary'],

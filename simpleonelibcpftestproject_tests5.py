@@ -73,7 +73,7 @@ class SimpleOneLibCPFTestProjectFixture5(simpleonelibcpftestprojectfixture.Simpl
         """
         # Setup
         self.generate_project()
-        self.build_target(simpleonelibcpftestprojectfixture.DISTRIBUTION_PACKAGES_MYLIB_TARGET)
+        self.build_target(simpleonelibcpftestprojectfixture.PACKAGE_ARCHIVES_MYLIB_TARGET)
 
         # Execute
         # Make a dummy change
@@ -88,8 +88,8 @@ class SimpleOneLibCPFTestProjectFixture5(simpleonelibcpftestprojectfixture.Simpl
         )
         # Do the incremental generate
         self.run_python_command('3_Generate.py')
-        # Build the distribution package target
-        self.build_target(simpleonelibcpftestprojectfixture.DISTRIBUTION_PACKAGES_MYLIB_TARGET)
+        # Build the package archive target
+        self.build_target(simpleonelibcpftestprojectfixture.PACKAGE_ARCHIVES_MYLIB_TARGET)
 
         # Verify
         packageVersionFromGit = self.get_package_version("MyLib") # The version from git

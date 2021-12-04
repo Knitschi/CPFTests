@@ -44,7 +44,7 @@ class SimpleOneLibCPFTestProjectFixture4(simpleonelibcpftestprojectfixture.Simpl
         """
         # Setup
         self.generate_project()
-        target = simpleonelibcpftestprojectfixture.DISTRIBUTION_PACKAGES_MYLIB_TARGET
+        target = simpleonelibcpftestprojectfixture.PACKAGE_ARCHIVES_MYLIB_TARGET
 
         sources = [
             'Sources/MyLib/function.cpp'

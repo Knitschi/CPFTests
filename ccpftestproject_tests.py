@@ -46,7 +46,7 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
 
     def get_expected_package_content(self, package, contentType, packageType, packageNamespace, packageDependencies=[], packagePluginDependencies={}):
         """
-        Returns absolute pathes to files and symlinks that are expected in the distribution package.
+        Returns absolute pathes to files and symlinks that are expected in the package archive.
         """
         # runtime package component
         if contentType == 'CT_RUNTIME':

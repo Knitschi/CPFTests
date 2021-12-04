@@ -79,7 +79,7 @@ class SimpleOneLibCPFTestProjectFixture1(simpleonelibcpftestprojectfixture.Simpl
         self.assert_output_contains_signature(output, target, simpleonelibcpftestprojectfixture.MYLIB_TARGET)
         self.assert_output_contains_signature(output, target, simpleonelibcpftestprojectfixture.MYLIB_TESTS_TARGET)
         self.assert_output_contains_signature(output, target, simpleonelibcpftestprojectfixture.MYLIB_FIXTURES_TARGET)
-        self.assert_output_contains_signature(output, target, simpleonelibcpftestprojectfixture.DISTRIBUTION_PACKAGES_MYLIB_TARGET)
+        self.assert_output_contains_signature(output, target, simpleonelibcpftestprojectfixture.PACKAGE_ARCHIVES_MYLIB_TARGET)
 
         # Config specific tools are run
         if self.is_visual_studio_config() and self.is_debug_compiler_config():
@@ -119,10 +119,10 @@ class SimpleOneLibCPFTestProjectFixture1(simpleonelibcpftestprojectfixture.Simpl
     def test_distributionPackages_target(self):
         # Setup
         self.generate_project()
-        target = simpleonelibcpftestprojectfixture.DISTRIBUTION_PACKAGES_TARGET
+        target = simpleonelibcpftestprojectfixture.PACKAGE_ARCHIVES_TARGET
 
         # Execute
-        self.do_basic_target_tests(target, simpleonelibcpftestprojectfixture.DISTRIBUTION_PACKAGES_MYLIB_TARGET)
+        self.do_basic_target_tests(target, simpleonelibcpftestprojectfixture.PACKAGE_ARCHIVES_MYLIB_TARGET)
 
 
     def test_runAllTests_target(self):

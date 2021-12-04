@@ -448,7 +448,7 @@ class TestProjectFixture(unittest.TestCase):
 
     def get_full_distribution_package_path(self, package, packageGenerator, contentType, excludedTargets=[]):
         """
-        Returns the full path to a distribution package in the html-LastBuild download directory.
+        Returns the full path to a package archive in the html-LastBuild download directory.
         """
         return self.get_distribution_package_directory(package, COMPILER_CONFIG, contentType, excludedTargets) / self.get_distribution_package_short_name(package, packageGenerator, contentType, excludedTargets)
        

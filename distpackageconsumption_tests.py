@@ -1,5 +1,5 @@
 """
-This module contains tests of the created distribution packages.
+This module contains tests of the created package archives.
 """
 
 import unittest
@@ -104,12 +104,12 @@ class DistPackageFixture(unittest.TestCase):
 
     def test_consume_the_simple_test_project_library_from_distribution_package(self):
         """
-        This test builds the distribution packages of the SimpleOneLibCPFTestProject
+        This test builds the package archives of the SimpleOneLibCPFTestProject
         and tests for one of them if the package can be used within the CPFPackageConsumerTestProject.
         """
         # ------------------- Setup -----------------------
 
-        # Create a distribution package for each compiler config and deploy it in the consumer project.
+        # Create a package archive for each compiler config and deploy it in the consumer project.
         self.libraryProjectFixture.generate_project()
         compilerConfigs = self.libraryProjectFixture.get_compiler_configs()
         myLibVersion = self.libraryProjectFixture.get_package_version("MyLib")
@@ -118,7 +118,7 @@ class DistPackageFixture(unittest.TestCase):
         for config in compilerConfigs:
             
             # Build the library project
-            self.libraryProjectFixture.build_target("distributionPackages", config=config)
+            self.libraryProjectFixture.build_target("packageArchives", config=config)
 
             # Copy binary packages to the consumer package
             packageFileWE = self.libraryProjectFixture.get_distribution_package_name_we('MyLib', config, 'CT_DEVELOPER')
