@@ -38,7 +38,7 @@ cpfAddFilePackageComponent(SOURCES "${files};${testModules}")
 
 # Add a test target
 set(dependedOnPackages CPFCMake CPFBuildscripts)
-cpfFindConfigFile(configFile "${CPF_CONFIG}" TRUE)
+cpfFindConfigFile(configFile ${CPF_CONFIG} TRUE "${CPFCMake_SOURCE_DIR}" "${CIBuildConfigurations_SOURCE_DIR}")
 cpfAssertDefinedMessage(CPF_PARENT_CONFIG "Error! Your config file is missing a definition of variable CPF_PARENT_CONFIG")
 
 # The CPFTESTS_TEST_NAME variable can be specified to run only a subset of all tests. Its value should be set in the developers config file.
