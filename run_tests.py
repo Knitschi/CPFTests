@@ -81,10 +81,11 @@ def getTestNames():
 
 
 def getTestNamesFromSuite(suite, test_loader):
+    
     fullTestNames = []
     for moduleTests in suite._tests:
         for test in moduleTests._tests:
-            testNames = test_loader.getTestCaseNames(test)
+            testNames = test_loader.getTestCaseNames(type(test))
             for testName in testNames:
                 fullTestNames.append(test.__class__.__module__ + '.' + test.__class__.__name__ + '.' + testName)
 
@@ -123,6 +124,8 @@ def runTests(testNames):
 
 
 if __name__ == '__main__':
+
+    ACPFTestProjectFixture.__qualname__="ACPFTestProjectFixture"
 
     # Get the script arguments
     keywordargs = parseKeyWordArgs(sys.argv)

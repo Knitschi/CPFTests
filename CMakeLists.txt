@@ -11,6 +11,7 @@ cpfPackageProject(
 
 set( testModules
     acpftestproject_tests.py
+    #[[
     bcpftestproject_tests.py
     ccpftestproject_tests.py
     distpackageconsumption_tests.py
@@ -20,6 +21,7 @@ set( testModules
     simpleonelibcpftestproject_tests3.py
     simpleonelibcpftestproject_tests4.py
     simpleonelibcpftestproject_tests5.py
+    ]]
 )
 
 set( files
