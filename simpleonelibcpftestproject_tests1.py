@@ -50,7 +50,7 @@ class SimpleOneLibCPFTestProjectFixture1(simpleonelibcpftestprojectfixture.Simpl
         # Check that configuring an existing variable works.
         # Test overriding existing variables and setting variables with whitespaces.
         self.run_python_command('1_Configure.py MyConfig --inherits {0} -D CPF_ENABLE_RUN_TESTS_TARGET=OFF -D BLUB="bli bla"'.format(testprojectfixture.PARENT_CONFIG))
-        self.run_python_command('3_Generate.py MyConfig')
+        self.run_python_command('2_Generate.py MyConfig')
         cmakeCacheVariables = self.osa.execute_command_output(
             'cmake Generated/MyConfig -L',
             cwd=self.cpf_root_dir,

@@ -87,7 +87,7 @@ class SimpleOneLibCPFTestProjectFixture5(simpleonelibcpftestprojectfixture.Simpl
             print_output=miscosaccess.OutputMode.ON_ERROR
         )
         # Do the incremental generate
-        self.run_python_command('3_Generate.py')
+        self.run_python_command('2_Generate.py')
         # Build the package archive target
         self.build_target(simpleonelibcpftestprojectfixture.PACKAGE_ARCHIVES_MYLIB_TARGET)
 
