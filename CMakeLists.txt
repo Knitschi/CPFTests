@@ -10,11 +10,12 @@ cpfPackageProject(
 )
 
 set( testModules
-    acpftestproject_tests.py
     #[[
+    acpftestproject_tests.py
     bcpftestproject_tests.py
+    ]]
     ccpftestproject_tests.py
-    distpackageconsumption_tests.py
+    #[[
     misc_tests.py
     simpleonelibcpftestproject_tests1.py
     simpleonelibcpftestproject_tests2.py
@@ -26,7 +27,6 @@ set( testModules
 
 set( files
     __init__.py
-    cpfpackageconsumertestprojectfixture.py
     documentation/CPFTests.rst
     ping.py
     README.md

@@ -18,6 +18,8 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
     """
 
     cpf_root_dir = ''
+    cpf_cmake_dir = 'Sources/CPFCMake'
+    ci_buildconfigurations_dir = 'Sources/CIBuildConfigurations'
     project = ''
 
     @classmethod
@@ -28,7 +30,7 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
 
 
     def setUp(self):
-        super(CCPFTestProjectFixture, self).setUp(self.project, self.cpf_root_dir, self.instantiating_module)        
+        super(CCPFTestProjectFixture, self).setUp(self.project, self.cpf_root_dir, self.cpf_cmake_dir, self.ci_buildconfigurations_dir, self.instantiating_module)        
 
     def unpack_archive_package(self, package, packageGenerator, contentType, excludedTargets ):
         packageFileShort = self.get_distribution_package_short_name(package, packageGenerator, contentType, excludedTargets)

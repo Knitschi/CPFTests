@@ -75,7 +75,7 @@ def replace_package_in_test_project_with_local(package, cpf_root_dir):
     fsa = filesystemaccess.FileSystemAccess()
     osa = miscosaccess.MiscOsAccess()
 
-    this_root_dir = PurePosixPath(filelocations.get_cpf_root_dir_from_script_dir())
+    this_root_dir = PurePosixPath(os.path.dirname(os.path.realpath(__file__)) + "/../..")
     rel_package_path = 'Sources/{0}'.format(package)
     this_package_dir = this_root_dir.joinpath(rel_package_path)
     test_project_package_dir = cpf_root_dir.joinpath(rel_package_path)
@@ -111,15 +111,17 @@ class TestProjectFixture(unittest.TestCase):
     """
     This fixture offers utilities for tests that work on checked out test projects.
     """
-    def setUp(self, project, cpf_root_dir, instantiating_module):
+    def setUp(self, project, cpf_root_dir, cpf_cmake_dir, ci_buildconfigurations_dir, instantiating_module):
 
         self.fsa = filesystemaccess.FileSystemAccess()
         self.osa = miscosaccess.MiscOsAccess()
 
         self.project = project
         self.cpf_root_dir = cpf_root_dir
+        self.cpf_cmake_dir = cpf_cmake_dir
+        self.ci_buildconfigurations_dir = ci_buildconfigurations_dir
         self.instantiating_module = instantiating_module
-        self.locations = filelocations.FileLocations(cpf_root_dir)
+        self.locations = filelocations.FileLocations(cpf_root_dir, "Souces/CPFCMake", "Souces/CIBuildConfigurations" )
 
         # add a big fat line to help with manual output parsing when an error occurs.
         if str(self._testMethodName) != "runTest":
@@ -138,7 +140,7 @@ class TestProjectFixture(unittest.TestCase):
         """
         self.cleanup_generated_files()
 
-        self.run_python_command('Sources/CPFBuildscripts/0_CopyScripts.py')
+        self.run_python_command("Sources/CPFBuildscripts/0_CopyScripts.py --CPFCMake_DIR \"{0}\" --CIBuildConfigurations_DIR \"{1}\" ".format(self.cpf_cmake_dir, self.ci_buildconfigurations_dir))
         d_option_string = ''
         for option in d_options:
             d_option_string += '-D ' + option + ' '
@@ -311,8 +313,8 @@ class TestProjectFixture(unittest.TestCase):
     def get_package_version(self, package):
         return projectutils.get_version_from_repository(self.cpf_root_dir, package)
 
-    def get_package_runtime_path_in_build_tree(self, package, config, compilerConfig):
-        buildTreePath = self.locations.get_full_path_binary_output_folder(package, config, compilerConfig)
+    def get_package_runtime_path_in_build_tree(self, config, compilerConfig):
+        buildTreePath = self.locations.get_full_path_binary_output_folder(config, compilerConfig)
         if self.is_linux():
             return buildTreePath / 'bin'
         elif self.is_windows():
@@ -321,7 +323,7 @@ class TestProjectFixture(unittest.TestCase):
         raise Exception('Unknown platform!. Add case.')
 
     def get_package_executable_path_in_build_tree(self, package, config, compilerConfig, version):
-        runtimeDir = self.get_package_runtime_path_in_build_tree(package, config, compilerConfig)
+        runtimeDir = self.get_package_runtime_path_in_build_tree(config, compilerConfig)
         shortExeName = self.get_target_exe_shortname(package, compilerConfig, version)
         return runtimeDir / shortExeName
 

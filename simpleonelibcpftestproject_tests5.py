@@ -24,6 +24,8 @@ class SimpleOneLibCPFTestProjectFixture5(simpleonelibcpftestprojectfixture.Simpl
     """
 
     cpf_root_dir = ''
+    cpf_cmake_dir = 'Sources/external/CPFCMake'
+    ci_buildconfigurations_dir = 'Sources/external/CIBuildConfigurations'
     project = ''
 
     @classmethod
@@ -33,7 +35,7 @@ class SimpleOneLibCPFTestProjectFixture5(simpleonelibcpftestprojectfixture.Simpl
         cls.cpf_root_dir = testprojectfixture.prepareTestProject('https://github.com/Knitschi/SimpleOneLibCPFTestProject.git', cls.project, cls.instantiating_module)
 
     def setUp(self):
-        super(SimpleOneLibCPFTestProjectFixture5, self).setUp(self.project, self.cpf_root_dir, self.instantiating_module)
+        super(SimpleOneLibCPFTestProjectFixture5, self).setUp(self.project, self.cpf_root_dir, self.cpf_cmake_dir, self.ci_buildconfigurations_dir, self.instantiating_module)
 
     def test_clangtidy_MyLib_target(self):
         # Setup

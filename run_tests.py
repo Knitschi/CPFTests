@@ -27,7 +27,6 @@ from .simpleonelibcpftestproject_tests2 import *
 from .simpleonelibcpftestproject_tests3 import *
 from .simpleonelibcpftestproject_tests4 import *
 from .simpleonelibcpftestproject_tests5 import *
-from .distpackageconsumption_tests import *
 
 
 def parseKeyWordArgs( arglist ):

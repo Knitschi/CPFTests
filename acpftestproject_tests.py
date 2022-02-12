@@ -18,6 +18,8 @@ class ACPFTestProjectFixture(testprojectfixture.TestProjectFixture):
     """
 
     cpf_root_dir = ''
+    cpf_cmake_dir = 'Sources/CPFCMake'
+    ci_buildconfigurations_dir = 'Sources/CIBuildConfigurations'
     project = ''
 
     @classmethod
@@ -28,7 +30,7 @@ class ACPFTestProjectFixture(testprojectfixture.TestProjectFixture):
 
 
     def setUp(self):
-        super(ACPFTestProjectFixture, self).setUp(self.project, self.cpf_root_dir, self.instantiating_module)        
+        super(ACPFTestProjectFixture, self).setUp(self.project, self.cpf_root_dir, self.cpf_cmake_dir, self.ci_buildconfigurations_dir, self.instantiating_module)        
 
 
     #####################################################################################################
@@ -87,14 +89,14 @@ class ACPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         # shared EPackage
         package = 'EPackage'
         version = self.get_package_version(package)
-        binaryOutputDir = self.locations.get_full_path_binary_output_folder(package, testprojectfixture.PARENT_CONFIG, testprojectfixture.COMPILER_CONFIG)
+        binaryOutputDir = self.locations.get_full_path_binary_output_folder(testprojectfixture.PARENT_CONFIG, testprojectfixture.COMPILER_CONFIG)
         dll = binaryOutputDir / self.get_package_shared_lib_path(package, 'LIB', version)
         expectedFiles = [dll]
 
         # static BPackage
         package = 'BPackage'
         version = self.get_package_version(package)
-        binaryOutputDir = self.locations.get_full_path_binary_output_folder(package, testprojectfixture.PARENT_CONFIG, testprojectfixture.COMPILER_CONFIG)
+        binaryOutputDir = self.locations.get_full_path_binary_output_folder(testprojectfixture.PARENT_CONFIG, testprojectfixture.COMPILER_CONFIG)
         lib = binaryOutputDir / self.get_package_static_lib_path(package, 'LIB')
         expectedFiles.append(lib)
         dll = binaryOutputDir / self.get_package_shared_lib_path(package, 'LIB', version)
@@ -103,7 +105,7 @@ class ACPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         # static APackage
         package = 'APackage'
         version = self.get_package_version(package)
-        binaryOutputDir = self.locations.get_full_path_binary_output_folder(package, testprojectfixture.PARENT_CONFIG, testprojectfixture.COMPILER_CONFIG)
+        binaryOutputDir = self.locations.get_full_path_binary_output_folder(testprojectfixture.PARENT_CONFIG, testprojectfixture.COMPILER_CONFIG)
         lib = binaryOutputDir / self.get_package_static_lib_path(package, 'CONSOLE_APP')
         expectedFiles.append(lib)
         dll = binaryOutputDir / self.get_package_shared_lib_path(package, 'LIB', version)

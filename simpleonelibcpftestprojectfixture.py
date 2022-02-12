@@ -117,12 +117,14 @@ class SimpleOneLibCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
     """
 
     cpf_root_dir = ''
+    cpf_cmake_dir = 'Sources/external/CPFCMake'
+    ci_buildconfigurations_dir = 'Sources/external/CIBuildConfigurations'
     project = ''
 
     
 
-    def setUp(self, project, cpf_root_dir, instantiating_module):
-        super(SimpleOneLibCPFTestProjectFixture, self).setUp(project, cpf_root_dir, instantiating_module)
+    def setUp(self, project, cpf_root_dir, cpf_cmake_dir, ci_buildconfigurations_dir, instantiating_module):
+        super(SimpleOneLibCPFTestProjectFixture, self).setUp(project, cpf_root_dir, cpf_cmake_dir, ci_buildconfigurations_dir, instantiating_module)
 
     def assert_output_contains_signature(self, output, target, signature_target, source_file = None):
         super(SimpleOneLibCPFTestProjectFixture, self).assert_output_contains_signature(output, target, self.get_signature(signature_target), trigger_source_file = source_file)

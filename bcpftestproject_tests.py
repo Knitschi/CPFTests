@@ -14,6 +14,8 @@ class BCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
     """
 
     cpf_root_dir = ''
+    cpf_cmake_dir = 'Sources/CPFCMake'
+    ci_buildconfigurations_dir = 'Sources/CIBuildConfigurations'
     project = ''
 
     @classmethod
@@ -24,7 +26,7 @@ class BCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
 
 
     def setUp(self):
-        super(BCPFTestProjectFixture, self).setUp(self.project, self.cpf_root_dir, self.instantiating_module)  
+        super(BCPFTestProjectFixture, self).setUp(self.project, self.cpf_root_dir, self.cpf_cmake_dir, self.ci_buildconfigurations_dir, self.instantiating_module)  
 
 
     def test_pipeline_works(self):
