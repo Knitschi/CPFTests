@@ -499,8 +499,8 @@ class TestProjectFixture(unittest.TestCase):
         else:
             raise Exception('Unhandled packageGenerator "{0}"'.format(packageGenerator))
 
-    def get_distribution_package_install_directory(self, package):
-        return self.locations.get_full_path_default_install_folder() / package / 'DistributionPackages'
+    def get_distribution_package_install_directory(self):
+        return self.locations.get_full_path_default_install_folder() / 'DistributionPackages'
 
     def assert_target_does_not_exist(self, target):
         target_misses_signature = ''

@@ -34,7 +34,7 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
 
     def unpack_archive_package(self, package, packageGenerator, contentType, excludedTargets ):
         packageFileShort = self.get_distribution_package_short_name(package, packageGenerator, contentType, excludedTargets)
-        packageFileDir = self.get_distribution_package_install_directory(package)
+        packageFileDir = self.get_distribution_package_install_directory()
 
         self.osa.execute_command_output(
             "cmake -E tar xzf " + packageFileShort,
@@ -43,35 +43,35 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
             )
 
         packageFileWE = self.get_distribution_package_name_we(package, testprojectfixture.COMPILER_CONFIG, contentType, excludedTargets)
-        return  packageFileDir / packageFileWE / package
+        return  packageFileDir / packageFileWE 
 
 
-    def get_expected_package_content(self, package, contentType, packageType, packageNamespace, packageDependencies=[], packagePluginDependencies={}):
+    def get_expected_package_content(self, package, contentType, packageType, packageDependencies=[], packagePluginDependencies={}):
         """
         Returns absolute pathes to files and symlinks that are expected in the package archive.
         """
         # runtime package component
         if contentType == 'CT_RUNTIME':
-            return self.get_runtime_package_content(package, packageType, packageNamespace)
+            return self.get_runtime_package_content(package, packageType)
 
         # runtime dependencies component
         if contentType == 'CT_RUNTIME_PORTABLE':
-            return self.get_runtime_portable_package_content(package, packageType, packageNamespace, packageDependencies, packagePluginDependencies)
+            return self.get_runtime_portable_package_content(package, packageType, packageDependencies, packagePluginDependencies)
 
         # developer component
         if contentType == 'CT_DEVELOPER':
-            return self.get_developer_package_content(package, packageType, packageNamespace)
+            return self.get_developer_package_content(package, packageType)
 
         # sources component
         if contentType == 'CT_SOURCES':
-            return self.get_sources_package_content(package, packageType, packageNamespace)
+            return self.get_sources_package_content(package, packageType)
         
         raise Exception("Missing case!")
 
         return []
 
 
-    def get_runtime_package_content(self, package, packageType, packageNamespace):
+    def get_runtime_package_content(self, package, packageType):
         """
         Returns the package files from the runtime install component.
         """
@@ -109,11 +109,11 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         return [packageFiles, symlinks]
 
 
-    def get_runtime_portable_package_content(self, package, packageType, packageNamespace, packageDependencies, packagePluginDependencies):
+    def get_runtime_portable_package_content(self, package, packageType, packageDependencies, packagePluginDependencies):
         """
         Returns the package files from the runtime-portable install component.
         """
-        [packageFiles, symlinks] = self.get_runtime_package_content(package, packageType, packageNamespace)
+        [packageFiles, symlinks] = self.get_runtime_package_content(package, packageType)
 
         # Shared external libraries
         if self.is_shared_libraries_config():
@@ -134,7 +134,7 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         return [packageFiles, symlinks]
 
 
-    def get_developer_package_content(self, package, packageType, packageNamespace):
+    def get_developer_package_content(self, package, packageType):
         """
         Returns the package files from the developer install component.
         """
@@ -145,7 +145,7 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         isInterfaceLib = not isNotInterfaceLib
 
         # The developer package also contains the main binaries.
-        [packageFiles, symlinks] = self.get_runtime_package_content(package, packageType, packageNamespace)
+        [packageFiles, symlinks] = self.get_runtime_package_content(package, packageType)
 
         # We have to add the static libraries for the developer package.
         if isNotInterfaceLib:   # Interface libraries have no binary files.
@@ -169,14 +169,15 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
                     packageFiles.append(self.get_package_static_lib_path(package, packageType))
 
         # Test executable
-        testPackageBaseName = package
+        # This is included to allow running the tests in the target environment.
+        productionLibName = package
         if isExePackage:
-            testPackageBaseName = 'lib' + package
-        packageFiles.append(self.get_package_executable_path(testPackageBaseName, version, target_postfix='_tests'))
+            productionLibName = 'lib' + package
+        packageFiles.append(self.get_package_executable_path(productionLibName, version, target_postfix='_tests'))
         
         # test exe  symlinks
         if self.is_linux():
-            symlinks.append( self.get_package_exe_symlink_path(testPackageBaseName, version, target_postfix='_tests') )
+            symlinks.append( self.get_package_exe_symlink_path(productionLibName, version, target_postfix='_tests') )
 
         # Fixture library files
         if self.is_shared_libraries_config():
@@ -192,8 +193,8 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         packageFiles.extend([
             cmakeFilesPath / (package + 'Config.cmake'),
             cmakeFilesPath / (package + 'ConfigVersion.cmake'),
-            cmakeFilesPath / (package + 'Targets-{0}.cmake'.format(config)),
-            cmakeFilesPath / (package + 'Targets.cmake'),
+            cmakeFilesPath / (package + '-{0}.cmake'.format(config)),
+            cmakeFilesPath / (package + '.cmake'),
         ])
 
         # Public header files
@@ -201,12 +202,12 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         packageFiles.extend([
             includePath / 'function.h',
             includePath / 'Tests/fixture.h',
-            includePath / (packageNamespace + '_tests_export.h'),
             includePath / 'cpfPackageVersion_{0}.h'.format(package)
         ])
 
         if isNotInterfaceLib:   # Interface libs do not need an export macro header.
-            packageFiles.append( includePath / (packageNamespace + '_export.h'))
+            packageFiles.append( includePath / (productionLibName.lower() + '_export.h'))
+            packageFiles.append( includePath / (productionLibName.lower() + '_fixtures_export.h'))
 
         if package == 'APackage':
             packageFiles.append( includePath / 'Tests/generatedHeader.h' )
@@ -246,7 +247,7 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
                 ])
 
                 # Source files are required for debugging with pdb files.
-                allSources = self.get_package_source_files(package, packageType, packageNamespace)
+                allSources = self.get_package_source_files(package, packageType)
                 cppSources = []
                 # The component will only install the h and cpp files.
                 cppExtensions = ['.cpp', '.h']
@@ -278,19 +279,19 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         return [packageFiles, symlinks]
 
 
-    def get_sources_package_content(self, package, packageType, packageNamespace):
+    def get_sources_package_content(self, package, packageType):
         """
         Returns the package files from the sources install component.
         """
         packageFiles = []
         symlinks = []
 
-        packageFiles = self.get_package_source_files(package, packageType, packageNamespace)
+        packageFiles = self.get_package_source_files(package, packageType)
 
         return [packageFiles, symlinks]
 
 
-    def get_package_source_files(self, package, packageType, packageNamespace):
+    def get_package_source_files(self, package, packageType):
 
         isInterfaceLib = not self.is_not_interface_lib(packageType)
         isExePackage = self.is_exe_package(packageType)
@@ -308,8 +309,8 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
             sourcePath / 'Tests/fixture.cpp',
             sourcePath / 'Tests/fixture.h',
             sourcePath / 'Tests/tests_main.cpp',
-            sourcePath / (packageNamespace + '_export.h'),
-            sourcePath / (packageNamespace + '_tests_export.h')
+            sourcePath / (package.lower() + '_export.h'),
+            sourcePath / (package.lower() + '_tests_export.h')
         ])
 
         # The version.rc file is only generated for the visual studio configs.
@@ -337,7 +338,7 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         # The interface library has no cpp file and export macro header
         if isInterfaceLib:
             sourceFiles.remove( sourcePath / 'function.cpp')
-            sourceFiles.remove( sourcePath / (packageNamespace + '_export.h'))
+            sourceFiles.remove( sourcePath / (package.lower() + '_export.h'))
 
         # The generated header is only in APackage
         if package == 'APackage':
@@ -354,34 +355,34 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
     def assert_APackage_content(self, contentType, excludedTargets=[]):
         package = 'APackage'
         unpackedPackageDir = self.unpack_archive_package(package, '7Z', contentType, excludedTargets)
-        [package_files, package_symlinks] = self.get_expected_package_content(package, contentType, 'CONSOLE_APP', 'a', ['BPackage'], { 'plugins' : ['DPackage'] })
+        [package_files, package_symlinks] = self.get_expected_package_content(package, contentType, 'CONSOLE_APP', ['BPackage'], { 'plugins' : ['DPackage'] })
         self.assert_filetree_is_equal( unpackedPackageDir , package_files, package_symlinks)
 
 
     def assert_BPackage_content(self, contentType, excludedTargets=[]):
         package = 'BPackage'
         unpackedPackageDir = self.unpack_archive_package(package, '7Z', contentType, excludedTargets )
-        [package_files, package_symlinks] = self.get_expected_package_content(package, contentType, 'LIB', 'b')
+        [package_files, package_symlinks] = self.get_expected_package_content(package, contentType, 'LIB')
         self.assert_filetree_is_equal( unpackedPackageDir , package_files, package_symlinks)
 
 
     def assert_EPackage_content(self, contentType, excludedTargets=[]):
         package = 'EPackage'
         unpackedPackageDir = self.unpack_archive_package(package, '7Z', contentType, excludedTargets )
-        [package_files, package_symlinks] = self.get_expected_package_content(package, contentType, 'INTERFACE_LIB', 'e')
+        [package_files, package_symlinks] = self.get_expected_package_content(package, contentType, 'INTERFACE_LIB')
         self.assert_filetree_is_equal( unpackedPackageDir , package_files, package_symlinks)
 
 
     #####################################################################################################
     
-    def test_distributionPackages_content(self):
+    def test_distributionPackages_archive_files_exist(self):
         """
         This test verifies that the various package content type options
-        lead to the correct package content.
+        lead to the correct package archive files.
         """
         # Execute
         self.generate_project()
-        self.build_target('install_all')
+        self.build_target('install_APackage')
 
 
         # Verify all packages were created.
@@ -393,9 +394,17 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         expectedDistPackageFiles.append(self.get_distribution_package_short_name('APackage', '7Z', 'CT_RUNTIME_PORTABLE', ['CPackage']))
         expectedDistPackageFiles.append(self.get_distribution_package_short_name('APackage', '7Z', 'CT_DEVELOPER'))
         expectedDistPackageFiles.append(self.get_distribution_package_short_name('APackage', '7Z', 'CT_SOURCES'))
-        packageFileDir = self.get_distribution_package_install_directory('APackage')
+        packageFileDir = self.get_distribution_package_install_directory()
         self.assert_filetree_is_equal( packageFileDir , expectedDistPackageFiles)
 
+            
+    def test_distributionPackages_content(self):
+        """
+        This test verifies that package archives contain the correct files.
+        """
+        # Execute
+        self.generate_project()
+        self.build_target('install_all')
 
         # Verify the contents of the various packages.
 
@@ -421,5 +430,3 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         self.assert_APackage_content('CT_SOURCES')
         self.assert_BPackage_content('CT_SOURCES')
         self.assert_EPackage_content('CT_SOURCES')
-
-
