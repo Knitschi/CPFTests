@@ -46,7 +46,7 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         return  packageFileDir / packageFileWE 
 
 
-    def get_expected_package_content(self, package, contentType, packageType, packageDependencies=[], packagePluginDependencies={}):
+    def get_expected_package_content(self, package, componentSubdir, contentType, packageType, packageDependencies=[], packagePluginDependencies={}):
         """
         Returns absolute pathes to files and symlinks that are expected in the package archive.
         """
@@ -60,11 +60,11 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
 
         # developer component
         if contentType == 'CT_DEVELOPER':
-            return self.get_developer_package_content(package, packageType)
+            return self.get_developer_package_content(package, componentSubdir, packageType)
 
         # sources component
         if contentType == 'CT_SOURCES':
-            return self.get_sources_package_content(package, packageType)
+            return self.get_sources_package_content(package, componentSubdir, packageType)
         
         raise Exception("Missing case!")
 
@@ -134,7 +134,7 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         return [packageFiles, symlinks]
 
 
-    def get_developer_package_content(self, package, packageType):
+    def get_developer_package_content(self, package, componentSubdir, packageType):
         """
         Returns the package files from the developer install component.
         """
@@ -198,16 +198,16 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         ])
 
         # Public header files
-        includePath = PurePosixPath('include') / package
+        includePath = PurePosixPath('include') / package / componentSubdir
         packageFiles.extend([
             includePath / 'function.h',
             includePath / 'Tests/fixture.h',
-            includePath / 'cpfPackageVersion_{0}.h'.format(package)
+            includePath / 'cpfPackageVersion_{0}.h'.format(package),
+            includePath / (productionLibName.lower() + '_fixtures_export.h')
         ])
 
         if isNotInterfaceLib:   # Interface libs do not need an export macro header.
             packageFiles.append( includePath / (productionLibName.lower() + '_export.h'))
-            packageFiles.append( includePath / (productionLibName.lower() + '_fixtures_export.h'))
 
         if package == 'APackage':
             packageFiles.append( includePath / 'Tests/generatedHeader.h' )
@@ -247,7 +247,7 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
                 ])
 
                 # Source files are required for debugging with pdb files.
-                allSources = self.get_package_source_files(package, packageType)
+                allSources = self.get_package_source_files(package, componentSubdir, packageType)
                 cppSources = []
                 # The component will only install the h and cpp files.
                 cppExtensions = ['.cpp', '.h']
@@ -279,60 +279,64 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
         return [packageFiles, symlinks]
 
 
-    def get_sources_package_content(self, package, packageType):
+    def get_sources_package_content(self, package, componentSubdir, packageType):
         """
         Returns the package files from the sources install component.
         """
         packageFiles = []
         symlinks = []
 
-        packageFiles = self.get_package_source_files(package, packageType)
+        packageFiles = self.get_package_source_files(package, componentSubdir, packageType)
 
         return [packageFiles, symlinks]
 
 
-    def get_package_source_files(self, package, packageType):
+    def get_package_source_files(self, package, componentSubdir, packageType):
 
         isInterfaceLib = not self.is_not_interface_lib(packageType)
         isExePackage = self.is_exe_package(packageType)
         isSharedLibPackage = self.is_shared_libraries_config()
 
+        productionLib = package
+        if isExePackage:
+            productionLib = 'lib' + package
+
         sourceFiles = []
 
-        sourcePath = PurePosixPath('src') / package
+        sourcePath = PurePosixPath('src') / package / componentSubdir
         sourceFiles.extend([
             sourcePath / 'CMakeLists.txt',
-            sourcePath / 'cpfPackageVersion_{0}.cmake'.format(package),
             sourcePath / 'cpfPackageVersion_{0}.h'.format(package),
             sourcePath / 'function.cpp',
             sourcePath / 'function.h',
             sourcePath / 'Tests/fixture.cpp',
             sourcePath / 'Tests/fixture.h',
             sourcePath / 'Tests/tests_main.cpp',
-            sourcePath / (package.lower() + '_export.h'),
-            sourcePath / (package.lower() + '_tests_export.h')
+            sourcePath / (productionLib.lower() + '_export.h'),
+            sourcePath / (productionLib.lower() + '_fixtures_export.h')
         ])
+
+        
+        if not componentSubdir: # is single component package.
+            sourceFiles.append(sourcePath / 'cpfPackageVersion_{0}.cmake'.format(package))
 
         # The version.rc file is only generated for the visual studio configs.
         if self.is_visual_studio_config():
             
             # for exe
-            packageLib = package
             if isExePackage:
-                packageLib = 'lib' + package
                 sourceFiles.append( sourcePath / (package + '_version.rc') )
             
             # for lib
             if not isInterfaceLib and isSharedLibPackage:  # Interface have no binaries so nothing can be compiled into them. Static libs do not have version information compiled into them.
-                sourceFiles.append(sourcePath / (packageLib + '_version.rc'))
+                sourceFiles.append(sourcePath / (productionLib + '_version.rc'))
 
             # for fixture lib
             if isSharedLibPackage:
-                sourceFiles.append(sourcePath / (packageLib + '_fixtures_version.rc'))
+                sourceFiles.append(sourcePath / (productionLib + '_fixtures_version.rc'))
 
             # for test exe
-            sourceFiles.append(sourcePath / (packageLib + '_tests_version.rc'))
-
+            sourceFiles.append(sourcePath / (productionLib + '_tests_version.rc'))
 
 
         # The interface library has no cpp file and export macro header
@@ -355,21 +359,40 @@ class CCPFTestProjectFixture(testprojectfixture.TestProjectFixture):
     def assert_APackage_content(self, contentType, excludedTargets=[]):
         package = 'APackage'
         unpackedPackageDir = self.unpack_archive_package(package, '7Z', contentType, excludedTargets)
-        [package_files, package_symlinks] = self.get_expected_package_content(package, contentType, 'CONSOLE_APP', ['BPackage'], { 'plugins' : ['DPackage'] })
+        [package_files, package_symlinks] = self.get_expected_package_content(package, package, contentType, 'CONSOLE_APP', ['BPackage'], { 'plugins' : ['DPackage'] })
+
+        if contentType == "CT_SOURCES":
+
+            # Add package level files.
+            package_files.extend([
+                    'src/APackage/CMakeLists.txt',
+                    'src/APackage/CPFPackageDependencyRequirements.cmake',
+                    'src/APackage/cpfPackageVersion_APackage.cmake',
+                ])
+
+            # Add documentation component files.
+            package_files.extend([
+                    'src/APackage/documentation/CCPFTestProjectDocs.dox',
+                    'src/APackage/documentation/CMakeLists.txt',
+                    'src/APackage/documentation/DoxygenConfig.txt',
+                    'src/APackage/documentation/DoxygenLayout.xml',
+                    'src/APackage/documentation/DoxygenStylesheet.css',
+                ])
+
         self.assert_filetree_is_equal( unpackedPackageDir , package_files, package_symlinks)
 
 
     def assert_BPackage_content(self, contentType, excludedTargets=[]):
         package = 'BPackage'
         unpackedPackageDir = self.unpack_archive_package(package, '7Z', contentType, excludedTargets )
-        [package_files, package_symlinks] = self.get_expected_package_content(package, contentType, 'LIB')
+        [package_files, package_symlinks] = self.get_expected_package_content(package, "", contentType, 'LIB')
         self.assert_filetree_is_equal( unpackedPackageDir , package_files, package_symlinks)
 
 
     def assert_EPackage_content(self, contentType, excludedTargets=[]):
         package = 'EPackage'
         unpackedPackageDir = self.unpack_archive_package(package, '7Z', contentType, excludedTargets )
-        [package_files, package_symlinks] = self.get_expected_package_content(package, contentType, 'INTERFACE_LIB')
+        [package_files, package_symlinks] = self.get_expected_package_content(package, "", contentType, 'INTERFACE_LIB')
         self.assert_filetree_is_equal( unpackedPackageDir , package_files, package_symlinks)
 
 
