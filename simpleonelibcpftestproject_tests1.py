@@ -42,8 +42,8 @@ class SimpleOneLibCPFTestProjectFixture1(simpleonelibcpftestprojectfixture.Simpl
 
         # EXECUTE
         # Check that a failed call causes an test exception.
-        self.assertRaises(miscosaccess.CalledProcessError, self.run_python_command, '1_Configure.py')
-        print("-- Failed as expected.")
+        # Note that printing the output causes the build to fail for visual studio because ms build seems to parse its own output.
+        self.assertRaises(miscosaccess.CalledProcessError, self.run_python_command, '1_Configure.py', print_output=miscosaccess.OutputMode.NEVER)
 
         # Check that configuring an existing variable works.
         # Test overriding existing variables and setting variables with whitespaces.
