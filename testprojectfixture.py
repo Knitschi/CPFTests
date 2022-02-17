@@ -325,7 +325,7 @@ class TestProjectFixture(unittest.TestCase):
         return self.get_selected_variables_from_output_string(variablesOutputList, variables)
 
     def get_package_version(self, package):
-        return projectutils.get_version_from_repository(self.cpf_root_dir, package)
+        return projectutils.get_version_from_repository(self.cpf_root_dir, self.cpf_cmake_dir, package)
 
     def get_package_runtime_path_in_build_tree(self, config, compilerConfig):
         buildTreePath = self.locations.get_full_path_binary_output_folder(config, compilerConfig)

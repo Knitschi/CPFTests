@@ -43,11 +43,11 @@ class SimpleOneLibCPFTestProjectFixture3(simpleonelibcpftestprojectfixture.Simpl
         self.generate_project()
         target = simpleonelibcpftestprojectfixture.OPENCPPCOVERAGE_TARGET
         sources = [
-            'Sources/MyLib/function.cpp',
+            'Sources/MyLib/MyLib/function.cpp',
         ]
         
         output = [
-            'opencppcoverage/OpenCppCoverage/index.html',
+            'OpenCppCoverage/Debug/index.html',
         ]
 
         # Execute

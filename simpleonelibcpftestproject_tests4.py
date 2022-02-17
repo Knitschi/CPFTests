@@ -49,7 +49,7 @@ class SimpleOneLibCPFTestProjectFixture4(simpleonelibcpftestprojectfixture.Simpl
         target = simpleonelibcpftestprojectfixture.PACKAGE_ARCHIVES_MYLIB_TARGET
 
         sources = [
-            'Sources/MyLib/function.cpp'
+            'Sources/MyLib/MyLib/function.cpp'
         ]
 
         # Check the zip file is created.
@@ -88,12 +88,12 @@ class SimpleOneLibCPFTestProjectFixture4(simpleonelibcpftestprojectfixture.Simpl
         self.generate_project()
         target = simpleonelibcpftestprojectfixture.OPENCPPCOVERAGE_MYLIB_TARGET
         sources = [
-            'Sources/MyLib/function.cpp'
+            'Sources/MyLib/MyLib/function.cpp'
         ]
         output = []
         if self.is_visual_studio_config() and self.is_debug_compiler_config():
             output.extend([
-                'MyLib/opencppcoverage_MyLib/MyLib_tests.cov'
+                'MyLib/MyLib/OpenCppCoverage_MyLib/MyLib_tests.cov'
             ])
 
         # Execute
