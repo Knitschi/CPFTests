@@ -44,6 +44,6 @@ cpfAssertDefinedMessage(CPF_PARENT_CONFIG "Error! Your config file is missing a 
 # Examples:
 # set( CPFTESTS_TEST_NAME "test_execute_command" )     # -> runs only one test function
 #set( CPFTESTS_TEST_NAME "CCPFTestProjectFixture" )     # -> runs all tests using the SimpleOneLibCPFTestProjectFixture
-set( CPFTESTS_TEST_NAME "test_distributionPackages_content" )
+#set( CPFTESTS_TEST_NAME "test_opencppcoverage_target" )
 set(testScriptArgs  "test_dir=\"${CPF_TEST_FILES_DIR}/$<CONFIG>\" parent_config=${CPF_PARENT_CONFIG} compiler_config=$<CONFIG> test_filter=${CPFTESTS_TEST_NAME}")
 cpfAddRunPython3TestTargetForEachModule( run_tests.py "${testModules}" "${testScriptArgs}" "${files}" "${dependedOnPackages}" "${configFile}") # We also make this depend on the config file to make sure tests are retriggered when the CPFTESTS_TEST_NAME variable is changed.

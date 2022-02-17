@@ -23,19 +23,14 @@ class SimpleOneLibCPFTestProjectFixture1(simpleonelibcpftestprojectfixture.Simpl
     only a library package.
     """
 
-    cpf_root_dir = ''
-    cpf_cmake_dir = 'Sources/external/CPFCMake'
-    ci_buildconfigurations_dir = 'Sources/external/CIBuildConfigurations'
-    project = ''
-
     @classmethod
     def setUpClass(cls, instantiating_test_module=__name__.split('.')[-1]):
         cls.instantiating_module = instantiating_test_module
         cls.project = 'SimpleOneLibCPFTestProject'
-        cls.cpf_root_dir = testprojectfixture.prepareTestProject('https://github.com/Knitschi/SimpleOneLibCPFTestProject.git', cls.project, cls.instantiating_module)
+        cls.cpf_root_dir = testprojectfixture.prepareTestProject('https://github.com/Knitschi/SimpleOneLibCPFTestProject.git', cls.project, cls.cpf_cmake_dir, cls.cpf_buildscripts_dir, cls.instantiating_module)
 
     def setUp(self):
-        super(SimpleOneLibCPFTestProjectFixture1, self).setUp(self.project, self.cpf_root_dir, self.cpf_cmake_dir, self.ci_buildconfigurations_dir, self.instantiating_module)
+        super(SimpleOneLibCPFTestProjectFixture1, self).setUp(self.instantiating_module)
 
     def test_configure_script(self):
         """
@@ -43,11 +38,12 @@ class SimpleOneLibCPFTestProjectFixture1(simpleonelibcpftestprojectfixture.Simpl
         """
         # SETUP
         self.cleanup_generated_files()
-        self.run_python_command('Sources/CPFBuildscripts/0_CopyScripts.py')
+        self.copyScripts()
 
         # EXECUTE
         # Check that a failed call causes an test exception.
         self.assertRaises(miscosaccess.CalledProcessError, self.run_python_command, '1_Configure.py')
+        print("-- Failed as expected.")
 
         # Check that configuring an existing variable works.
         # Test overriding existing variables and setting variables with whitespaces.
@@ -105,13 +101,13 @@ class SimpleOneLibCPFTestProjectFixture1(simpleonelibcpftestprojectfixture.Simpl
         # More or less every change to a file should trigger doxygen.
         # We restrain ourselves to two files here to save time.
         sources = [
-            'Sources/documentation/DoxygenConfig.txt',
-            'Sources/MyLib/function.cpp',
+            'Sources/MyLib/documentation/DoxygenConfig.txt',
+            'Sources/MyLib/MyLib/function.cpp',
         ]
         output = [
-            'documentation/tempDoxygenConfig.txt',                                  # test the production of the temp config file works
-            'documentation/doxygen/external/CPFDependenciesTransitiveReduced.dot',           # test the dependency dot files are produced.
-            'documentation/doxygen/html/index.html'                                          # test the index html file is produced.
+            'MyLib/documentation/tempDoxygenConfig.txt',                                  # test the production of the temp config file works
+            'MyLib/documentation/doxygen/external/CPFDependenciesTransitiveReduced.dot',           # test the dependency dot files are produced.
+            'MyLib/documentation/doxygen/html/index.html'                                          # test the index html file is produced.
         ]
 
         # Execute

@@ -26,7 +26,7 @@ PARENT_CONFIG = ''
 COMPILER_CONFIG = ''
 
 
-def prepareTestProject(repository, project, instantiating_test_module):
+def prepareTestProject(repository, project, cpf_cmake_dir, cpf_buildscripts_dir, instantiating_test_module):
     """
     This method clones a given repository of a CPF test project into the testdirectory 
     that is stored in the global BASE_TEST_DIR variable. After that it copies the
@@ -62,12 +62,12 @@ def prepareTestProject(repository, project, instantiating_test_module):
     # Replace the CPFCMake and CPFBuildscripts packages in the test project with the ones
     # that are used by this repository. This makes sure that we test the versions that
     # are used here and not the ones that are set in the test project.
-    replace_package_in_test_project_with_local('CPFCMake', cpf_root_dir)
-    replace_package_in_test_project_with_local('CPFBuildscripts', cpf_root_dir)
+    replace_package_in_test_project_with_local('CPFCMake', cpf_cmake_dir, cpf_root_dir)
+    replace_package_in_test_project_with_local('CPFBuildscripts', cpf_buildscripts_dir, cpf_root_dir)
     return cpf_root_dir
 
 
-def replace_package_in_test_project_with_local(package, cpf_root_dir):
+def replace_package_in_test_project_with_local(package, rel_package_path, cpf_root_dir):
     """
     This function replaces a package in the cpf project situated at test_project_root_dir
     with the package of same name in this repository.
@@ -76,13 +76,22 @@ def replace_package_in_test_project_with_local(package, cpf_root_dir):
     osa = miscosaccess.MiscOsAccess()
 
     this_root_dir = PurePosixPath(os.path.dirname(os.path.realpath(__file__)) + "/../..")
-    rel_package_path = 'Sources/{0}'.format(package)
-    this_package_dir = this_root_dir.joinpath(rel_package_path)
+    this_package_dir = this_root_dir.joinpath('Sources/{0}'.format(package))
     test_project_package_dir = cpf_root_dir.joinpath(rel_package_path)
+
+    # move the .git file to a save place while the package content is replaces.
+    gitFilePath = test_project_package_dir / ".git"
+    tempGitFilePath = test_project_package_dir / "../.git"
+    fsa.move(gitFilePath, tempGitFilePath)
 
     # We delete the package in the the copy the content of this package over
     fsa.rmtree(test_project_package_dir)
     shutil.copytree(str(this_package_dir), str(test_project_package_dir))
+
+    # Move the .git file back in place.
+    fsa.remove(gitFilePath)
+    fsa.move(tempGitFilePath, gitFilePath)
+
     # We also commit and add the changes to make sure the repository is not dirty
     # which is expected after a "fresh" checkout. We have to call git add for the
     # case that we added files to the cpf projects, which are not picket up by
@@ -111,7 +120,7 @@ class TestProjectFixture(unittest.TestCase):
     """
     This fixture offers utilities for tests that work on checked out test projects.
     """
-    def setUp(self, project, cpf_root_dir, cpf_cmake_dir, ci_buildconfigurations_dir, instantiating_module):
+    def setUp(self, project, cpf_root_dir, cpf_cmake_dir, cpf_buildscripts_dir, ci_buildconfigurations_dir, instantiating_module):
 
         self.fsa = filesystemaccess.FileSystemAccess()
         self.osa = miscosaccess.MiscOsAccess()
@@ -119,9 +128,10 @@ class TestProjectFixture(unittest.TestCase):
         self.project = project
         self.cpf_root_dir = cpf_root_dir
         self.cpf_cmake_dir = cpf_cmake_dir
+        self.cpf_buildscripts_dir = cpf_buildscripts_dir
         self.ci_buildconfigurations_dir = ci_buildconfigurations_dir
         self.instantiating_module = instantiating_module
-        self.locations = filelocations.FileLocations(cpf_root_dir, "Souces/CPFCMake", "Souces/CIBuildConfigurations" )
+        self.locations = filelocations.FileLocations(cpf_root_dir, cpf_cmake_dir, ci_buildconfigurations_dir )
 
         # add a big fat line to help with manual output parsing when an error occurs.
         if str(self._testMethodName) != "runTest":
@@ -129,6 +139,9 @@ class TestProjectFixture(unittest.TestCase):
 
     def printPrefixed(self, text):
         return print('[' + self.instantiating_module + '] ' + text)
+
+    def copyScripts(self):
+        self.run_python_command(self.cpf_buildscripts_dir + "/0_CopyScripts.py --CPFCMake_DIR \"{0}\" --CIBuildConfigurations_DIR \"{1}\" ".format(self.cpf_cmake_dir, self.ci_buildconfigurations_dir))
 
     def generate_project(self, d_options=[]):
         """
@@ -140,7 +153,8 @@ class TestProjectFixture(unittest.TestCase):
         """
         self.cleanup_generated_files()
 
-        self.run_python_command("Sources/CPFBuildscripts/0_CopyScripts.py --CPFCMake_DIR \"{0}\" --CIBuildConfigurations_DIR \"{1}\" ".format(self.cpf_cmake_dir, self.ci_buildconfigurations_dir))
+        self.copyScripts()
+
         d_option_string = ''
         for option in d_options:
             d_option_string += '-D ' + option + ' '
@@ -300,7 +314,7 @@ class TestProjectFixture(unittest.TestCase):
         """
         Returns a map with the values of the given variables in the given cmake script file.
         """
-        printVariablesScript = self.locations.get_full_path_source_folder() / "CPFCMake/Scripts/printScriptFileVariables.cmake"
+        printVariablesScript = self.cpf_root_dir /  self.cpf_cmake_dir / "Scripts/printScriptFileVariables.cmake"
         variablesOutputList = self.osa.execute_command_output(
             'cmake -DSCRIPT_PATH="{0}" -P "{1}"'.format(str(file), printVariablesScript),
             cwd=self.cpf_root_dir,
