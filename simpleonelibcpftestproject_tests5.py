@@ -79,7 +79,7 @@ class SimpleOneLibCPFTestProjectFixture5(simpleonelibcpftestprojectfixture.Simpl
 
         # Execute
         # Make a dummy change
-        sourceFile = self.locations.get_full_path_source_folder() / "MyLib/function.cpp"
+        sourceFile = self.locations.get_full_path_source_folder() / "MyLib/MyLib/function.cpp"
         with open(str(sourceFile), "a") as f:
             f.write("\n")
         # Commit the change
@@ -96,7 +96,7 @@ class SimpleOneLibCPFTestProjectFixture5(simpleonelibcpftestprojectfixture.Simpl
         # Verify
         packageVersionFromGit = self.get_package_version("MyLib") # The version from git
         packageVersionVar = 'PACKAGE_VERSION'
-        packageVersionConfigFile = self.locations.get_full_path_config_makefile_folder(testprojectfixture.PARENT_CONFIG) / "MyLib/_pckg/dev/MyLib/MyLib/lib/cmake/MyLib/MyLibConfigVersion.cmake"
+        packageVersionConfigFile = self.locations.get_full_path_config_makefile_folder(testprojectfixture.PARENT_CONFIG) / "MyLib/_pckg/dev/MyLib/lib/cmake/MyLib/MyLibConfigVersion.cmake"
         packageVersionFromConfigFile = self.get_cmake_variables_in_file([packageVersionVar], packageVersionConfigFile)[packageVersionVar]
 
         self.assertEqual(packageVersionFromConfigFile, packageVersionFromGit)
@@ -120,12 +120,14 @@ class SimpleOneLibCPFTestProjectFixture5(simpleonelibcpftestprojectfixture.Simpl
         # VERIFY
         package = 'MyLib'
         packageType = 'LIB'
-        owner = 'Dummy Owner'
+        owner = 'Knitschi'
         version = self.get_package_version(package)
-        binBaseDir = self.locations.get_full_path_binary_output_folder(package, testprojectfixture.PARENT_CONFIG, testprojectfixture.COMPILER_CONFIG)
+        binBaseDir = self.locations.get_full_path_binary_output_folder(testprojectfixture.PARENT_CONFIG, testprojectfixture.COMPILER_CONFIG)
         
         libFile = binBaseDir / self.get_package_shared_lib_path(package, packageType, version)
         shortLibFile = self.get_shared_lib_short_name(package, packageType, version)
+
+        print(libFile)
 
         # Read the properties from the binary file.
         props = testprojectfixture.get_file_properties(str(libFile))['StringFileInfo']
