@@ -34,6 +34,8 @@ set( files
 # Add the target.
 cpfAddFilePackageComponent(SOURCES "${files};${testModules}")
 
+cpfFinalizePackageProject()
+
 # Add a test target
 set(dependedOnPackages CPFCMake CPFBuildscripts)
 cpfFindConfigFile(configFile ${CPF_CONFIG} TRUE "${CPFCMake_SOURCE_DIR}" "${CIBuildConfigurations_SOURCE_DIR}")
@@ -47,3 +49,4 @@ cpfAssertDefinedMessage(CPF_PARENT_CONFIG "Error! Your config file is missing a 
 #set( CPFTESTS_TEST_NAME "test_version_is_written_into_file_info_file" )
 set(testScriptArgs  "test_dir=\"${CPF_TEST_FILES_DIR}/$<CONFIG>\" parent_config=${CPF_PARENT_CONFIG} compiler_config=$<CONFIG> test_filter=${CPFTESTS_TEST_NAME}")
 cpfAddRunPython3TestTargetForEachModule( run_tests.py "${testModules}" "${testScriptArgs}" "${files}" "${dependedOnPackages}" "${configFile}") # We also make this depend on the config file to make sure tests are retriggered when the CPFTESTS_TEST_NAME variable is changed.
+
